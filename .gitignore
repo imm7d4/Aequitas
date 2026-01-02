@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+/backend/vendor/
+
+# Build outputs
+/frontend/dist/
+/frontend/build/
+/backend/bin/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+/frontend/coverage/
+*.test.js.snap
+
+# MongoDB
+/data/
+
+# Temporary files
+*.tmp
+.cache/
