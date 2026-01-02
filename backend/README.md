@@ -56,6 +56,25 @@ Content-Type: application/json
 }
 ```
 
+### Instruments
+
+**List Instruments** (US-1.1.1)
+- `GET /api/instruments`
+- Returns all active instruments.
+
+**Search Instruments** (US-1.1.1)
+- `GET /api/instruments/search?q=query`
+- Search by symbol, name, or ISIN.
+
+**Create Instrument** (Admin)
+- `POST /api/admin/instruments`
+
+### Market
+
+**Get Market Status** (US-1.1.2)
+- `GET /api/market/status/{exchange}`
+- Returns real-time status (OPEN, CLOSED, etc.) and next open/close times.
+
 ## API Response Format
 
 All endpoints follow this standardized format:
@@ -124,3 +143,16 @@ Connected to MongoDB successfully
 Server starting on port 8080
 ```
 
+## Data Seeding
+
+To populate the database with top 100 NSE stocks and market hours/holidays:
+
+```bash
+cd backend/scripts/seed
+go run main.go
+```
+
+This will:
+1. Seed 100 instruments with symbols, names, and ISINs.
+2. Seed standard market hours for NSE and BSE.
+3. Seed market holidays for 2026.

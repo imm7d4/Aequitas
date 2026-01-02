@@ -96,6 +96,7 @@ func (s *AuthService) Login(email, password string) (string, *models.User, error
 	token, err := utils.GenerateToken(
 		user.ID.Hex(),
 		user.Email,
+		user.IsAdmin,
 		s.config.JWTSecret,
 		s.config.JWTExpiryHours,
 	)

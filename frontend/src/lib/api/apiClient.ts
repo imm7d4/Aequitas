@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import axios from 'axios';
 
 // Single axios instance for entire app

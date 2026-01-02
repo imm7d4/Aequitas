@@ -8,23 +8,32 @@ import (
 )
 
 type Claims struct {
-	UserID string `json:"userId"`
-	Email  string `json:"email"`
+	UserID  string `json:"userId"`
+	Email   string `json:"email"`
+	IsAdmin bool   `json:"isAdmin"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken creates a JWT token for a user
-func GenerateToken(userID, email, secret string, expiryHours int) (string, error) {
+func GenerateToken(
+	userID, email string,
+	isAdmin bool,
+	secret string,
+	expiryHours int,
+) (string, error) {
 	if secret == "" {
 		return "", errors.New("JWT secret is not configured")
 	}
 
 	claims := Claims{
-		UserID: userID,
-		Email:  email,
+		UserID:  userID,
+		Email:   email,
+		IsAdmin: isAdmin,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(expiryHours))),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(
+				time.Now().Add(time.Hour * time.Duration(expiryHours)),
+			),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
 		},
 	}
 

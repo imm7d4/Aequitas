@@ -2,7 +2,7 @@
 
 **Epic:** EPIC 1.1 - Market & Instrument Foundation  
 **Phase:** Phase 1 - Market & Instrument Setup  
-**Status:** Not Started
+**Status:** Completed
 
 ## User Story
 
@@ -12,12 +12,15 @@ So that **orders are only accepted during active trading sessions**
 
 ## Acceptance Criteria
 
-- [ ] Define market hours per exchange (NSE, BSE)
-- [ ] Pre-market, regular market, and post-market sessions
-- [ ] Market holidays calendar
-- [ ] Check if market is currently open
-- [ ] Reject orders outside trading hours
-- [ ] Display market status to users (OPEN, CLOSED, PRE_MARKET, POST_MARKET)
+- [x] Define market hours per exchange (NSE, BSE)
+- [x] Pre-market, regular market, and post-market sessions
+- [x] Market holidays calendar
+- [x] Check if market is currently open
+- [x] Rejection of orders outside trading hours
+- [x] Display market status to users (OPEN, CLOSED, PRE_MARKET, POST_MARKET)
+- [x] **New:** Admin dashboard for listing and deleting market holidays
+- [x] **New:** Filtering of holiday grid by Month and Exchange
+- [x] **New:** Option to clear all holiday filters
 
 ## Technical Requirements
 
@@ -208,3 +211,4 @@ export interface MarketHoliday {
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-01-02 | AI Assistant | Initial creation |
+| 2026-01-03 | AI Assistant | Added admin holiday management (list/delete/filter) |

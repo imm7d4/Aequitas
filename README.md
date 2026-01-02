@@ -85,6 +85,25 @@ Frontend runs on `http://localhost:5173`
 - ✅ Token persistence across page refreshes
 - ✅ CORS properly configured for frontend-backend communication
 
+## ✅ Phase 1 - Market & Instrument Setup (Completed)
+
+### User Stories Implemented
+
+#### US-1.1.1 - Instrument Master Data
+- ✅ Instrument model with symbol, name, ISIN, exchange, type, sector
+- ✅ CRUD operations for instruments (Admin only for write)
+- ✅ Search instruments by symbol, name, or ISIN
+- ✅ Filter active instruments
+- ✅ ISIN validation (Luhn algorithm)
+- ✅ Seed script with top 100 NSE stocks
+
+#### US-1.1.2 - Market Hours & Trading Sessions
+- ✅ Market hours model for NSE/BSE
+- ✅ Real-time market status (OPEN, CLOSED, PRE_MARKET, POST_MARKET)
+- ✅ Market holidays calendar for 2026
+- ✅ Trading session enforcement (Status badge)
+- ✅ Seed script for NSE/BSE market hours and holidays
+
 ## 📡 API Endpoints
 
 All endpoints follow standardized response format:
@@ -99,6 +118,18 @@ All endpoints follow standardized response format:
 ### Authentication
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
+
+### Instruments
+- `GET /api/instruments` - List active instruments (protected)
+- `GET /api/instruments/search?q=query` - Search instruments (protected)
+- `GET /api/instruments/{id}` - Get instrument details (protected)
+- `POST /api/admin/instruments` - Create instrument (admin)
+- `PUT /api/admin/instruments/{id}` - Update instrument (admin)
+
+### Market
+- `GET /api/market/status/{exchange}` - Get real-time market status (protected)
+- `POST /api/admin/market/hours` - Configure market hours (admin)
+- `POST /api/admin/market/holidays` - Add market holiday (admin)
 
 ## 🧪 Testing
 
@@ -200,7 +231,7 @@ taskkill /PID <PID> /F
 
 ## 📋 Next Steps
 
-Phase 1 - Market & Instrument Setup (Coming Soon)
+Phase 2 - Watchlist & Market Data (Next)
 
 ## 📄 License
 

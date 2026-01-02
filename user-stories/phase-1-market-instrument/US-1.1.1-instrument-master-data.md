@@ -2,7 +2,7 @@
 
 **Epic:** EPIC 1.1 - Market & Instrument Foundation  
 **Phase:** Phase 1 - Market & Instrument Setup  
-**Status:** Not Started
+**Status:** Completed
 
 ## User Story
 
@@ -12,14 +12,18 @@ So that **users can search and trade stocks**
 
 ## Acceptance Criteria
 
-- [ ] Create instrument with symbol, name, ISIN, exchange
-- [ ] Instrument type (STOCK, ETF, BOND, etc.)
-- [ ] Trading status (ACTIVE, SUSPENDED, DELISTED)
-- [ ] Lot size and tick size configuration
-- [ ] Instrument search by symbol or ISIN
-- [ ] List all active instruments
-- [ ] Update instrument details
-- [ ] Deactivate/suspend instrument
+- [x] Create instrument with symbol, name, ISIN, exchange
+- [x] Instrument type (STOCK, ETF, BOND, etc.)
+- [x] Trading status (ACTIVE, SUSPENDED, DELISTED)
+- [x] Lot size and tick size configuration
+- [x] Instrument search by symbol or ISIN
+- [x] List all active instruments
+- [x] Update instrument details
+- [x] Deactivate/suspend instrument
+- [x] **New:** Toggle between Grid and List views
+- [x] **New:** Advanced filtering by Exchange, Type, and Sector
+- [x] **New:** State persistence for list view, filters, and search query across navigation
+- [x] **New:** Global reset for all filters and search query
 
 ## Technical Requirements
 
@@ -123,10 +127,13 @@ export interface CreateInstrumentRequest {
 }
 ```
 
-**State Management:**
+**State Management (Zustand):**
 - Global state for instrument list (cache)
 - Search results state
 - Selected instrument state
+- **New:** `viewMode` (grid/list)
+- **New:** `filters` (exchange, type, sector)
+- **New:** `searchQuery` (persisted search term)
 
 ## Dependencies
 
@@ -197,3 +204,4 @@ export interface CreateInstrumentRequest {
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-01-02 | AI Assistant | Initial creation |
+| 2026-01-03 | AI Assistant | Added Grid/List toggle, advanced filtering, and state persistence |

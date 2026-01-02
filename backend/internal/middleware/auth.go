@@ -9,10 +9,6 @@ import (
 	"aequitas/internal/utils"
 )
 
-type contextKey string
-
-const UserIDKey contextKey = "userID"
-
 // Auth middleware validates JWT token and attaches user ID to context
 func Auth(cfg *config.Config) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -40,8 +36,9 @@ func Auth(cfg *config.Config) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Attach user ID to context
+			// Attach user ID and isAdmin to context
 			ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+			ctx = context.WithValue(ctx, IsAdminKey, claims.IsAdmin)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

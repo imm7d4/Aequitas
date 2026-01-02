@@ -62,6 +62,26 @@ Frontend will start on `http://localhost:5173`
   - Centralized authentication logic
   - Type-safe state updates
 
+### Market & Instruments (Phase 1) ✅
+
+- **Instrument Master Data** (US-1.1.1)
+  - Full instrument list with search and filtering
+  - Debounced search by symbol, name, or ISIN
+  - Detailed instrument cards with sector and exchange info
+  
+- **Market Status Monitoring** (US-1.1.2)
+  - Real-time market status badge (OPEN, CLOSED, PRE_MARKET, POST_MARKET)
+  - Automatic polling every 60 seconds
+  - Visual status indicators (color-coded chips)
+  
+- **State Management (Zustand)**
+  - `instrumentStore`: Manages instrument list and search results
+  - `marketStore`: Manages real-time market status
+  
+- **Custom Hooks**
+  - `useInstruments`: Orchestrates fetching and searching instruments
+  - `useMarketStatus`: Handles market status polling and data retrieval
+
 ### Architecture Highlights
 
 **Token Persistence Implementation:**

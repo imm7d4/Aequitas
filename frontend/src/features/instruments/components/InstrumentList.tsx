@@ -1,0 +1,225 @@
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+    Box,
+    Typography,
+    CircularProgress,
+    Alert,
+    Grid,
+    ToggleButton,
+    ToggleButtonGroup,
+    TextField,
+    MenuItem,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Button,
+} from '@mui/material';
+import GridViewIcon from '@mui/icons-material/GridView';
+import ListIcon from '@mui/icons-material/List';
+import { useInstrumentStore } from '../store/instrumentStore';
+import { InstrumentCard } from './InstrumentCard';
+import { InstrumentSearch } from './InstrumentSearch';
+import type { Instrument } from '../types/instrument.types';
+
+export const InstrumentList = () => {
+    const {
+        instruments,
+        searchResults,
+        isLoading,
+        error,
+        viewMode,
+        filters,
+        searchQuery,
+        setViewMode,
+        setFilters,
+        setSearchQuery,
+        setSearchResults
+    } = useInstrumentStore();
+    const navigate = useNavigate();
+
+    const sectors = useMemo(() => {
+        const uniqueSectors = new Set(instruments.map((ins: Instrument) => ins.sector).filter(Boolean));
+        return ['ALL', ...Array.from(uniqueSectors).sort()];
+    }, [instruments]);
+
+    const displayInstruments = useMemo(() => {
+        const source = searchResults.length > 0 ? searchResults : instruments;
+        return source.filter((ins: Instrument) => {
+            const exchangeMatch = filters.exchange === 'ALL' || ins.exchange === filters.exchange;
+            const typeMatch = filters.type === 'ALL' || ins.type === filters.type;
+            const sectorMatch = filters.sector === 'ALL' || ins.sector === filters.sector;
+            return exchangeMatch && typeMatch && sectorMatch;
+        });
+    }, [instruments, searchResults, filters]);
+
+    const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFilters({ ...filters, [name]: value });
+    };
+
+    const resetFilters = () => {
+        setFilters({ exchange: 'ALL', type: 'ALL', sector: 'ALL' });
+        setSearchQuery('');
+        setSearchResults([]);
+    };
+
+    const isFiltered = filters.exchange !== 'ALL' || filters.type !== 'ALL' || filters.sector !== 'ALL' || searchQuery !== '';
+
+    if (isLoading && instruments.length === 0) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+        );
+    }
+
+    return (
+        <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                <Typography variant="h4">Instruments</Typography>
+                <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={(_, mode) => mode && setViewMode(mode)}
+                    size="small"
+                    aria-label="view mode"
+                >
+                    <ToggleButton value="grid" aria-label="grid view">
+                        <GridViewIcon sx={{ mr: 1 }} /> Grid
+                    </ToggleButton>
+                    <ToggleButton value="list" aria-label="list view">
+                        <ListIcon sx={{ mr: 1 }} /> List
+                    </ToggleButton>
+                </ToggleButtonGroup>
+            </Box>
+
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid item xs={12} md={6}>
+                    <InstrumentSearch />
+                </Grid>
+                <Grid item xs={12} md={2}>
+                    <TextField
+                        fullWidth
+                        select
+                        label="Exchange"
+                        name="exchange"
+                        value={filters.exchange}
+                        onChange={handleFilterChange}
+                        size="small"
+                    >
+                        <MenuItem value="ALL">All Exchanges</MenuItem>
+                        <MenuItem value="NSE">NSE</MenuItem>
+                        <MenuItem value="BSE">BSE</MenuItem>
+                    </TextField>
+                </Grid>
+                <Grid item xs={12} md={2}>
+                    <TextField
+                        fullWidth
+                        select
+                        label="Type"
+                        name="type"
+                        value={filters.type}
+                        onChange={handleFilterChange}
+                        size="small"
+                    >
+                        <MenuItem value="ALL">All Types</MenuItem>
+                        <MenuItem value="STOCK">STOCK</MenuItem>
+                        <MenuItem value="ETF">ETF</MenuItem>
+                    </TextField>
+                </Grid>
+                <Grid item xs={12} md={2}>
+                    <TextField
+                        fullWidth
+                        select
+                        label="Sector"
+                        name="sector"
+                        value={filters.sector}
+                        onChange={handleFilterChange}
+                        size="small"
+                    >
+                        <MenuItem value="ALL">All Sectors</MenuItem>
+                        {sectors.map((sector: string) => (
+                            <MenuItem key={sector} value={sector}>{sector}</MenuItem>
+                        ))}
+                    </TextField>
+                </Grid>
+                {isFiltered && (
+                    <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mt: -1 }}>
+                        <Button size="small" onClick={resetFilters}>Reset All</Button>
+                    </Grid>
+                )}
+            </Grid>
+
+            {displayInstruments.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 8 }}>
+                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                        No instruments found
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        Try adjusting your filters or search query
+                    </Typography>
+                </Box>
+            ) : viewMode === 'grid' ? (
+                <Grid container spacing={2}>
+                    {displayInstruments.map((instrument: Instrument) => (
+                        <Grid item xs={12} sm={6} md={4} key={instrument.id}>
+                            <InstrumentCard
+                                instrument={instrument}
+                                onClick={() => navigate(`/instruments/${instrument.id}`)}
+                            />
+                        </Grid>
+                    ))}
+                </Grid>
+            ) : (
+                <TableContainer component={Paper}>
+                    <Table sx={{ minWidth: 650 }}>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Symbol</TableCell>
+                                <TableCell>Name</TableCell>
+                                <TableCell>Exchange</TableCell>
+                                <TableCell>Type</TableCell>
+                                <TableCell>Sector</TableCell>
+                                <TableCell>ISIN</TableCell>
+                                <TableCell align="right">Action</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {displayInstruments.map((instrument: Instrument) => (
+                                <TableRow
+                                    key={instrument.id}
+                                    hover
+                                    sx={{ cursor: 'pointer' }}
+                                    onClick={() => navigate(`/instruments/${instrument.id}`)}
+                                >
+                                    <TableCell sx={{ fontWeight: 'bold' }}>{instrument.symbol}</TableCell>
+                                    <TableCell>{instrument.name}</TableCell>
+                                    <TableCell>{instrument.exchange}</TableCell>
+                                    <TableCell>{instrument.type}</TableCell>
+                                    <TableCell>{instrument.sector}</TableCell>
+                                    <TableCell sx={{ fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                                        {instrument.isin}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <Button size="small" variant="outlined">View</Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
+        </Box>
+    );
+};
