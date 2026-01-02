@@ -24,6 +24,7 @@ So that **users can search and trade stocks**
 - [x] **New:** Advanced filtering by Exchange, Type, and Sector
 - [x] **New:** State persistence for list view, filters, and search query across navigation
 - [x] **New:** Global reset for all filters and search query
+- [x] **New:** Client-side pagination (25, 50, 75, 100) with sticky bottom controls
 
 ## Technical Requirements
 
@@ -134,6 +135,7 @@ export interface CreateInstrumentRequest {
 - **New:** `viewMode` (grid/list)
 - **New:** `filters` (exchange, type, sector)
 - **New:** `searchQuery` (persisted search term)
+- **New:** `pagination` (page, rowsPerPage)
 
 ## Dependencies
 
@@ -205,3 +207,4 @@ export interface CreateInstrumentRequest {
 |------|--------|--------|
 | 2026-01-02 | AI Assistant | Initial creation |
 | 2026-01-03 | AI Assistant | Added Grid/List toggle, advanced filtering, and state persistence |
+| 2026-01-03 | AI Assistant | Implemented client-side pagination with sticky bottom controls |

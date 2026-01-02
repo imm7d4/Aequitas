@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { User } from '../types';
 import { authService } from '../services/authService';
 import { tokenStorage } from '@/lib/storage/tokenStorage';
+import { useInstrumentStore } from '@/features/instruments/store/instrumentStore';
 
 interface AuthState {
     user: User | null;
@@ -74,6 +75,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     logout: () => {
         authService.logout();
+        // Reset feature stores
+        useInstrumentStore.getState().reset();
         set({ user: null, token: null, isAuthenticated: false });
     },
 }));

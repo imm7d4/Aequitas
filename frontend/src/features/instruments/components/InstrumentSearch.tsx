@@ -3,10 +3,20 @@ import { useInstrumentStore } from '../store/instrumentStore';
 import { instrumentService } from '../services/instrumentService';
 
 export const InstrumentSearch = () => {
-    const { searchQuery, setSearchQuery, setSearchResults, setLoading, setError, clearError } = useInstrumentStore();
+    const {
+        searchQuery,
+        setSearchQuery,
+        setSearchResults,
+        setLoading,
+        setError,
+        clearError,
+        pagination,
+        setPagination
+    } = useInstrumentStore();
 
     const handleSearch = (value: string) => {
         setSearchQuery(value);
+        setPagination({ ...pagination, page: 0 }); // Reset to first page on search
         if (!value.trim()) {
             setSearchResults([]);
             return;
@@ -30,9 +40,10 @@ export const InstrumentSearch = () => {
     };
 
     return (
-        <Box sx={{ mb: 3 }}>
+        <Box>
             <TextField
                 fullWidth
+                size="small"
                 label="Search Instruments"
                 placeholder="Search by symbol, name, or ISIN..."
                 value={searchQuery}

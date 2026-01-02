@@ -18,15 +18,20 @@ import {
     TableRow,
     Paper,
     Button,
+    TablePagination,
 } from '@mui/material';
 import GridViewIcon from '@mui/icons-material/GridView';
 import ListIcon from '@mui/icons-material/List';
+import { useInstruments } from '../hooks/useInstruments';
 import { useInstrumentStore } from '../store/instrumentStore';
 import { InstrumentCard } from './InstrumentCard';
 import { InstrumentSearch } from './InstrumentSearch';
 import type { Instrument } from '../types/instrument.types';
 
 export const InstrumentList = () => {
+    // Trigger data fetching on mount via useInstruments hook
+    useInstruments();
+
     const {
         instruments,
         searchResults,
@@ -35,10 +40,12 @@ export const InstrumentList = () => {
         viewMode,
         filters,
         searchQuery,
+        pagination,
         setViewMode,
         setFilters,
         setSearchQuery,
-        setSearchResults
+        setSearchResults,
+        setPagination
     } = useInstrumentStore();
     const navigate = useNavigate();
 
@@ -47,25 +54,44 @@ export const InstrumentList = () => {
         return ['ALL', ...Array.from(uniqueSectors).sort()];
     }, [instruments]);
 
-    const displayInstruments = useMemo(() => {
-        const source = searchResults.length > 0 ? searchResults : instruments;
+    const filteredInstruments = useMemo(() => {
+        // If there's a search query, use searchResults even if empty
+        const source = (searchQuery && searchQuery.trim() !== '') ? searchResults : instruments;
         return source.filter((ins: Instrument) => {
             const exchangeMatch = filters.exchange === 'ALL' || ins.exchange === filters.exchange;
             const typeMatch = filters.type === 'ALL' || ins.type === filters.type;
             const sectorMatch = filters.sector === 'ALL' || ins.sector === filters.sector;
             return exchangeMatch && typeMatch && sectorMatch;
         });
-    }, [instruments, searchResults, filters]);
+    }, [instruments, searchResults, filters, searchQuery]);
+
+    const displayInstruments = useMemo(() => {
+        const { page, rowsPerPage } = pagination;
+        return filteredInstruments.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+    }, [filteredInstruments, pagination]);
 
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFilters({ ...filters, [name]: value });
+        setPagination({ ...pagination, page: 0 }); // Reset to first page on filter change
+    };
+
+    const handleChangePage = (_: unknown, newPage: number) => {
+        setPagination({ ...pagination, page: newPage });
+    };
+
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setPagination({
+            page: 0,
+            rowsPerPage: parseInt(event.target.value, 10),
+        });
     };
 
     const resetFilters = () => {
         setFilters({ exchange: 'ALL', type: 'ALL', sector: 'ALL' });
         setSearchQuery('');
         setSearchResults([]);
+        setPagination({ page: 0, rowsPerPage: 25 });
     };
 
     const isFiltered = filters.exchange !== 'ALL' || filters.type !== 'ALL' || filters.sector !== 'ALL' || searchQuery !== '';
@@ -220,6 +246,27 @@ export const InstrumentList = () => {
                     </Table>
                 </TableContainer>
             )}
+
+            <Box sx={{
+                position: 'sticky',
+                bottom: 0,
+                bgcolor: 'background.paper',
+                borderTop: '1px solid',
+                borderColor: 'divider',
+                zIndex: 1,
+                mx: -2, // Offset container padding if necessary, or just keep it simple
+                px: 2
+            }}>
+                <TablePagination
+                    rowsPerPageOptions={[25, 50, 75, 100]}
+                    component="div"
+                    count={filteredInstruments.length}
+                    rowsPerPage={pagination.rowsPerPage}
+                    page={pagination.page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                />
+            </Box>
         </Box>
     );
 };
