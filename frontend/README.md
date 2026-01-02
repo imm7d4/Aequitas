@@ -36,12 +36,39 @@ Frontend will start on `http://localhost:5173`
 
 ## Features
 
-### Authentication (Phase 0)
+### Authentication (Phase 0) ✅
 
 - **User Registration** (US-0.1.1)
+  - Email and password validation
+  - Form validation with error handling
+  
 - **Login** (US-0.1.3)
+  - JWT token-based authentication
+  - Secure credential validation
+  
 - **Protected Routes**
+  - Route guards for authenticated pages
+  - Automatic redirect to login when unauthenticated
+  - Loading state to prevent flash of login page
+  
 - **JWT Token Management**
+  - Token stored in localStorage
+  - Auto-attached to API requests via Axios interceptor
+  - Token persistence across page refreshes
+  - Proper initialization with loading states
+  
+- **State Management**
+  - Zustand for global auth state
+  - Centralized authentication logic
+  - Type-safe state updates
+
+### Architecture Highlights
+
+**Token Persistence Implementation:**
+- Initial `isLoading: true` prevents premature redirects
+- `initialize()` called on app mount to restore session
+- `ProtectedRoute` waits for auth check before rendering
+- Error handling for corrupted localStorage data
 
 ## Tech Stack
 

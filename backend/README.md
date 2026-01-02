@@ -70,4 +70,57 @@ All endpoints follow this standardized format:
 
 ## Environment Variables
 
-See `.env` file for configuration.
+Create a `.env` file in the `backend/` directory:
+
+```env
+MONGODB_URI=mongodb://localhost:27017/aequitas
+JWT_SECRET=your-secure-random-secret-key-here
+JWT_EXPIRY_HOURS=24
+PORT=8080
+```
+
+**Important Notes:**
+- `JWT_SECRET` must be set for authentication to work
+- Use a strong, random secret in production
+- File must be ASCII or UTF-8 encoded (no BOM)
+- Server validates JWT_SECRET on startup
+
+## Setup Instructions
+
+### Prerequisites
+- Go 1.21 or higher
+- MongoDB 6.0+ running locally or via Docker
+
+### Installation Steps
+
+1. **Install Go dependencies:**
+   ```bash
+   # Set GOPATH to avoid permission issues
+   $env:GOPATH = "$env:USERPROFILE\go"
+   go mod tidy
+   ```
+
+2. **Start MongoDB:**
+   ```bash
+   # Using Docker
+   docker-compose up -d
+   
+   # Or use local MongoDB installation
+   ```
+
+3. **Create `.env` file** (see Environment Variables section above)
+
+4. **Run the server:**
+   ```bash
+   go run cmd/server/main.go
+   ```
+
+Server will start on `http://localhost:8080`
+
+You should see:
+```
+Configuration loaded successfully
+Connected to MongoDB successfully
+Server starting on port 8080
+```
+

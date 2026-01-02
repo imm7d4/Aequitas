@@ -82,6 +82,8 @@ Frontend runs on `http://localhost:5173`
 - ✅ Protected routes
 - ✅ Auto-logout on token expiry
 - ✅ Login/logout functionality
+- ✅ Token persistence across page refreshes
+- ✅ CORS properly configured for frontend-backend communication
 
 ## 📡 API Endpoints
 
@@ -119,6 +121,49 @@ All endpoints follow standardized response format:
 4. **Logout**
    - Click "Logout" button
    - Redirected to login page
+
+5. **Token Persistence**
+   - Login
+   - Refresh page
+   - Expected: Still logged in, dashboard loads
+
+## 🔧 Troubleshooting
+
+### Backend Issues
+
+**Go Module Cache Permission Error**
+```bash
+# If you see "Access is denied" for module cache
+$env:GOPATH = "$env:USERPROFILE\go"
+go mod tidy
+```
+
+**JWT Secret Not Loading**
+- Ensure `.env` file is in the `backend/` directory
+- Check file encoding (should be ASCII or UTF-8 without BOM)
+- Verify `JWT_SECRET` is set in `.env`
+
+**Port Already in Use**
+```bash
+# Find process using port 8080
+netstat -ano | findstr :8080
+
+# Kill the process (replace PID)
+taskkill /PID <PID> /F
+```
+
+### Frontend Issues
+
+**CORS Errors**
+- Ensure backend server is running
+- Check CORS middleware is applied first in `main.go`
+- Verify frontend is accessing `http://localhost:8080`
+
+**Token Not Persisting**
+- Clear browser localStorage
+- Check browser console for errors
+- Ensure `initialize()` is called in `App.tsx`
+
 
 ## 📚 Documentation
 
