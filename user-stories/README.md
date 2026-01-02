@@ -12,7 +12,7 @@ user-stories/
 │   ├── US-0.1.2-trading-account-creation.md
 │   └── US-0.1.3-authentication-session.md
 ├── phase-1-market-instrument/
-├── phase-2-wallet-cash/
+├── phase-2-watchlist-market-data/
 ├── phase-3-order-management/
 ├── phase-4-risk-management/
 ├── phase-5-matching-engine/
@@ -91,8 +91,8 @@ Core user and account management, authentication
 ### Phase 1 - Market & Instrument Setup
 Define tradable instruments and market structure
 
-### Phase 2 - Wallet & Cash Management
-Handle user funds and wallet operations
+### Phase 2 - Watchlist & Market Data
+Customizable watchlists and real-time (simulated) price updates
 
 ### Phase 3 - Order Management System (OMS)
 Order placement, modification, and cancellation
@@ -123,7 +123,7 @@ Use this section to track overall progress:
 |-------|--------------|-----------|-------------|-------------|
 | 0 | 3 | 3 | 0 | 0 |
 | 1 | 2 | 2 | 0 | 0 |
-| 2 | 2 | 0 | 0 | 2 |
+| 2 | 2 | 0 | 1 | 1 |
 | 3 | 3 | 0 | 0 | 3 |
 | 4 | 3 | 0 | 0 | 3 |
 | 5 | 2 | 0 | 0 | 2 |
