@@ -36,6 +36,25 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
             timeScale: {
                 timeVisible: true,
                 secondsVisible: false,
+                tickMarkFormatter: (time: number) => {
+                    const date = new Date(time * 1000);
+                    return date.toLocaleTimeString('en-IN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    });
+                },
+            },
+            localization: {
+                locale: 'en-IN',
+                timeFormatter: (time: number) => {
+                    const date = new Date(time * 1000);
+                    return date.toLocaleTimeString('en-IN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    });
+                },
             },
         }) as any;
 

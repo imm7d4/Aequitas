@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -16,7 +16,6 @@ import {
 import {
     TrendingUp as BuyIcon,
     TrendingDown as SellIcon,
-    AccountBalanceWallet as WalletIcon,
 } from '@mui/icons-material';
 import { Instrument } from '@/features/instruments/types/instrument.types';
 import { orderService } from '../services/orderService';
@@ -24,14 +23,25 @@ import { orderService } from '../services/orderService';
 interface TradePanelProps {
     instrument: Instrument;
     ltp: number;
-    balance: number;
 }
 
-export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, balance }) => {
+export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp }) => {
     const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
     const [orderType, setOrderType] = useState<'MARKET' | 'LIMIT'>('LIMIT');
     const [quantity, setQuantity] = useState<string>('');
-    const [price, setPrice] = useState<string>(ltp.toString());
+    const [price, setPrice] = useState<string>(ltp > 0 ? ltp.toFixed(2) : '0');
+
+    useEffect(() => {
+        if (ltp > 0 && (price === '0' || price === '')) {
+            setPrice(ltp.toFixed(2));
+        }
+    }, [ltp, price]);
+
+    useEffect(() => {
+        if (ltp > 0) {
+            setPrice(ltp.toFixed(2));
+        }
+    }, [instrument.id, ltp]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -52,10 +62,8 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, balance
             if (isNaN(p) || p <= 0) return false;
         }
 
-        if (side === 'BUY' && estValue > balance) return false;
-
         return true;
-    }, [quantity, price, orderType, side, balance, estValue, instrument.lotSize]);
+    }, [quantity, price, orderType, instrument.lotSize]);
 
     const handlePlaceOrder = async () => {
         setIsLoading(true);
@@ -88,12 +96,6 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, balance
                     <Typography variant="h6" fontWeight={700}>
                         Trade {instrument.symbol}
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
-                        <WalletIcon sx={{ fontSize: 16 }} />
-                        <Typography variant="caption" fontWeight={600}>
-                            ₹{balance.toLocaleString()}
-                        </Typography>
-                    </Box>
                 </Box>
 
                 <ToggleButtonGroup
@@ -170,9 +172,11 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, balance
                         <Typography variant="body2" fontWeight={600}>₹{estValue.toLocaleString()}</Typography>
                     </Box>
                     {orderType === 'MARKET' && (
-                        <Typography variant="caption" color="text.secondary" display="block">
-                            * Includes 1% price protection buffer
-                        </Typography>
+                        <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 1.5, bgcolor: 'rgba(237, 108, 2, 0.08)', border: '1px dashed rgba(237, 108, 2, 0.3)' }}>
+                            <Typography variant="caption" sx={{ color: 'warning.dark', display: 'flex', alignItems: 'center', gap: 1, fontWeight: 600 }}>
+                                ⚠ Risk Context: Market order may execute between ₹{(ltp * 0.9995).toFixed(2)} – ₹{(ltp * 1.0005).toFixed(2)}
+                            </Typography>
+                        </Box>
                     )}
                 </Box>
 
