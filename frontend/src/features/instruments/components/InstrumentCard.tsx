@@ -1,15 +1,17 @@
 import { useMemo } from 'react';
 import { Card, CardContent, Typography, Chip, Box, Grid, IconButton } from '@mui/material';
-import { Star as StarIcon, StarBorder as StarBorderIcon } from '@mui/icons-material';
+import { Star as StarIcon, StarBorder as StarBorderIcon, TrendingUp, TrendingDown } from '@mui/icons-material';
 import type { Instrument } from '../types/instrument.types';
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
+import type { MarketData } from '@/features/market/types/market.types';
 
 interface InstrumentCardProps {
     instrument: Instrument;
     onClick?: () => void;
+    marketData?: MarketData;
 }
 
-export const InstrumentCard = ({ instrument, onClick }: InstrumentCardProps) => {
+export const InstrumentCard = ({ instrument, onClick, marketData }: InstrumentCardProps) => {
     const {
         watchlists,
         activeWatchlistId,
@@ -60,6 +62,8 @@ export const InstrumentCard = ({ instrument, onClick }: InstrumentCardProps) => 
         return watchlists.some(w => w.instrumentIds.includes(instrument.id));
     }, [watchlists, instrument.id]);
 
+    const isPositive = marketData ? marketData.change >= 0 : true;
+
     return (
         <Card
             sx={{
@@ -95,6 +99,30 @@ export const InstrumentCard = ({ instrument, onClick }: InstrumentCardProps) => 
                     {instrument.name}
                 </Typography>
 
+                {/* Price Section */}
+                {marketData && (
+                    <Box sx={{ my: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 0.5 }}>
+                            <Typography variant="h5" fontWeight={700}>
+                                ₹{marketData.lastPrice.toFixed(2)}
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                {isPositive ? <TrendingUp fontSize="small" color="success" /> : <TrendingDown fontSize="small" color="error" />}
+                                <Typography
+                                    variant="body2"
+                                    fontWeight={600}
+                                    color={isPositive ? 'success.main' : 'error.main'}
+                                >
+                                    {isPositive ? '+' : ''}{marketData.changePct.toFixed(2)}%
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                            Vol: {marketData.volume.toLocaleString()} • H/L: ₹{marketData.high.toFixed(2)}/₹{marketData.low.toFixed(2)}
+                        </Typography>
+                    </Box>
+                )}
+
                 <Grid container spacing={2} sx={{ mt: 1 }}>
                     <Grid item xs={6}>
                         <Typography variant="caption" color="text.secondary">
@@ -107,20 +135,6 @@ export const InstrumentCard = ({ instrument, onClick }: InstrumentCardProps) => 
                             Sector
                         </Typography>
                         <Typography variant="body2">{instrument.sector}</Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary">
-                            ISIN
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
-                            {instrument.isin}
-                        </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary">
-                            Type
-                        </Typography>
-                        <Typography variant="body2">{instrument.type}</Typography>
                     </Grid>
                 </Grid>
             </CardContent>

@@ -102,7 +102,8 @@ func (s *PricingService) simulatePrices() {
 			data.Low = data.LastPrice
 		}
 
-		data.Volume += int64(rand.Intn(1000))
+		// Volume is now static until matching engine (Phase 6) is implemented
+		// data.Volume will only be set during initialization
 
 		if err := s.marketDataRepo.Upsert(data); err != nil {
 			log.Printf("Pricing engine error: failed to update %s: %v", inst.Symbol, err)

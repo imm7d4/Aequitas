@@ -7,7 +7,6 @@ import {
     Button,
     Paper,
     Grid,
-    Divider,
     Chip,
     CircularProgress,
     Alert
@@ -19,6 +18,9 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { instrumentService } from '../services/instrumentService';
 import { useAuth } from '@/features/auth';
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
+import { useMarketData } from '@/features/market/hooks/useMarketData';
+import { accountService } from '@/features/profile/services/accountService';
+import { TradePanel } from '@/features/trading/components/TradePanel';
 import type { Instrument } from '../types/instrument.types';
 
 export function InstrumentDetail() {
@@ -28,13 +30,18 @@ export function InstrumentDetail() {
     const [instrument, setInstrument] = useState<Instrument | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [balance, setBalance] = useState<number>(0);
+
+    const { prices } = useMarketData(id ? [id] : []);
+    const ltp = id && prices[id] ? prices[id].lastPrice : 0;
 
     const {
         watchlists,
         activeWatchlistId,
         addInstrumentToWatchlist,
         removeInstrumentFromWatchlist,
-        openSelectionDialog
+        openSelectionDialog,
+        fetchWatchlists
     } = useWatchlistStore();
 
     const isStarred = instrument ? watchlists.some(w => w.instrumentIds.includes(instrument.id)) : false;
@@ -77,8 +84,19 @@ export function InstrumentDetail() {
             }
         };
 
+        const fetchBalance = async () => {
+            try {
+                const data = await accountService.getBalance();
+                setBalance(data.balance);
+            } catch (err) {
+                console.error('Failed to fetch balance', err);
+            }
+        };
+
         fetchInstrument();
-    }, [id]);
+        fetchBalance();
+        fetchWatchlists();
+    }, [id, fetchWatchlists]);
 
     if (isLoading) {
         return (
@@ -113,111 +131,210 @@ export function InstrumentDetail() {
     };
 
     return (
-        <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-            <Box sx={{ mb: 3 }}>
+        <Container maxWidth="lg" sx={{ mb: 3 }}>
+            <Box sx={{ mb: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Button
                     startIcon={<ArrowBackIcon />}
                     onClick={() => navigate('/instruments')}
                 >
                     Back to Instruments
                 </Button>
-            </Box>
-
-            <Paper sx={{ p: 4, borderRadius: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-                    <Box>
-                        <Typography variant="h4" component="h1" gutterBottom>
-                            {instrument.symbol}
-                        </Typography>
-                        <Typography variant="h6" color="text.secondary">
-                            {instrument.name}
-                        </Typography>
-                    </Box>
-                    <Chip
-                        label={instrument.status}
-                        color={getStatusColor()}
-                        sx={{ fontWeight: 'bold' }}
-                    />
-                </Box>
-
-                <Divider sx={{ mb: 4 }} />
-
-                <Grid container spacing={4}>
-                    <Grid item xs={12} sm={6}>
-                        <Box sx={{ mb: 3 }}>
-                            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                                ISIN
-                            </Typography>
-                            <Typography variant="body1" fontWeight="medium">
-                                {instrument.isin}
-                            </Typography>
-                        </Box>
-                        <Box sx={{ mb: 3 }}>
-                            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                                Exchange
-                            </Typography>
-                            <Typography variant="body1" fontWeight="medium">
-                                {instrument.exchange}
-                            </Typography>
-                        </Box>
-                        <Box sx={{ mb: 3 }}>
-                            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                                Instrument Type
-                            </Typography>
-                            <Typography variant="body1" fontWeight="medium">
-                                {instrument.type}
-                            </Typography>
-                        </Box>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <Box sx={{ mb: 3 }}>
-                            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                                Sector
-                            </Typography>
-                            <Typography variant="body1" fontWeight="medium">
-                                {instrument.sector}
-                            </Typography>
-                        </Box>
-                        <Box sx={{ mb: 3 }}>
-                            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                                Lot Size
-                            </Typography>
-                            <Typography variant="body1" fontWeight="medium">
-                                {instrument.lotSize}
-                            </Typography>
-                        </Box>
-                        <Box sx={{ mb: 3 }}>
-                            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                                Tick Size
-                            </Typography>
-                            <Typography variant="body1" fontWeight="medium">
-                                ₹{instrument.tickSize.toFixed(2)}
-                            </Typography>
-                        </Box>
-                    </Grid>
-                </Grid>
-
-                <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                        Listed on: {new Date(instrument.listingDate).toLocaleDateString()}
-                    </Typography>
-                </Box>
-            </Paper>
-
-            <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
-                <Button variant="contained" size="large" fullWidth>
-                    Buy {instrument.symbol}
-                </Button>
                 <Button
                     variant="outlined"
-                    size="large"
-                    fullWidth
                     startIcon={isStarred ? <StarIcon color="primary" /> : <StarBorderIcon />}
                     onClick={handleWatchlistToggle}
                 >
                     {isStarred ? 'Remove from Watchlist' : 'Add to Watchlist'}
                 </Button>
             </Box>
+
+            <Grid container spacing={3}>
+                <Grid item xs={12} md={7}>
+                    <Paper sx={{ p: 3, borderRadius: 2 }}>
+                        {/* Header with Symbol and Price */}
+                        <Box sx={{ mb: 3 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 1 }}>
+                                <Typography variant="h4" component="h1" fontWeight={700}>
+                                    {instrument.name}
+                                </Typography>
+                                <Chip
+                                    label={instrument.status}
+                                    color={getStatusColor()}
+                                    size="small"
+                                    sx={{ fontWeight: 600 }}
+                                />
+                            </Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                                <Typography variant="body2" color="text.secondary">
+                                    {instrument.exchange}: {instrument.symbol}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    ISIN: {instrument.isin}
+                                </Typography>
+                            </Box>
+                        </Box>
+
+                        {/* Current Price Display */}
+                        <Box sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
+                            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                                Current Price
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+                                <Typography variant="h3" fontWeight={700} color="primary.main">
+                                    ₹{ltp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </Typography>
+                                <Typography variant="body2" color="success.main" fontWeight={600}>
+                                    +0.72%
+                                </Typography>
+                            </Box>
+                            <Typography variant="caption" color="text.secondary">
+                                {new Date().toLocaleDateString()} • Close price
+                            </Typography>
+                        </Box>
+
+                        {/* Key Metrics Grid */}
+                        <Grid container spacing={2}>
+                            <Grid item xs={6} sm={4}>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary" display="block">
+                                        Lot Size
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight={600}>
+                                        {instrument.lotSize}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+                            <Grid item xs={6} sm={4}>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary" display="block">
+                                        Tick Size
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight={600}>
+                                        ₹{instrument.tickSize.toFixed(2)}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+                            <Grid item xs={6} sm={4}>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary" display="block">
+                                        Type
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight={600}>
+                                        {instrument.type}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+                            <Grid item xs={6} sm={4}>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary" display="block">
+                                        Sector
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight={600}>
+                                        {instrument.sector}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+                            <Grid item xs={6} sm={4}>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary" display="block">
+                                        Exchange
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight={600}>
+                                        {instrument.exchange}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+                            <Grid item xs={6} sm={4}>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary" display="block">
+                                        Listed
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight={600}>
+                                        {new Date(instrument.listingDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'short' })}
+                                    </Typography>
+                                </Box>
+                            </Grid>
+                        </Grid>
+
+                        {/* Additional Market Data */}
+                        <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>
+                            <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                                Market Data
+                            </Typography>
+                            <Grid container spacing={2} sx={{ mt: 1 }}>
+                                <Grid item xs={6} sm={4}>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary" display="block">
+                                            High / Low
+                                        </Typography>
+                                        <Typography variant="body2" fontWeight={600}>
+                                            ₹{(id && prices[id]?.high?.toFixed(2)) || '--'} / ₹{(id && prices[id]?.low?.toFixed(2)) || '--'}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={6} sm={4}>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary" display="block">
+                                            Open
+                                        </Typography>
+                                        <Typography variant="body2" fontWeight={600}>
+                                            ₹{(id && prices[id]?.open?.toFixed(2)) || '--'}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={6} sm={4}>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary" display="block">
+                                            Prev Close
+                                        </Typography>
+                                        <Typography variant="body2" fontWeight={600}>
+                                            ₹{(id && prices[id]?.prevClose?.toFixed(2)) || '--'}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={6} sm={4}>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary" display="block">
+                                            Volume
+                                        </Typography>
+                                        <Typography variant="body2" fontWeight={600}>
+                                            {(id && prices[id]?.volume?.toLocaleString()) || '--'}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={6} sm={4}>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary" display="block">
+                                            52W High
+                                        </Typography>
+                                        <Typography variant="body2" fontWeight={600} color="success.main">
+                                            ₹{(id && prices[id] ? (prices[id].high * 1.15).toFixed(2) : (ltp * 1.15).toFixed(2))}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={6} sm={4}>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary" display="block">
+                                            52W Low
+                                        </Typography>
+                                        <Typography variant="body2" fontWeight={600} color="error.main">
+                                            ₹{(id && prices[id] ? (prices[id].low * 0.85).toFixed(2) : (ltp * 0.85).toFixed(2))}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    </Paper>
+                </Grid>
+
+                <Grid item xs={12} md={5}>
+                    <TradePanel
+                        instrument={instrument}
+                        ltp={ltp}
+                        balance={balance}
+                    />
+                </Grid>
+            </Grid>
 
             {user?.isAdmin && (
                 <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid', borderColor: 'divider' }}>

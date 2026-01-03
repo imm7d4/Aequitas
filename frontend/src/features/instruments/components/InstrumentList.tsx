@@ -28,6 +28,7 @@ import StarBorderIcon from '@mui/icons-material/StarBorder';
 import { useInstruments } from '../hooks/useInstruments';
 import { useInstrumentStore } from '../store/instrumentStore';
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
+import { useMarketData } from '@/features/market/hooks/useMarketData';
 import { InstrumentCard } from './InstrumentCard';
 import { InstrumentSearch } from './InstrumentSearch';
 import type { Instrument } from '../types/instrument.types';
@@ -49,8 +50,14 @@ export const InstrumentList = () => {
         setFilters,
         setSearchQuery,
         setSearchResults,
-        setPagination
+        setPagination,
     } = useInstrumentStore();
+
+    const navigate = useNavigate();
+
+    // Fetch market data for all instruments
+    const instrumentIds = useMemo(() => instruments.map(i => i.id), [instruments]);
+    const { prices } = useMarketData(instrumentIds);
     const {
         watchlists,
         activeWatchlistId,
@@ -58,7 +65,6 @@ export const InstrumentList = () => {
         removeInstrumentFromWatchlist,
         openSelectionDialog
     } = useWatchlistStore();
-    const navigate = useNavigate();
 
     const sectors = useMemo(() => {
         const uniqueSectors = new Set(instruments.map((ins: Instrument) => ins.sector).filter(Boolean));
@@ -234,10 +240,11 @@ export const InstrumentList = () => {
             ) : viewMode === 'grid' ? (
                 <Grid container spacing={2}>
                     {displayInstruments.map((instrument: Instrument) => (
-                        <Grid item xs={12} sm={6} md={4} key={instrument.id}>
+                        <Grid item xs={12} sm={6} lg={4} xl={3} key={instrument.id}>
                             <InstrumentCard
                                 instrument={instrument}
                                 onClick={() => navigate(`/instruments/${instrument.id}`)}
+                                marketData={prices[instrument.id]}
                             />
                         </Grid>
                     ))}
@@ -249,10 +256,14 @@ export const InstrumentList = () => {
                             <TableRow>
                                 <TableCell>Symbol</TableCell>
                                 <TableCell>Name</TableCell>
+                                <TableCell align="right">LTP</TableCell>
+                                <TableCell align="right">Change</TableCell>
+                                <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>Change %</TableCell>
+                                <TableCell align="right">Volume</TableCell>
+                                <TableCell align="right">High</TableCell>
+                                <TableCell align="right">Low</TableCell>
                                 <TableCell>Exchange</TableCell>
-                                <TableCell>Type</TableCell>
                                 <TableCell>Sector</TableCell>
-                                <TableCell>ISIN</TableCell>
                                 <TableCell align="center">Watchlist</TableCell>
                                 <TableCell align="right">Action</TableCell>
                             </TableRow>
@@ -260,6 +271,9 @@ export const InstrumentList = () => {
                         <TableBody>
                             {displayInstruments.map((instrument: Instrument) => {
                                 const isStarred = watchlists.some(w => w.instrumentIds.includes(instrument.id));
+                                const marketData = prices[instrument.id];
+                                const isPositive = marketData ? marketData.change >= 0 : true;
+
                                 return (
                                     <TableRow
                                         key={instrument.id}
@@ -269,12 +283,26 @@ export const InstrumentList = () => {
                                     >
                                         <TableCell sx={{ fontWeight: 'bold' }}>{instrument.symbol}</TableCell>
                                         <TableCell>{instrument.name}</TableCell>
-                                        <TableCell>{instrument.exchange}</TableCell>
-                                        <TableCell>{instrument.type}</TableCell>
-                                        <TableCell>{instrument.sector}</TableCell>
-                                        <TableCell sx={{ fontSize: '0.75rem', fontFamily: 'monospace' }}>
-                                            {instrument.isin}
+                                        <TableCell align="right" sx={{ fontWeight: 600 }}>
+                                            {marketData ? `₹${marketData.lastPrice.toFixed(2)}` : '--'}
                                         </TableCell>
+                                        <TableCell align="right" sx={{ color: isPositive ? 'success.main' : 'error.main', fontWeight: 600 }}>
+                                            {marketData ? `${isPositive ? '+' : ''}₹${marketData.change.toFixed(2)}` : '--'}
+                                        </TableCell>
+                                        <TableCell align="right" sx={{ color: isPositive ? 'success.main' : 'error.main', fontWeight: 600 }}>
+                                            {marketData ? `${isPositive ? '+' : ''}${marketData.changePct.toFixed(2)}%` : '--'}
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            {marketData ? marketData.volume.toLocaleString() : '--'}
+                                        </TableCell>
+                                        <TableCell align="right" sx={{ color: 'success.main', fontWeight: 600 }}>
+                                            {marketData ? `₹${marketData.high.toFixed(2)}` : '--'}
+                                        </TableCell>
+                                        <TableCell align="right" sx={{ color: 'error.main', fontWeight: 600 }}>
+                                            {marketData ? `₹${marketData.low.toFixed(2)}` : '--'}
+                                        </TableCell>
+                                        <TableCell>{instrument.exchange}</TableCell>
+                                        <TableCell>{instrument.sector}</TableCell>
                                         <TableCell align="center">
                                             <IconButton
                                                 size="small"
