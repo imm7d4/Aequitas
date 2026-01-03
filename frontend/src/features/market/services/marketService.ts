@@ -4,6 +4,7 @@ import type {
     CreateMarketHoursRequest,
     CreateHolidayRequest,
     MarketData,
+    MarketHours,
 } from '../types/market.types';
 
 export const marketService = {
@@ -68,5 +69,17 @@ export const marketService = {
     async getBatchPrices(ids: string[]): Promise<MarketData[]> {
         const response = await apiClient.get(`/market/prices?ids=${ids.join(',')}`);
         return response.data.data;
+    },
+
+    async getWeeklyHours(exchange: string): Promise<(MarketHours | null)[]> {
+        const response = await apiClient.get(`/admin/market/hours/${exchange}`);
+        return response.data.data;
+    },
+
+    async updateWeeklyHours(
+        exchange: string,
+        hours: CreateMarketHoursRequest[]
+    ): Promise<void> {
+        await apiClient.put(`/admin/market/hours/${exchange}/bulk`, { hours });
     },
 };

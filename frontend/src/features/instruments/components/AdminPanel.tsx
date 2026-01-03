@@ -41,10 +41,10 @@ export function AdminPanel() {
             action: () => navigate('/admin/instruments/new')
         },
         {
-            title: 'Market Hours',
-            description: 'Configure trading session times.',
+            title: 'Manage Hours',
+            description: 'Configure weekly trading hours for all exchanges.',
             icon: <ScheduleIcon sx={{ fontSize: 40 }} />,
-            action: () => navigate('/admin/market-hours')
+            action: () => navigate('/admin/manage-hours')
         },
         {
             title: 'Market Holidays',

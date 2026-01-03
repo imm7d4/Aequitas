@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type MarketRepository struct {
@@ -163,4 +164,62 @@ func (r *MarketRepository) IsHoliday(exchange string, date time.Time) (bool, err
 	}
 
 	return count > 0, nil
+}
+
+func (r *MarketRepository) FindAllMarketHoursByExchange(
+	exchange string,
+) ([]*models.MarketHours, error) {
+	filter := bson.M{"exchange": exchange}
+
+	cursor, err := r.hoursCollection.Find(context.Background(), filter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find market hours: %w", err)
+	}
+	defer cursor.Close(context.Background())
+
+	var hours []*models.MarketHours
+	if err = cursor.All(context.Background(), &hours); err != nil {
+		return nil, fmt.Errorf("failed to decode market hours: %w", err)
+	}
+
+	return hours, nil
+}
+
+func (r *MarketRepository) UpsertMarketHours(hours *models.MarketHours) error {
+	hours.UpdatedAt = time.Now()
+
+	filter := bson.M{
+		"exchange":    hours.Exchange,
+		"day_of_week": hours.DayOfWeek,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"pre_market_start":  hours.PreMarketStart,
+			"pre_market_end":    hours.PreMarketEnd,
+			"market_open":       hours.MarketOpen,
+			"market_close":      hours.MarketClose,
+			"post_market_start": hours.PostMarketStart,
+			"post_market_end":   hours.PostMarketEnd,
+			"is_closed":         hours.IsClosed,
+			"updated_at":        hours.UpdatedAt,
+		},
+		"$setOnInsert": bson.M{
+			"created_at": time.Now(),
+		},
+	}
+
+	upsertTrue := true
+	_, err := r.hoursCollection.UpdateOne(
+		context.Background(),
+		filter,
+		update,
+		&options.UpdateOptions{Upsert: &upsertTrue},
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to upsert market hours: %w", err)
+	}
+
+	return nil
 }

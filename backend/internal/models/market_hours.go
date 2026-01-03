@@ -16,7 +16,7 @@ type MarketHours struct {
 	MarketClose     string             `bson:"market_close" json:"marketClose"`
 	PostMarketStart string             `bson:"post_market_start" json:"postMarketStart"`
 	PostMarketEnd   string             `bson:"post_market_end" json:"postMarketEnd"`
-	IsHoliday       bool               `bson:"is_holiday" json:"isHoliday"`
+	IsClosed        bool               `bson:"is_closed" json:"isClosed"`
 	CreatedAt       time.Time          `bson:"created_at" json:"createdAt"`
 	UpdatedAt       time.Time          `bson:"updated_at" json:"updatedAt"`
 }

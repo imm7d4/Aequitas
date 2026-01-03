@@ -16,7 +16,7 @@ export interface MarketHours {
     marketClose: string;
     postMarketStart: string;
     postMarketEnd: string;
-    isHoliday: boolean;
+    isClosed: boolean;
 }
 
 export interface MarketHoliday {
@@ -35,6 +35,7 @@ export interface CreateMarketHoursRequest {
     marketClose: string;
     postMarketStart: string;
     postMarketEnd: string;
+    isClosed?: boolean;
 }
 
 export interface CreateHolidayRequest {
@@ -55,4 +56,12 @@ export interface MarketData {
     low: number;
     volume: number;
     updatedAt: string;
+}
+
+export interface WeeklyHoursResponse {
+    hours: (MarketHours | null)[];
+}
+
+export interface UpdateWeeklyHoursRequest {
+    hours: CreateMarketHoursRequest[];
 }

@@ -9,6 +9,7 @@ import { AdminPanel } from '@/features/instruments/components/AdminPanel';
 import { AdminInstrumentForm } from '@/features/instruments/components/AdminInstrumentForm';
 import { AdminMarketHoursForm } from '@/features/market/components/AdminMarketHoursForm';
 import { AdminMarketHolidayForm } from '@/features/market/components/AdminMarketHolidayForm';
+import { AdminManageHours } from '@/features/market/components/AdminManageHours';
 
 import { TelemetryProvider } from '@/shared/services/telemetry/TelemetryProvider';
 import { ProfilePage } from '@/features/profile/components/ProfilePage';
@@ -39,6 +40,7 @@ export function Router(): JSX.Element {
                         <Route path="/admin/instruments/new" element={<AdminInstrumentForm />} />
                         <Route path="/admin/instruments/edit/:id" element={<AdminInstrumentForm />} />
                         <Route path="/admin/market-hours" element={<AdminMarketHoursForm />} />
+                        <Route path="/admin/manage-hours" element={<AdminManageHours />} />
                         <Route path="/admin/market-holidays" element={<AdminMarketHolidayForm />} />
                     </Route>
                 </Routes>
