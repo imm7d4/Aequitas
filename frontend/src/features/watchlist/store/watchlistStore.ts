@@ -20,6 +20,7 @@ interface WatchlistState {
     closeSelectionDialog: () => void;
 
     fetchWatchlists: () => Promise<void>;
+    createWatchlist: (name: string) => Promise<string>;
     addInstrumentToWatchlist: (watchlistId: string, instrumentId: string) => Promise<void>;
     removeInstrumentFromWatchlist: (watchlistId: string, instrumentId: string) => Promise<void>;
     syncInstrumentInWatchlists: (instrumentId: string, selectedWatchlistIds: string[]) => Promise<void>;
@@ -54,6 +55,23 @@ export const useWatchlistStore = create<WatchlistState>((set, get) => ({
             }
         } catch (err: any) {
             set({ error: err.response?.data?.message || 'Failed to fetch watchlists' });
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    createWatchlist: async (name) => {
+        set({ isLoading: true, error: null });
+        try {
+            const data = await watchlistService.createWatchlist({ name });
+            // Refresh state
+            const watchlists = await watchlistService.getWatchlists();
+            set({ watchlists });
+            return data.id;
+        } catch (err: any) {
+            const message = err.response?.data?.message || 'Failed to create watchlist';
+            set({ error: message });
+            throw new Error(message);
         } finally {
             set({ isLoading: false });
         }

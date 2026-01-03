@@ -125,34 +125,36 @@ export const Sidebar: React.FC = () => {
             </Box>
 
             <Divider />
-
-            <Box
-                sx={{
-                    p: 2,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: 64,
-                    transition: theme.transitions.create(['padding', 'min-height'], {
-                        easing: theme.transitions.easing.sharp,
-                        duration: theme.transitions.duration.enteringScreen,
-                    }),
-                }}
-            >
-                {isSidebarOpen ? (
-                    <img
-                        src={logoFull}
-                        alt="Aequitas Logo"
-                        style={{ width: '100%', maxWidth: '160px', height: 'auto', display: 'block' }}
-                    />
-                ) : (
-                    <img
-                        src={logoIcon}
-                        alt="Aequitas Icon"
-                        style={{ width: '32px', height: '32px', display: 'block' }}
-                    />
-                )}
-            </Box>
+            <Tooltip title="Made with Love by Dharmesh 💚" placement="right" arrow>
+                <Box
+                    sx={{
+                        p: 2,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minHeight: 64,
+                        cursor: 'pointer',
+                        transition: theme.transitions.create(['padding', 'min-height'], {
+                            easing: theme.transitions.easing.sharp,
+                            duration: theme.transitions.duration.enteringScreen,
+                        }),
+                    }}
+                >
+                    {isSidebarOpen ? (
+                        <img
+                            src={logoFull}
+                            alt="Aequitas Logo"
+                            style={{ width: '100%', maxWidth: '160px', height: 'auto', display: 'block' }}
+                        />
+                    ) : (
+                        <img
+                            src={logoIcon}
+                            alt="Aequitas Icon"
+                            style={{ width: '32px', height: '32px', display: 'block' }}
+                        />
+                    )}
+                </Box>
+            </Tooltip>
         </Drawer>
     );
 };

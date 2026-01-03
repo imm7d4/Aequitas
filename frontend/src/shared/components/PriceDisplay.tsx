@@ -31,7 +31,7 @@ export const PriceDisplay: React.FC<PriceDisplayProps> = ({
             <Box sx={{ display: 'flex', alignItems: 'center', color }}>
                 {showIcon && <Icon sx={{ fontSize: '0.9em', mr: 0.5 }} />}
                 <Typography variant="caption" sx={{ fontWeight: 500 }}>
-                    {isPositive ? '+' : ''}{change.toFixed(2)} ({isPositive ? '+' : ''}{changePct.toFixed(2)}%)
+                    {isPositive ? '+' : isNegative ? '-' : ''}₹{Math.abs(change).toFixed(2)} ({isPositive ? '+' : ''}{changePct.toFixed(2)}%)
                 </Typography>
             </Box>
         </Box>
