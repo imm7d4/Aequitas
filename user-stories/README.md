@@ -10,7 +10,8 @@ user-stories/
 ├── phase-0-foundation/
 │   ├── US-0.1.1-user-registration.md
 │   ├── US-0.1.2-trading-account-creation.md
-│   └── US-0.1.3-authentication-session.md
+│   ├── US-0.1.3-authentication-session.md
+│   └── US-0.2.1-global-ui-shell.md
 ├── phase-1-market-instrument/
 ├── phase-2-watchlist-market-data/
 ├── phase-3-order-management/
@@ -86,44 +87,42 @@ So that [benefit]
 ## Phase Overview
 
 ### Phase 0 - Foundation
-Core user and account management, authentication
+Core user and account management, authentication, and global UI shell.
 
 ### Phase 1 - Market & Instrument Setup
-Define tradable instruments and market structure
+Define tradable instruments and market structure.
 
 ### Phase 2 - Watchlist & Market Data
-Customizable watchlists and real-time (simulated) price updates
+Customizable watchlists and real-time (simulated) price updates.
 
 ### Phase 3 - Order Management System (OMS)
-Order placement, modification, and cancellation
+Order placement, modification, and cancellation.
 
 ### Phase 4 - Risk Management
-Pre-trade risk checks and validations
+Pre-trade risk checks and validations.
 
 ### Phase 5 - Matching Engine (CORE)
-Order matching and trade execution
+Order matching and trade execution.
 
 ### Phase 6 - Settlement & Positions
-Post-trade settlement and position management
+Post-trade settlement and position management.
 
 ### Phase 7 - Order Book & Market Data
-Market transparency and data feeds
+Market transparency and data feeds.
 
 ### Phase 8 - Reporting & P&L
-Trade history and profit/loss calculations
+Trade history and profit/loss calculations.
 
 ### Phase 9 - Audit & Admin
-Compliance, audit logs, and administrative controls
+Compliance, audit logs, and administrative controls.
 
 ## Status Tracking
 
-Use this section to track overall progress:
-
 | Phase | Total Stories | Completed | In Progress | Not Started |
 |-------|--------------|-----------|-------------|-------------|
-| 0 | 3 | 3 | 0 | 0 |
+| 0 | 4 | 4 | 0 | 0 |
 | 1 | 2 | 2 | 0 | 0 |
-| 2 | 2 | 0 | 1 | 1 |
+| 2 | 2 | 2 | 0 | 0 |
 | 3 | 3 | 0 | 0 | 3 |
 | 4 | 3 | 0 | 0 | 3 |
 | 5 | 2 | 0 | 0 | 2 |
@@ -131,4 +130,3 @@ Use this section to track overall progress:
 | 7 | 2 | 0 | 0 | 2 |
 | 8 | 2 | 0 | 0 | 2 |
 | 9 | 2 | 0 | 0 | 2 |
-

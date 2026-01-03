@@ -16,14 +16,18 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Paper,
     Button,
     TablePagination,
+    IconButton,
+    Paper,
 } from '@mui/material';
 import GridViewIcon from '@mui/icons-material/GridView';
 import ListIcon from '@mui/icons-material/List';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
 import { useInstruments } from '../hooks/useInstruments';
 import { useInstrumentStore } from '../store/instrumentStore';
+import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
 import { InstrumentCard } from './InstrumentCard';
 import { InstrumentSearch } from './InstrumentSearch';
 import type { Instrument } from '../types/instrument.types';
@@ -47,6 +51,13 @@ export const InstrumentList = () => {
         setSearchResults,
         setPagination
     } = useInstrumentStore();
+    const {
+        watchlists,
+        activeWatchlistId,
+        addInstrumentToWatchlist,
+        removeInstrumentFromWatchlist,
+        openSelectionDialog
+    } = useWatchlistStore();
     const navigate = useNavigate();
 
     const sectors = useMemo(() => {
@@ -92,6 +103,30 @@ export const InstrumentList = () => {
         setSearchQuery('');
         setSearchResults([]);
         setPagination({ page: 0, rowsPerPage: 25 });
+    };
+
+    const handleWatchlistToggle = async (e: React.MouseEvent, instrument: Instrument) => {
+        e.stopPropagation();
+
+        if (watchlists.length > 1) {
+            openSelectionDialog(instrument);
+            return;
+        }
+
+        if (!activeWatchlistId) return;
+
+        const activeWatchlist = watchlists.find(w => w.id === activeWatchlistId);
+        const inWatchlist = activeWatchlist?.instrumentIds.includes(instrument.id) || false;
+
+        try {
+            if (inWatchlist) {
+                await removeInstrumentFromWatchlist(activeWatchlistId, instrument.id);
+            } else {
+                await addInstrumentToWatchlist(activeWatchlistId, instrument.id);
+            }
+        } catch (err) {
+            console.error('Failed to update watchlist', err);
+        }
     };
 
     const isFiltered = filters.exchange !== 'ALL' || filters.type !== 'ALL' || filters.sector !== 'ALL' || searchQuery !== '';
@@ -218,30 +253,47 @@ export const InstrumentList = () => {
                                 <TableCell>Type</TableCell>
                                 <TableCell>Sector</TableCell>
                                 <TableCell>ISIN</TableCell>
+                                <TableCell align="center">Watchlist</TableCell>
                                 <TableCell align="right">Action</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {displayInstruments.map((instrument: Instrument) => (
-                                <TableRow
-                                    key={instrument.id}
-                                    hover
-                                    sx={{ cursor: 'pointer' }}
-                                    onClick={() => navigate(`/instruments/${instrument.id}`)}
-                                >
-                                    <TableCell sx={{ fontWeight: 'bold' }}>{instrument.symbol}</TableCell>
-                                    <TableCell>{instrument.name}</TableCell>
-                                    <TableCell>{instrument.exchange}</TableCell>
-                                    <TableCell>{instrument.type}</TableCell>
-                                    <TableCell>{instrument.sector}</TableCell>
-                                    <TableCell sx={{ fontSize: '0.75rem', fontFamily: 'monospace' }}>
-                                        {instrument.isin}
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <Button size="small" variant="outlined">View</Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                            {displayInstruments.map((instrument: Instrument) => {
+                                const isStarred = watchlists.some(w => w.instrumentIds.includes(instrument.id));
+                                return (
+                                    <TableRow
+                                        key={instrument.id}
+                                        hover
+                                        sx={{ cursor: 'pointer' }}
+                                        onClick={() => navigate(`/instruments/${instrument.id}`)}
+                                    >
+                                        <TableCell sx={{ fontWeight: 'bold' }}>{instrument.symbol}</TableCell>
+                                        <TableCell>{instrument.name}</TableCell>
+                                        <TableCell>{instrument.exchange}</TableCell>
+                                        <TableCell>{instrument.type}</TableCell>
+                                        <TableCell>{instrument.sector}</TableCell>
+                                        <TableCell sx={{ fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                                            {instrument.isin}
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            <IconButton
+                                                size="small"
+                                                onClick={(e) => handleWatchlistToggle(e, instrument)}
+                                                color={isStarred ? "primary" : "default"}
+                                            >
+                                                {isStarred ? (
+                                                    <StarIcon fontSize="small" />
+                                                ) : (
+                                                    <StarBorderIcon fontSize="small" />
+                                                )}
+                                            </IconButton>
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            <Button size="small" variant="outlined">View</Button>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
                         </TableBody>
                     </Table>
                 </TableContainer>
@@ -254,7 +306,7 @@ export const InstrumentList = () => {
                 borderTop: '1px solid',
                 borderColor: 'divider',
                 zIndex: 1,
-                mx: -2, // Offset container padding if necessary, or just keep it simple
+                mx: -2,
                 px: 2
             }}>
                 <TablePagination

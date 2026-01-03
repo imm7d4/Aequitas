@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"aequitas/internal/services"
 	"aequitas/internal/utils"
@@ -90,4 +91,20 @@ func (c *MarketController) DeleteHoliday(w http.ResponseWriter, r *http.Request)
 	}
 
 	utils.RespondJSON(w, http.StatusOK, nil, "Holiday deleted")
+}
+func (c *MarketController) GetBatchPrices(w http.ResponseWriter, r *http.Request) {
+	idsParam := r.URL.Query().Get("ids")
+	if idsParam == "" {
+		utils.RespondError(w, http.StatusBadRequest, "Missing 'ids' query parameter")
+		return
+	}
+
+	ids := strings.Split(idsParam, ",")
+	prices, err := c.service.GetBatchPrices(ids)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, prices, "Batch prices retrieved")
 }

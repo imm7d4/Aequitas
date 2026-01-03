@@ -2,7 +2,7 @@
 
 **Epic:** EPIC 2.2 - Real-time Market Data  
 **Phase:** Phase 2 - Watchlist & Market Data  
-**Status:** Not Started
+**Status:** Completed
 
 ## User Story
 
@@ -12,12 +12,13 @@ So that I can **make informed trading decisions based on current market conditio
 
 ## Acceptance Criteria
 
-- [ ] View Last Traded Price (LTP) for instruments
-- [ ] View daily absolute and percentage change
-- [ ] View trading volume
-- [ ] Prices update periodically (e.g., every 5 seconds) without page refresh
-- [ ] Visual indicators for price movement (green for up, red for down)
-- [ ] Live data displayed on Dashboard, Watchlist, and Instrument Details pages
+- [x] View Last Traded Price (LTP) for instruments
+- [x] View daily absolute and percentage change
+- [x] View trading volume (simulated)
+- [x] Prices update periodically (every 3 seconds) without page refresh
+- [x] Visual indicators for price movement (green for up, red for down)
+- [x] Live data displayed on Dashboard, Watchlist, and Instrument Details pages
+- [x] Optimized batch polling for multiple instruments
 
 ## Technical Requirements
 
@@ -72,3 +73,4 @@ type MarketData struct {
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-01-03 | AI Assistant | Initial creation |
+| 2026-01-03 | AI Assistant | Implemented Phase 2 market data features, PricingService simulation, and polling hook |

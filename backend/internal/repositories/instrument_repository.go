@@ -108,7 +108,7 @@ func (r *InstrumentRepository) Search(query string) ([]*models.Instrument, error
 	}
 	defer cursor.Close(context.Background())
 
-	var instruments []*models.Instrument
+	instruments := make([]*models.Instrument, 0)
 	if err = cursor.All(context.Background(), &instruments); err != nil {
 		return nil, fmt.Errorf("failed to decode instruments: %w", err)
 	}
@@ -125,7 +125,7 @@ func (r *InstrumentRepository) FindAll(
 	}
 	defer cursor.Close(context.Background())
 
-	var instruments []*models.Instrument
+	instruments := make([]*models.Instrument, 0)
 	if err = cursor.All(context.Background(), &instruments); err != nil {
 		return nil, fmt.Errorf("failed to decode instruments: %w", err)
 	}

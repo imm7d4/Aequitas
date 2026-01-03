@@ -3,6 +3,7 @@ import type {
     MarketStatus,
     CreateMarketHoursRequest,
     CreateHolidayRequest,
+    MarketData,
 } from '../types/market.types';
 
 export const marketService = {
@@ -29,5 +30,10 @@ export const marketService = {
 
     async deleteHoliday(id: string): Promise<void> {
         await apiClient.delete(`/admin/market/holidays/${id}`);
+    },
+
+    async getBatchPrices(ids: string[]): Promise<MarketData[]> {
+        const response = await apiClient.get(`/market/prices?ids=${ids.join(',')}`);
+        return response.data.data;
     },
 };

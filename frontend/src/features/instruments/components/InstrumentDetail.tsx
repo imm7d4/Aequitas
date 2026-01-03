@@ -17,7 +17,6 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { instrumentService } from '../services/instrumentService';
 import { useAuth } from '@/features/auth';
 import type { Instrument } from '../types/instrument.types';
-import { MarketStatusBadge } from '@/features/market/components/MarketStatusBadge';
 
 export function InstrumentDetail() {
     const { id } = useParams<{ id: string }>();
@@ -78,14 +77,13 @@ export function InstrumentDetail() {
 
     return (
         <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box sx={{ mb: 3 }}>
                 <Button
                     startIcon={<ArrowBackIcon />}
                     onClick={() => navigate('/instruments')}
                 >
                     Back to Instruments
                 </Button>
-                <MarketStatusBadge />
             </Box>
 
             <Paper sx={{ p: 4, borderRadius: 2 }}>

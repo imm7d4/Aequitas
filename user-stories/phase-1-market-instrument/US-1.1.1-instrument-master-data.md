@@ -25,6 +25,8 @@ So that **users can search and trade stocks**
 - [x] **New:** State persistence for list view, filters, and search query across navigation
 - [x] **New:** Global reset for all filters and search query
 - [x] **New:** Client-side pagination (25, 50, 75, 100) with sticky bottom controls
+- [x] **New:** Admin management of Market Holidays (View/Delete)
+- [x] **New:** Dynamic status management in Admin instrument forms
 
 ## Technical Requirements
 

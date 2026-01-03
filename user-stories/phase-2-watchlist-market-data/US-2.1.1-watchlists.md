@@ -2,7 +2,7 @@
 
 **Epic:** EPIC 2.1 - Watchlist & Market Discovery  
 **Phase:** Phase 2 - Watchlist & Market Data  
-**Status:** Not Started
+**Status:** Completed
 
 ## User Story
 
@@ -12,13 +12,15 @@ So that I can **monitor specific stocks and assets efficiently**
 
 ## Acceptance Criteria
 
-- [ ] Create multiple watchlists with custom names
-- [ ] Add instruments to a watchlist (max 50 instruments per watchlist)
-- [ ] Remove instruments from a watchlist
-- [ ] Switch between different watchlists on the dashboard
-- [ ] Delete a watchlist (prevent deletion of the only watchlist)
-- [ ] List all instruments in the active watchlist with key metrics (Symbol, Name, Price, Change)
-- [ ] Perspective: Dashboard should remember the last viewed watchlist
+- [x] Create multiple watchlists with custom names
+- [x] Add instruments to a watchlist (max 50 instruments per watchlist)
+- [x] Remove instruments from a watchlist
+- [x] Switch between different watchlists on the dashboard
+- [x] Delete a watchlist (prevent deletion of the only watchlist)
+- [x] List all instruments in the active watchlist with key metrics (Symbol, Name, Price, Change)
+- [x] Dashboard remembers the last viewed watchlist
+- [x] **New:** Smart "Star" toggle that opens a selection dialog for multiple watchlists
+- [x] **New:** Support for syncing instruments across multiple watchlists simultaneously
 
 ## Technical Requirements
 
@@ -81,3 +83,4 @@ type Watchlist struct {
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-01-03 | AI Assistant | Initial creation |
+| 2026-01-03 | AI Assistant | Implemented Phase 2 requirements, added multi-watchlist selection dialog and sync logic |

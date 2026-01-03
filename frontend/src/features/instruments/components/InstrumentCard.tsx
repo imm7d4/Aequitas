@@ -1,5 +1,8 @@
-import { Card, CardContent, Typography, Chip, Box, Grid } from '@mui/material';
+import { useMemo } from 'react';
+import { Card, CardContent, Typography, Chip, Box, Grid, IconButton } from '@mui/material';
+import { Star as StarIcon, StarBorder as StarBorderIcon } from '@mui/icons-material';
 import type { Instrument } from '../types/instrument.types';
+import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
 
 interface InstrumentCardProps {
     instrument: Instrument;
@@ -7,6 +10,39 @@ interface InstrumentCardProps {
 }
 
 export const InstrumentCard = ({ instrument, onClick }: InstrumentCardProps) => {
+    const {
+        watchlists,
+        activeWatchlistId,
+        addInstrumentToWatchlist,
+        removeInstrumentFromWatchlist,
+        openSelectionDialog
+    } = useWatchlistStore();
+
+    const activeInWatchlist = useMemo(() => {
+        const active = watchlists.find((w) => w.id === activeWatchlistId);
+        return active?.instrumentIds.includes(instrument.id) || false;
+    }, [watchlists, activeWatchlistId, instrument.id]);
+
+    const handleWatchlistToggle = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+
+        if (watchlists.length > 1) {
+            openSelectionDialog(instrument);
+            return;
+        }
+
+        if (!activeWatchlistId) return;
+        try {
+            if (activeInWatchlist) {
+                await removeInstrumentFromWatchlist(activeWatchlistId, instrument.id);
+            } else {
+                await addInstrumentToWatchlist(activeWatchlistId, instrument.id);
+            }
+        } catch (err) {
+            console.error('Failed to update watchlist', err);
+        }
+    };
+
     const getStatusColor = () => {
         switch (instrument.status) {
             case 'ACTIVE':
@@ -20,6 +56,10 @@ export const InstrumentCard = ({ instrument, onClick }: InstrumentCardProps) => 
         }
     };
 
+    const isStarred = useMemo(() => {
+        return watchlists.some(w => w.instrumentIds.includes(instrument.id));
+    }, [watchlists, instrument.id]);
+
     return (
         <Card
             sx={{
@@ -31,9 +71,19 @@ export const InstrumentCard = ({ instrument, onClick }: InstrumentCardProps) => 
         >
             <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="h6" component="div">
-                        {instrument.symbol}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <IconButton
+                            size="small"
+                            onClick={handleWatchlistToggle}
+                            color={isStarred ? 'primary' : 'default'}
+                            sx={{ mr: 1, p: 0.5 }}
+                        >
+                            {isStarred ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
+                        </IconButton>
+                        <Typography variant="h6" component="div">
+                            {instrument.symbol}
+                        </Typography>
+                    </Box>
                     <Chip
                         label={instrument.status}
                         color={getStatusColor()}

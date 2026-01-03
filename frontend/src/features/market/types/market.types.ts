@@ -42,3 +42,17 @@ export interface CreateHolidayRequest {
     date: string;
     name: string;
 }
+
+export interface MarketData {
+    instrumentId: string;
+    symbol: string;
+    lastPrice: number;
+    change: number;
+    changePct: number;
+    prevClose: number;
+    open: number;
+    high: number;
+    low: number;
+    volume: number;
+    updatedAt: string;
+}

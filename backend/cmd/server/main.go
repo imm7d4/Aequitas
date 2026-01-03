@@ -57,17 +57,26 @@ func main() {
 	tradingAccountRepo := repositories.NewTradingAccountRepository(db)
 	instrumentRepo := repositories.NewInstrumentRepository(db)
 	marketRepo := repositories.NewMarketRepository(db)
+	watchlistRepo := repositories.NewWatchlistRepository(db)
+	marketDataRepo := repositories.NewMarketDataRepository(db)
 
 	// Initialize services
 	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo)
 	authService := services.NewAuthService(userRepo, tradingAccountService, cfg)
 	instrumentService := services.NewInstrumentService(instrumentRepo)
-	marketService := services.NewMarketService(marketRepo)
+	marketService := services.NewMarketService(marketRepo, marketDataRepo)
+	watchlistService := services.NewWatchlistService(watchlistRepo, instrumentRepo)
+
+	// Initialize pricing engine
+	pricingService := services.NewPricingService(instrumentRepo, marketDataRepo)
+	pricingService.Start()
+	defer pricingService.Stop()
 
 	// Initialize controllers
 	authController := controllers.NewAuthController(authService)
 	instrumentController := controllers.NewInstrumentController(instrumentService)
 	marketController := controllers.NewMarketController(marketService)
+	watchlistController := controllers.NewWatchlistController(watchlistService)
 
 	// Set up router
 	router := mux.NewRouter()
@@ -95,6 +104,16 @@ func main() {
 
 	// Market routes (public)
 	protected.HandleFunc("/market/status/{exchange}", marketController.GetMarketStatus).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/market/prices", marketController.GetBatchPrices).Methods("GET", "OPTIONS")
+
+	// Watchlist routes
+	protected.HandleFunc("/watchlists", watchlistController.GetUserWatchlists).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/watchlists", watchlistController.CreateWatchlist).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/watchlists/{id}", watchlistController.RenameWatchlist).Methods("PUT", "OPTIONS")
+	protected.HandleFunc("/watchlists/{id}", watchlistController.DeleteWatchlist).Methods("DELETE", "OPTIONS")
+	protected.HandleFunc("/watchlists/{id}/default", watchlistController.SetDefaultWatchlist).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/watchlists/{id}/instruments/{instrumentId}", watchlistController.AddToWatchlist).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/watchlists/{id}/instruments/{instrumentId}", watchlistController.RemoveFromWatchlist).Methods("DELETE", "OPTIONS")
 
 	// Admin routes (require admin role)
 	admin := protected.PathPrefix("/admin").Subrouter()

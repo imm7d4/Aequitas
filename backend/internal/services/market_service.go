@@ -10,11 +10,22 @@ import (
 )
 
 type MarketService struct {
-	repo *repositories.MarketRepository
+	repo           *repositories.MarketRepository
+	marketDataRepo *repositories.MarketDataRepository
 }
 
-func NewMarketService(repo *repositories.MarketRepository) *MarketService {
-	return &MarketService{repo: repo}
+func NewMarketService(
+	repo *repositories.MarketRepository,
+	marketDataRepo *repositories.MarketDataRepository,
+) *MarketService {
+	return &MarketService{
+		repo:           repo,
+		marketDataRepo: marketDataRepo,
+	}
+}
+
+func (s *MarketService) GetBatchPrices(instrumentIDs []string) ([]*models.MarketData, error) {
+	return s.marketDataRepo.FindByInstrumentIDs(instrumentIDs)
 }
 
 type CreateMarketHoursRequest struct {

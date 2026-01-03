@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { instrumentService } from '../services/instrumentService';
 import { useInstrumentStore } from '../store/instrumentStore';
 
@@ -17,7 +17,7 @@ export const useInstruments = () => {
         clearError,
     } = useInstrumentStore();
 
-    const fetchInstruments = async () => {
+    const fetchInstruments = useCallback(async () => {
         setLoading(true);
         clearError();
         try {
@@ -28,9 +28,9 @@ export const useInstruments = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [setLoading, clearError, setInstruments, setError]);
 
-    const searchInstruments = async (query: string) => {
+    const searchInstruments = useCallback(async (query: string) => {
         if (!query.trim()) {
             setSearchResults([]);
             return;
@@ -46,9 +46,9 @@ export const useInstruments = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [setLoading, clearError, setSearchResults, setError]);
 
-    const getInstrumentById = async (id: string) => {
+    const getInstrumentById = useCallback(async (id: string) => {
         setLoading(true);
         clearError();
         try {
@@ -59,11 +59,11 @@ export const useInstruments = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [setLoading, clearError, setSelectedInstrument, setError]);
 
     useEffect(() => {
         fetchInstruments();
-    }, []);
+    }, [fetchInstruments]);
 
     return {
         instruments,
