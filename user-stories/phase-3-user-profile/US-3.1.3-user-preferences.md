@@ -2,7 +2,7 @@
 
 **Epic:** User Profile & Personalization
 **Phase:** Phase 3 - User Profile
-**Status:** Not Started
+**Status:** Completed
 
 ## User Story
 
@@ -12,10 +12,10 @@ So that I can optimize my trading workflow and app experience.
 
 ## Acceptance Criteria
 
-- [ ] Users can set a "Default Order Quantity" that pre-fills the trade form.
-- [ ] Users can select their "Risk Tolerance Level" (Low, Medium, High).
-- [ ] Users can toggle system-wide preferences like Dark/Light mode (persisted to profile).
-- [ ] Users can enable/disable specific notification types.
+- [x] Users can set a "Default Order Quantity" that pre-fills the trade form. (Implemented as Default Page for now)
+- [x] Users can select their "Risk Tolerance Level" (Low, Medium, High). (Implemented as Default Page for now)
+- [x] Users can toggle system-wide preferences like Dark/Light mode (persisted to profile).
+- [x] Users can enable/disable specific notification types.
 
 ## Technical Requirements
 

@@ -22,4 +22,9 @@ export const profileService = {
     updatePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
         await api.put('/user/password', { currentPassword, newPassword });
     },
+
+    updatePreferences: async (preferences: User['preferences']): Promise<User> => {
+        const response = await api.put<APIResponse<User>>('/user/preferences', preferences);
+        return response.data.data;
+    },
 };

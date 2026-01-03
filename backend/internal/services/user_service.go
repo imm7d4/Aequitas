@@ -80,3 +80,22 @@ func (s *UserService) UpdatePassword(userID string, currentPassword, newPassword
 	user.Password = hashedPassword
 	return s.userRepo.Update(user)
 }
+
+// UpdatePreferences allows a user to customize their platform experience
+func (s *UserService) UpdatePreferences(userID string, prefs models.UserPreferences) (*models.User, error) {
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	user.Preferences = prefs
+	err = s.userRepo.Update(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}

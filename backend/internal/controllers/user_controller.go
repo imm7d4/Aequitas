@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"aequitas/internal/middleware"
+	"aequitas/internal/models"
 	"aequitas/internal/services"
 	"aequitas/internal/utils"
 )
@@ -111,4 +112,27 @@ func (c *UserController) UpdatePassword(w http.ResponseWriter, r *http.Request) 
 	}
 
 	utils.RespondJSON(w, http.StatusOK, nil, "Password updated successfully")
+}
+
+// UpdatePreferences handles PUT /api/user/preferences
+func (c *UserController) UpdatePreferences(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var req models.UserPreferences
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	user, err := c.userService.UpdatePreferences(userID, req)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, user, "Preferences updated successfully")
 }

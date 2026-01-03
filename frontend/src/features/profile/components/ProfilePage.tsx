@@ -17,10 +17,12 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import PersonIcon from '@mui/icons-material/Person';
 import SecurityIcon from '@mui/icons-material/Security';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { useAuth } from '@/features/auth';
 import { profileService } from '../services/profileService';
 import { ProfileEditForm } from './ProfileEditForm';
 import { SecuritySettings } from './SecuritySettings';
+import { UserPreferences } from './UserPreferences';
 import type { User } from '@/features/auth/types';
 
 export function ProfilePage() {
@@ -67,10 +69,11 @@ export function ProfilePage() {
                 <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
                     <Tab icon={<PersonIcon />} iconPosition="start" label="Personal Identity" />
                     <Tab icon={<SecurityIcon />} iconPosition="start" label="Account Security" />
+                    <Tab icon={<SettingsIcon />} iconPosition="start" label="Preferences" />
                 </Tabs>
             </Box>
 
-            {activeTab === 0 ? (
+            {activeTab === 0 && (
                 <Paper sx={{ p: 4, borderRadius: 2, mb: 4 }}>
                     {isEditing ? (
                         <ProfileEditForm
@@ -152,9 +155,9 @@ export function ProfilePage() {
                         </Box>
                     )}
                 </Paper>
-            ) : (
-                <SecuritySettings user={user} />
             )}
+            {activeTab === 1 && <SecuritySettings user={user} />}
+            {activeTab === 2 && <UserPreferences user={user} onUpdate={setUser} />}
 
             <Snackbar
                 open={!!successMessage}

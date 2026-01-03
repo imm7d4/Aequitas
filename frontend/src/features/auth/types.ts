@@ -1,3 +1,9 @@
+export interface UserPreferences {
+    theme: string;
+    defaultPage: string;
+    notificationsEnabled: boolean;
+}
+
 export interface User {
     id: string;
     email: string;
@@ -7,6 +13,7 @@ export interface User {
     avatar?: string;
     lastLoginAt?: string;
     lastLoginIP?: string;
+    preferences: UserPreferences;
     isAdmin: boolean;
     status: 'ACTIVE' | 'INACTIVE';
     createdAt: string;
