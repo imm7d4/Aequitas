@@ -13,9 +13,12 @@ import {
     Alert
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { instrumentService } from '../services/instrumentService';
 import { useAuth } from '@/features/auth';
+import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
 import type { Instrument } from '../types/instrument.types';
 
 export function InstrumentDetail() {
@@ -25,6 +28,40 @@ export function InstrumentDetail() {
     const [instrument, setInstrument] = useState<Instrument | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const {
+        watchlists,
+        activeWatchlistId,
+        addInstrumentToWatchlist,
+        removeInstrumentFromWatchlist,
+        openSelectionDialog
+    } = useWatchlistStore();
+
+    const isStarred = instrument ? watchlists.some(w => w.instrumentIds.includes(instrument.id)) : false;
+
+    const handleWatchlistToggle = async () => {
+        if (!instrument) return;
+
+        if (watchlists.length > 1) {
+            openSelectionDialog(instrument);
+            return;
+        }
+
+        if (!activeWatchlistId) return;
+
+        try {
+            const activeWatchlist = watchlists.find(w => w.id === activeWatchlistId);
+            const inActiveWatchlist = activeWatchlist?.instrumentIds.includes(instrument.id) || false;
+
+            if (inActiveWatchlist) {
+                await removeInstrumentFromWatchlist(activeWatchlistId, instrument.id);
+            } else {
+                await addInstrumentToWatchlist(activeWatchlistId, instrument.id);
+            }
+        } catch (err) {
+            console.error('Failed to update watchlist', err);
+        }
+    };
 
     useEffect(() => {
         const fetchInstrument = async () => {
@@ -171,9 +208,14 @@ export function InstrumentDetail() {
                 <Button variant="contained" size="large" fullWidth>
                     Buy {instrument.symbol}
                 </Button>
-                {/* Watchlist button etc */}
-                <Button variant="outlined" size="large" fullWidth>
-                    Add to Watchlist
+                <Button
+                    variant="outlined"
+                    size="large"
+                    fullWidth
+                    startIcon={isStarred ? <StarIcon color="primary" /> : <StarBorderIcon />}
+                    onClick={handleWatchlistToggle}
+                >
+                    {isStarred ? 'Remove from Watchlist' : 'Add to Watchlist'}
                 </Button>
             </Box>
 
