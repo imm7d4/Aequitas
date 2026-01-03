@@ -101,18 +101,46 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
 
     useEffect(() => {
         if (candleSeriesRef.current && volumeSeriesRef.current && candles.length > 0) {
-            const chartData = candles.map(c => ({
-                time: Math.floor(new Date(c.time).getTime() / 1000) as any,
-                open: c.open,
-                high: c.high,
-                low: c.low,
-                close: c.close,
+            const sanitizedData = candles
+                .filter(c => {
+                    const time = new Date(c.time).getTime();
+                    const isValidTime = !isNaN(time);
+                    const hasData = c.open !== null && c.open !== undefined &&
+                        c.high !== null && c.high !== undefined &&
+                        c.low !== null && c.low !== undefined &&
+                        c.close !== null && c.close !== undefined;
+
+                    if (!isValidTime || !hasData) {
+                        console.warn('Skipping invalid candle data:', c);
+                        return false;
+                    }
+                    return true;
+                })
+                .map(c => ({
+                    time: Math.floor(new Date(c.time).getTime() / 1000) as any,
+                    open: Number(c.open),
+                    high: Number(c.high),
+                    low: Number(c.low),
+                    close: Number(c.close),
+                    volume: Number(c.volume || 0),
+                }))
+                .sort((a, b) => a.time - b.time);
+
+            // Remove duplicate timestamps (lightweight-charts doesn't allow them)
+            const uniqueData = sanitizedData.filter((item, index, self) =>
+                index === 0 || item.time !== self[index - 1].time
+            );
+
+            if (uniqueData.length === 0) return;
+
+            const chartData = uniqueData.map(({ time, open, high, low, close }) => ({
+                time, open, high, low, close
             }));
 
-            const volumeData = candles.map(c => ({
-                time: Math.floor(new Date(c.time).getTime() / 1000) as any,
-                value: c.volume,
-                color: c.close >= c.open ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)',
+            const volumeData = uniqueData.map(({ time, open, close, volume }) => ({
+                time,
+                value: volume,
+                color: close >= open ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)',
             }));
 
             candleSeriesRef.current.setData(chartData);

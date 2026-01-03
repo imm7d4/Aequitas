@@ -13,6 +13,7 @@ import { AdminManageHours } from '@/features/market/components/AdminManageHours'
 
 import { TelemetryProvider } from '@/shared/services/telemetry/TelemetryProvider';
 import { ProfilePage } from '@/features/profile/components/ProfilePage';
+import { NotFound } from '@/shared/components/NotFound';
 
 export function Router(): JSX.Element {
     return (
@@ -43,6 +44,9 @@ export function Router(): JSX.Element {
                         <Route path="/admin/manage-hours" element={<AdminManageHours />} />
                         <Route path="/admin/market-holidays" element={<AdminMarketHolidayForm />} />
                     </Route>
+
+                    {/* 404 Route */}
+                    <Route path="*" element={<NotFound />} />
                 </Routes>
             </TelemetryProvider>
         </BrowserRouter>
