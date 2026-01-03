@@ -18,14 +18,14 @@ type UserRepository struct {
 
 func NewUserRepository(db *mongo.Database) *UserRepository {
 	collection := db.Collection("users")
-	
+
 	// Create unique index on email
 	indexModel := mongo.IndexModel{
 		Keys:    bson.D{{Key: "email", Value: 1}},
 		Options: options.Index().SetUnique(true),
 	}
 	collection.Indexes().CreateOne(context.Background(), indexModel)
-	
+
 	return &UserRepository{collection: collection}
 }
 
@@ -33,12 +33,12 @@ func NewUserRepository(db *mongo.Database) *UserRepository {
 func (r *UserRepository) Create(user *models.User) (*models.User, error) {
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
-	
+
 	result, err := r.collection.InsertOne(context.Background(), user)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	user.ID = result.InsertedID.(primitive.ObjectID)
 	return user, nil
 }
@@ -50,11 +50,11 @@ func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 		context.Background(),
 		bson.M{"email": email},
 	).Decode(&user)
-	
+
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
-	
+
 	return &user, err
 }
 
@@ -64,16 +64,28 @@ func (r *UserRepository) FindByID(id string) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var user models.User
 	err = r.collection.FindOne(
 		context.Background(),
 		bson.M{"_id": objectID},
 	).Decode(&user)
-	
+
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
-	
+
 	return &user, err
+}
+
+// Update updates an existing user
+func (r *UserRepository) Update(user *models.User) error {
+	user.UpdatedAt = time.Now()
+
+	_, err := r.collection.ReplaceOne(
+		context.Background(),
+		bson.M{"_id": user.ID},
+		user,
+	)
+	return err
 }

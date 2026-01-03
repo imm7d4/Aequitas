@@ -1,6 +1,10 @@
 export interface User {
     id: string;
     email: string;
+    fullName?: string;
+    displayName?: string;
+    bio?: string;
+    avatar?: string;
     isAdmin: boolean;
     status: 'ACTIVE' | 'INACTIVE';
     createdAt: Date;

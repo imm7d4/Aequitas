@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Typography,
     Avatar,
     Menu,
     MenuItem,
+    Divider,
+    ListItemIcon,
 } from '@mui/material';
 import {
     AccountCircle,
-    Settings,
-    Logout,
+    Settings as SettingsIcon,
+    Logout as LogoutIcon,
     KeyboardArrowDown as ExpandIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/features/auth';
@@ -18,6 +21,7 @@ import { useTelemetry } from '@/shared/services/telemetry/TelemetryProvider';
 export const UserProfile: React.FC = () => {
     const { user, logout } = useAuth();
     const { track } = useTelemetry();
+    const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -33,67 +37,85 @@ export const UserProfile: React.FC = () => {
         setAnchorEl(null);
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        handleMenuClose();
         track({
             event_name: 'profile.logout_clicked',
             event_version: 'v1',
             classification: 'USER_ACTION',
         });
-        handleMenuClose();
-        logout();
+        await logout();
     };
 
+    const handleProfile = () => {
+        handleMenuClose();
+        navigate('/profile');
+    };
+
+    const userInitial = user?.displayName?.[0] || user?.email?.[0]?.toUpperCase() || 'U';
+    const emailPrefix = user?.email?.split('@')[0] || 'User';
+    const displayName = user?.displayName || emailPrefix;
+
     return (
-        <>
+        <Box>
             <Box
+                onClick={handleProfileMenuOpen}
                 sx={{
-                    ml: 2,
                     display: 'flex',
                     alignItems: 'center',
+                    gap: 1.5,
                     cursor: 'pointer',
-                    p: 0.5,
-                    pr: 1,
+                    px: 1.5,
+                    py: 0.75,
                     borderRadius: 2,
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                     '&:hover': {
                         bgcolor: 'action.hover',
-                        '& .profile-arrow': {
-                            transform: 'translateY(2px)'
-                        }
                     }
                 }}
-                onClick={handleProfileMenuOpen}
             >
                 <Avatar
+                    src={user?.avatar}
                     sx={{
                         width: 36,
                         height: 36,
-                        bgcolor: 'primary.main',
-                        fontWeight: 800,
+                        background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
                         fontSize: '0.9rem',
+                        fontWeight: 800,
                         boxShadow: '0 2px 8px rgba(25, 118, 210, 0.25)',
-                        mr: 1.5,
-                        border: '2px solid transparent',
-                        backgroundClip: 'padding-box',
-                        transition: 'transform 0.2s',
+                        border: '2px solid rgba(25, 118, 210, 0.1)',
                     }}
                 >
-                    {user?.email?.charAt(0).toUpperCase() || 'U'}
+                    {userInitial}
                 </Avatar>
-                <Box sx={{ mr: 1, textAlign: 'left', display: { xs: 'none', md: 'block' } }}>
-                    <Typography variant="body2" sx={{ fontWeight: 700, lineHeight: 1.2, color: 'text.primary' }}>
-                        {user?.email?.split('@')[0] || 'User'}
+                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                    <Typography
+                        variant="subtitle2"
+                        sx={{
+                            lineHeight: 1.2,
+                            fontWeight: 700,
+                            color: 'text.primary'
+                        }}
+                    >
+                        {displayName}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500, display: 'block' }}>
-                        Master Trader
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            color: 'primary.main',
+                            fontWeight: 500,
+                            letterSpacing: '0.02em'
+                        }}
+                    >
+                        {user?.isAdmin ? 'Administrator' : 'Master Trader'}
                     </Typography>
                 </Box>
                 <ExpandIcon
-                    className="profile-arrow"
                     sx={{
-                        fontSize: 18,
-                        color: 'text.disabled',
-                        transition: 'transform 0.2s ease'
+                        fontSize: 20,
+                        color: 'text.secondary',
+                        transition: 'transform 0.2s',
+                        transform: Boolean(anchorEl) ? 'rotate(180deg)' : 'none'
                     }}
                 />
             </Box>
@@ -102,22 +124,51 @@ export const UserProfile: React.FC = () => {
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleMenuClose}
+                onClick={handleMenuClose}
+                PaperProps={{
+                    elevation: 3,
+                    sx: {
+                        mt: 1.5,
+                        minWidth: 180,
+                        borderRadius: 2,
+                        overflow: 'visible',
+                        '&:before': {
+                            content: '""',
+                            display: 'block',
+                            position: 'absolute',
+                            top: 0,
+                            right: 14,
+                            width: 10,
+                            height: 10,
+                            bgcolor: 'background.paper',
+                            transform: 'translateY(-50%) rotate(45deg)',
+                            zIndex: 0,
+                        },
+                    },
+                }}
                 transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                PaperProps={{
-                    sx: { mt: 1.5, minWidth: 180, boxShadow: 3 }
-                }}
             >
-                <MenuItem onClick={handleMenuClose}>
-                    <AccountCircle sx={{ mr: 1.5 }} /> Profile
+                <MenuItem onClick={handleProfile}>
+                    <ListItemIcon>
+                        <AccountCircle />
+                    </ListItemIcon>
+                    Profile
                 </MenuItem>
                 <MenuItem onClick={handleMenuClose}>
-                    <Settings sx={{ mr: 1.5 }} /> Settings
+                    <ListItemIcon>
+                        <SettingsIcon fontSize="small" />
+                    </ListItemIcon>
+                    Settings
                 </MenuItem>
+                <Divider />
                 <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
-                    <Logout sx={{ mr: 1.5 }} /> Logout
+                    <ListItemIcon>
+                        <LogoutIcon fontSize="small" color="error" />
+                    </ListItemIcon>
+                    Logout
                 </MenuItem>
             </Menu>
-        </>
+        </Box>
     );
 };

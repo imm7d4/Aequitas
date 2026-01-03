@@ -45,7 +45,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     isLoading: true, // Start as true during initialization
     error: null,
 
-    setUser: (user) => set({ user, isAuthenticated: !!user }),
+    setUser: (user) => {
+        if (user) {
+            tokenStorage.setUser(JSON.stringify(user));
+        } else {
+            tokenStorage.clear();
+        }
+        set({ user, isAuthenticated: !!user });
+    },
     setToken: (token) => set({ token }),
     setLoading: (isLoading) => set({ isLoading }),
     setError: (error) => set({ error }),

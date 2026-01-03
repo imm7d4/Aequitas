@@ -68,6 +68,7 @@ func main() {
 	marketService := services.NewMarketService(marketRepo, marketDataRepo)
 	watchlistService := services.NewWatchlistService(watchlistRepo, instrumentRepo)
 	telemetryService := services.NewTelemetryService(telemetryRepo)
+	userService := services.NewUserService(userRepo)
 
 	// Initialize pricing engine
 	pricingService := services.NewPricingService(instrumentRepo, marketDataRepo)
@@ -80,6 +81,7 @@ func main() {
 	marketController := controllers.NewMarketController(marketService)
 	watchlistController := controllers.NewWatchlistController(watchlistService)
 	telemetryController := controllers.NewTelemetryController(telemetryService)
+	userController := controllers.NewUserController(userService)
 
 	// Set up router
 	router := mux.NewRouter()
@@ -120,6 +122,10 @@ func main() {
 
 	// Telemetry routes
 	protected.HandleFunc("/telemetry", telemetryController.IngestTelemetry).Methods("POST", "OPTIONS")
+
+	// User Profile routes
+	protected.HandleFunc("/user/profile", userController.GetProfile).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/user/profile", userController.UpdateProfile).Methods("PUT", "OPTIONS")
 
 	// Admin routes (require admin role)
 	admin := protected.PathPrefix("/admin").Subrouter()
