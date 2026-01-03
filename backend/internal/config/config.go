@@ -30,9 +30,20 @@ func parseAllowedOrigins(origins string) []string {
 	if origins == "" {
 		return []string{"http://localhost:5173"}
 	}
-	// Simple split by comma
-	// For production, we can use strings.Split and trim space
-	return strings.Split(origins, ",")
+
+	parts := strings.Split(origins, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		trimmed := strings.TrimSpace(p)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+
+	if len(result) == 0 {
+		return []string{"http://localhost:5173"}
+	}
+	return result
 }
 
 func getEnv(key, defaultValue string) string {
