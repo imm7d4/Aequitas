@@ -14,13 +14,18 @@ user-stories/
 │   └── US-0.2.1-global-ui-shell.md
 ├── phase-1-market-instrument/
 ├── phase-2-watchlist-market-data/
-├── phase-3-order-management/
-├── phase-4-risk-management/
-├── phase-5-matching-engine/
-├── phase-6-settlement-positions/
-├── phase-7-orderbook-marketdata/
-├── phase-8-reporting-pnl/
-└── phase-9-audit-admin/
+├── phase-3-user-profile/
+│   ├── US-3.1.1-identity-branding.md
+│   ├── US-3.1.2-account-security.md
+│   ├── US-3.1.3-user-preferences.md
+│   └── US-3.1.4-account-finances.md
+├── phase-4-order-management/
+├── phase-5-risk-management/
+├── phase-6-matching-engine/
+├── phase-7-settlement-positions/
+├── phase-8-orderbook-marketdata/
+├── phase-9-reporting-pnl/
+└── phase-10-audit-admin/
 ```
 
 ## User Story Template
@@ -95,25 +100,28 @@ Define tradable instruments and market structure.
 ### Phase 2 - Watchlist & Market Data
 Customizable watchlists and real-time (simulated) price updates.
 
-### Phase 3 - Order Management System (OMS)
+### Phase 3 - User Profile & Personalization
+Personal identity management, account security, and trading preferences.
+
+### Phase 4 - Order Management System (OMS)
 Order placement, modification, and cancellation.
 
-### Phase 4 - Risk Management
+### Phase 5 - Risk Management
 Pre-trade risk checks and validations.
 
-### Phase 5 - Matching Engine (CORE)
+### Phase 6 - Matching Engine (CORE)
 Order matching and trade execution.
 
-### Phase 6 - Settlement & Positions
+### Phase 7 - Settlement & Positions
 Post-trade settlement and position management.
 
-### Phase 7 - Order Book & Market Data
+### Phase 8 - Order Book & Market Data
 Market transparency and data feeds.
 
-### Phase 8 - Reporting & P&L
+### Phase 9 - Reporting & P&L
 Trade history and profit/loss calculations.
 
-### Phase 9 - Audit & Admin
+### Phase 10 - Audit & Admin
 Compliance, audit logs, and administrative controls.
 
 ## Status Tracking
@@ -123,10 +131,11 @@ Compliance, audit logs, and administrative controls.
 | 0 | 4 | 4 | 0 | 0 |
 | 1 | 2 | 2 | 0 | 0 |
 | 2 | 2 | 2 | 0 | 0 |
-| 3 | 3 | 0 | 0 | 3 |
+| 3 | 4 | 0 | 0 | 4 |
 | 4 | 3 | 0 | 0 | 3 |
-| 5 | 2 | 0 | 0 | 2 |
-| 6 | 3 | 0 | 0 | 3 |
-| 7 | 2 | 0 | 0 | 2 |
+| 5 | 3 | 0 | 0 | 3 |
+| 6 | 2 | 0 | 0 | 2 |
+| 7 | 3 | 0 | 0 | 3 |
 | 8 | 2 | 0 | 0 | 2 |
 | 9 | 2 | 0 | 0 | 2 |
+| 10 | 2 | 0 | 0 | 2 |
