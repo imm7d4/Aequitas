@@ -1,6 +1,9 @@
 package middleware
 
 import (
+	"bufio"
+	"errors"
+	"net"
 	"net/http"
 )
 
@@ -27,6 +30,14 @@ func (w *corsResponseWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
+func (w *corsResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hijacker, ok := w.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, errors.New("underlying ResponseWriter does not implement http.Hijacker")
+	}
+	return hijacker.Hijack()
+}
+
 // CORS middleware handles Cross-Origin Resource Sharing
 func CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +49,7 @@ func CORS(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		
+
 		// Wrap the ResponseWriter to ensure CORS headers are always set
 		wrapped := &corsResponseWriter{ResponseWriter: w}
 		next.ServeHTTP(wrapped, r)

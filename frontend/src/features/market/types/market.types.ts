@@ -65,3 +65,17 @@ export interface WeeklyHoursResponse {
 export interface UpdateWeeklyHoursRequest {
     hours: CreateMarketHoursRequest[];
 }
+
+export type CandleInterval = '1m' | '5m' | '15m' | '1h' | '1d';
+
+export interface Candle {
+    id?: string;
+    instrumentId: string;
+    interval: CandleInterval;
+    time: string;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
+    volume: number;
+}

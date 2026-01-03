@@ -12,6 +12,7 @@ import (
 type PricingService struct {
 	instrumentRepo *repositories.InstrumentRepository
 	marketDataRepo *repositories.MarketDataRepository
+	candleBuilder  *CandleBuilder
 	stopChan       chan struct{}
 	rng            *rand.Rand
 }
@@ -19,12 +20,14 @@ type PricingService struct {
 func NewPricingService(
 	instrumentRepo *repositories.InstrumentRepository,
 	marketDataRepo *repositories.MarketDataRepository,
+	candleBuilder *CandleBuilder,
 ) *PricingService {
 	// Create a new random source with current time seed for varied randomness
 	source := rand.NewSource(time.Now().UnixNano())
 	return &PricingService{
 		instrumentRepo: instrumentRepo,
 		marketDataRepo: marketDataRepo,
+		candleBuilder:  candleBuilder,
 		stopChan:       make(chan struct{}),
 		rng:            rand.New(source),
 	}
@@ -127,6 +130,11 @@ func (s *PricingService) simulatePrices() {
 		// Simulate volume changes (small increments)
 		volumeIncrease := int64(s.rng.Intn(10000))
 		data.Volume += volumeIncrease
+
+		// Broadcast tick to candle builder
+		if s.candleBuilder != nil {
+			s.candleBuilder.OnPriceTick(inst.ID, data.LastPrice, volumeIncrease)
+		}
 
 		if err := s.marketDataRepo.Upsert(data); err != nil {
 			log.Printf("Pricing engine error: failed to update %s: %v", inst.Symbol, err)

@@ -21,6 +21,7 @@ import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
 import { useMarketData } from '@/features/market/hooks/useMarketData';
 import { accountService } from '@/features/profile/services/accountService';
 import { TradePanel } from '@/features/trading/components/TradePanel';
+import { StockChart } from '@/features/market/components/StockChart';
 import type { Instrument } from '../types/instrument.types';
 
 export function InstrumentDetail() {
@@ -151,6 +152,11 @@ export function InstrumentDetail() {
 
             <Grid container spacing={3}>
                 <Grid item xs={12} md={7}>
+                    {/* Chart Section */}
+                    <Box sx={{ mb: 3 }}>
+                        <StockChart instrumentId={instrument.id} symbol={instrument.symbol} />
+                    </Box>
+
                     <Paper sx={{ p: 3, borderRadius: 2 }}>
                         {/* Header with Symbol and Price */}
                         <Box sx={{ mb: 3 }}>

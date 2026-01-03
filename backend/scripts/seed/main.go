@@ -96,7 +96,7 @@ func seedMarketHours(repo *repositories.MarketRepository) error {
 			MarketClose:     "15:30",
 			PostMarketStart: "15:30",
 			PostMarketEnd:   "16:00",
-			IsHoliday:       false,
+			IsClosed:        false,
 		}
 
 		if err := repo.CreateMarketHours(hours); err != nil {
@@ -115,7 +115,7 @@ func seedMarketHours(repo *repositories.MarketRepository) error {
 			MarketClose:     "15:30",
 			PostMarketStart: "15:30",
 			PostMarketEnd:   "16:00",
-			IsHoliday:       false,
+			IsClosed:        false,
 		}
 
 		if err := repo.CreateMarketHours(hours); err != nil {

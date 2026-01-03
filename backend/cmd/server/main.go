@@ -15,8 +15,10 @@ import (
 	"aequitas/internal/config"
 	"aequitas/internal/controllers"
 	"aequitas/internal/middleware"
+	"aequitas/internal/models"
 	"aequitas/internal/repositories"
 	"aequitas/internal/services"
+	"aequitas/internal/websocket"
 )
 
 func main() {
@@ -62,6 +64,7 @@ func main() {
 	telemetryRepo := repositories.NewTelemetryRepository(db)
 	transactionRepo := repositories.NewTransactionRepository(db)
 	orderRepo := repositories.NewOrderRepository(db)
+	candleRepo := repositories.NewCandleRepository(db)
 
 	// Initialize services
 	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo, transactionRepo)
@@ -72,9 +75,21 @@ func main() {
 	telemetryService := services.NewTelemetryService(telemetryRepo)
 	userService := services.NewUserService(userRepo)
 	orderService := services.NewOrderService(orderRepo, instrumentRepo, tradingAccountRepo, marketDataRepo)
+	candleService := services.NewCandleService(candleRepo)
+	candleBuilder := services.NewCandleBuilder(candleRepo)
+
+	// Initialize WebSocket hub
+	wsHub := websocket.NewHub()
+	go wsHub.Run()
+	wsHandler := websocket.NewHandler(wsHub)
+
+	// Configure candle builder to broadcast to WS hub
+	candleBuilder.SetBroadcastFunc(func(instrumentID string, candle *models.Candle) {
+		wsHub.BroadcastToInstrument(instrumentID, candle)
+	})
 
 	// Initialize pricing engine
-	pricingService := services.NewPricingService(instrumentRepo, marketDataRepo)
+	pricingService := services.NewPricingService(instrumentRepo, marketDataRepo, candleBuilder)
 	pricingService.Start()
 	defer pricingService.Stop()
 
@@ -87,6 +102,7 @@ func main() {
 	userController := controllers.NewUserController(userService)
 	accountController := controllers.NewAccountController(tradingAccountService)
 	orderController := controllers.NewOrderController(orderService)
+	candleController := controllers.NewCandleController(candleService)
 
 	// Set up router
 	router := mux.NewRouter()
@@ -98,6 +114,9 @@ func main() {
 
 	// Register routes
 	api := router.PathPrefix("/api").Subrouter()
+
+	// WebSocket endpoint (no /api prefix)
+	router.HandleFunc("/ws", wsHandler.HandleWebSocket)
 
 	// Auth routes (public)
 	api.HandleFunc("/auth/register", authController.Register).Methods("POST", "OPTIONS")
@@ -115,6 +134,7 @@ func main() {
 	// Market routes (public)
 	protected.HandleFunc("/market/status/{exchange}", marketController.GetMarketStatus).Methods("GET", "OPTIONS")
 	protected.HandleFunc("/market/prices", marketController.GetBatchPrices).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/market/candles/{id}", candleController.GetHistoricalCandles).Methods("GET", "OPTIONS")
 
 	// Watchlist routes
 	protected.HandleFunc("/watchlists", watchlistController.GetUserWatchlists).Methods("GET", "OPTIONS")

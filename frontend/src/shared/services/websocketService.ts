@@ -1,0 +1,112 @@
+// WebSocket service for real-time updates
+
+type MessageType = 'subscribe' | 'unsubscribe' | 'candle' | 'error';
+
+interface WSMessage {
+    type: MessageType;
+    symbol?: string;
+    data?: any;
+}
+
+class WebSocketService {
+    private ws: WebSocket | null = null;
+    private subscriptions = new Map<string, Set<(candle: any) => void>>();
+    private reconnectAttempts = 0;
+    private maxReconnectAttempts = 5;
+    private reconnectDelay = 2000;
+    private url: string;
+
+    constructor() {
+        // In development, assume localhost:8080
+        // In production, this would be determined by the environment
+        this.url = 'ws://localhost:8080/ws';
+    }
+
+    connect() {
+        if (this.ws?.readyState === WebSocket.OPEN) return;
+
+        console.log('Connecting to WebSocket...');
+        this.ws = new WebSocket(this.url);
+
+        this.ws.onopen = () => {
+            console.log('WebSocket Connected');
+            this.reconnectAttempts = 0;
+            // Resubscribe to existing symbols
+            this.subscriptions.forEach((_, symbol) => {
+                this.send({ type: 'subscribe', symbol });
+            });
+        };
+
+        this.ws.onmessage = (event) => {
+            try {
+                const message: WSMessage = JSON.parse(event.data);
+                if (message.type === 'candle' && message.data) {
+                    const symbol = message.data.instrumentId;
+                    const callbacks = this.subscriptions.get(symbol);
+                    if (callbacks) {
+                        callbacks.forEach((cb) => cb(message.data));
+                    }
+                } else if (message.type === 'error') {
+                    console.error('WebSocket Error:', message.data);
+                }
+            } catch (err) {
+                console.error('Failed to parse WebSocket message', err);
+            }
+        };
+
+        this.ws.onclose = () => {
+            console.log('WebSocket Disconnected');
+            this.handleReconnect();
+        };
+
+        this.ws.onerror = (error) => {
+            console.error('WebSocket Error:', error);
+        };
+    }
+
+    private handleReconnect() {
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+            this.reconnectAttempts++;
+            console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+            setTimeout(() => this.connect(), this.reconnectDelay * this.reconnectAttempts);
+        }
+    }
+
+    private send(message: WSMessage) {
+        if (this.ws?.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify(message));
+        } else {
+            console.warn('WebSocket not connected. Message not sent:', message);
+        }
+    }
+
+    subscribe(symbol: string, callback: (candle: any) => void) {
+        let callbacks = this.subscriptions.get(symbol);
+        if (!callbacks) {
+            callbacks = new Set();
+            this.subscriptions.set(symbol, callbacks);
+            this.send({ type: 'subscribe', symbol });
+        }
+        callbacks.add(callback);
+    }
+
+    unsubscribe(symbol: string, callback: (candle: any) => void) {
+        const callbacks = this.subscriptions.get(symbol);
+        if (callbacks) {
+            callbacks.delete(callback);
+            if (callbacks.size === 0) {
+                this.subscriptions.delete(symbol);
+                this.send({ type: 'unsubscribe', symbol });
+            }
+        }
+    }
+
+    disconnect() {
+        if (this.ws) {
+            this.ws.close();
+            this.ws = null;
+        }
+    }
+}
+
+export const websocketService = new WebSocketService();
