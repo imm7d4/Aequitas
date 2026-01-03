@@ -283,22 +283,22 @@ export const InstrumentList = () => {
                                     >
                                         <TableCell sx={{ fontWeight: 'bold' }}>{instrument.symbol}</TableCell>
                                         <TableCell>{instrument.name}</TableCell>
-                                        <TableCell align="right" sx={{ fontWeight: 600 }}>
+                                        <TableCell align="right" sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
                                             {marketData ? `₹${marketData.lastPrice.toFixed(2)}` : '--'}
                                         </TableCell>
-                                        <TableCell align="right" sx={{ color: isPositive ? 'success.main' : 'error.main', fontWeight: 600 }}>
-                                            {marketData ? `${isPositive ? '+' : ''}₹${marketData.change.toFixed(2)}` : '--'}
+                                        <TableCell align="right" sx={{ color: isPositive ? 'success.main' : 'error.main', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                            {marketData ? `${isPositive ? '+' : '-'}₹${Math.abs(marketData.change).toFixed(2)}` : '--'}
                                         </TableCell>
-                                        <TableCell align="right" sx={{ color: isPositive ? 'success.main' : 'error.main', fontWeight: 600 }}>
+                                        <TableCell align="right" sx={{ color: isPositive ? 'success.main' : 'error.main', fontWeight: 600, whiteSpace: 'nowrap' }}>
                                             {marketData ? `${isPositive ? '+' : ''}${marketData.changePct.toFixed(2)}%` : '--'}
                                         </TableCell>
                                         <TableCell align="right">
                                             {marketData ? marketData.volume.toLocaleString() : '--'}
                                         </TableCell>
-                                        <TableCell align="right" sx={{ color: 'success.main', fontWeight: 600 }}>
+                                        <TableCell align="right" sx={{ color: 'success.main', fontWeight: 600, whiteSpace: 'nowrap' }}>
                                             {marketData ? `₹${marketData.high.toFixed(2)}` : '--'}
                                         </TableCell>
-                                        <TableCell align="right" sx={{ color: 'error.main', fontWeight: 600 }}>
+                                        <TableCell align="right" sx={{ color: 'error.main', fontWeight: 600, whiteSpace: 'nowrap' }}>
                                             {marketData ? `₹${marketData.low.toFixed(2)}` : '--'}
                                         </TableCell>
                                         <TableCell>{instrument.exchange}</TableCell>

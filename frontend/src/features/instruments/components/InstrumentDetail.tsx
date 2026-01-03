@@ -49,12 +49,19 @@ export function InstrumentDetail() {
     const handleWatchlistToggle = async () => {
         if (!instrument) return;
 
-        if (watchlists.length > 1) {
+        // If user has many watchlists or zero watchlists, open selection dialog
+        // If they have only one watchlist, we can toggle directly (current behavior)
+        if (watchlists.length !== 1) {
             openSelectionDialog(instrument);
             return;
         }
 
-        if (!activeWatchlistId) return;
+        if (!activeWatchlistId) {
+            // This case should ideally not happen if watchlists.length == 1
+            // but we handle it just in case
+            openSelectionDialog(instrument);
+            return;
+        }
 
         try {
             const activeWatchlist = watchlists.find(w => w.id === activeWatchlistId);
@@ -166,7 +173,7 @@ export function InstrumentDetail() {
                                     fontWeight={700}
                                     sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.5, mt: 0.5 }}
                                 >
-                                    {marketData.changePct >= 0 ? '▲' : '▼'} {marketData.changePct.toFixed(2)}% ({marketData.change >= 0 ? '+' : ''}₹{marketData.change.toFixed(2)})
+                                    {marketData.changePct >= 0 ? '▲' : '▼'} {marketData.changePct.toFixed(2)}% ({marketData.change >= 0 ? '+' : '-'}₹{Math.abs(marketData.change).toFixed(2)})
                                 </Typography>
                             )}
                         </Box>
