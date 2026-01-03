@@ -60,9 +60,10 @@ func main() {
 	watchlistRepo := repositories.NewWatchlistRepository(db)
 	marketDataRepo := repositories.NewMarketDataRepository(db)
 	telemetryRepo := repositories.NewTelemetryRepository(db)
+	transactionRepo := repositories.NewTransactionRepository(db)
 
 	// Initialize services
-	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo)
+	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo, transactionRepo)
 	authService := services.NewAuthService(userRepo, tradingAccountService, cfg)
 	instrumentService := services.NewInstrumentService(instrumentRepo)
 	marketService := services.NewMarketService(marketRepo, marketDataRepo)
@@ -82,6 +83,7 @@ func main() {
 	watchlistController := controllers.NewWatchlistController(watchlistService)
 	telemetryController := controllers.NewTelemetryController(telemetryService)
 	userController := controllers.NewUserController(userService)
+	accountController := controllers.NewAccountController(tradingAccountService)
 
 	// Set up router
 	router := mux.NewRouter()
@@ -128,6 +130,11 @@ func main() {
 	protected.HandleFunc("/user/profile", userController.UpdateProfile).Methods("PUT", "OPTIONS")
 	protected.HandleFunc("/user/password", userController.UpdatePassword).Methods("PUT", "OPTIONS")
 	protected.HandleFunc("/user/preferences", userController.UpdatePreferences).Methods("PUT", "OPTIONS")
+
+	// Account routes
+	protected.HandleFunc("/account/balance", accountController.GetBalance).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/account/fund", accountController.FundAccount).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/account/transactions", accountController.GetTransactions).Methods("GET", "OPTIONS")
 
 	// Admin routes (require admin role)
 	admin := protected.PathPrefix("/admin").Subrouter()

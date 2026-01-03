@@ -2,7 +2,7 @@
 
 **Epic:** User Profile & Personalization
 **Phase:** Phase 3 - User Profile
-**Status:** Not Started
+**Status:** Completed
 
 ## User Story
 
@@ -12,10 +12,10 @@ So that I can ensure I have sufficient capital for my trading operations.
 
 ## Acceptance Criteria
 
-- [ ] Users can view their current account balance and currency.
-- [ ] Users can perform a "Simulated Deposit" to add funds to their account.
-- [ ] Users can view a basic history of their recent financial transactions (deposits/withdrawals).
-- [ ] Financial status is prominently displayed in the profile overview.
+- [x] Users can view their current account balance and currency.
+- [x] Users can perform a "Simulated Deposit" to add funds to their account.
+- [x] Users can view a basic history of their recent financial transactions (deposits/withdrawals).
+- [x] Financial status is prominently displayed in the profile overview.
 
 ## Technical Requirements
 

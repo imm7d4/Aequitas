@@ -18,14 +18,14 @@ type TradingAccountRepository struct {
 
 func NewTradingAccountRepository(db *mongo.Database) *TradingAccountRepository {
 	collection := db.Collection("trading_accounts")
-	
+
 	// Create unique index on user_id
 	indexModel := mongo.IndexModel{
 		Keys:    bson.D{{Key: "user_id", Value: 1}},
 		Options: options.Index().SetUnique(true),
 	}
 	collection.Indexes().CreateOne(context.Background(), indexModel)
-	
+
 	return &TradingAccountRepository{collection: collection}
 }
 
@@ -33,12 +33,12 @@ func NewTradingAccountRepository(db *mongo.Database) *TradingAccountRepository {
 func (r *TradingAccountRepository) Create(account *models.TradingAccount) (*models.TradingAccount, error) {
 	account.CreatedAt = time.Now()
 	account.UpdatedAt = time.Now()
-	
+
 	result, err := r.collection.InsertOne(context.Background(), account)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	account.ID = result.InsertedID.(primitive.ObjectID)
 	return account, nil
 }
@@ -49,16 +49,26 @@ func (r *TradingAccountRepository) FindByUserID(userID string) (*models.TradingA
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var account models.TradingAccount
 	err = r.collection.FindOne(
 		context.Background(),
 		bson.M{"user_id": objectID},
 	).Decode(&account)
-	
+
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
-	
+
 	return &account, err
+}
+
+// UpdateBalance updates the balance of a trading account
+func (r *TradingAccountRepository) UpdateBalance(accountID primitive.ObjectID, newBalance float64) error {
+	_, err := r.collection.UpdateOne(
+		context.Background(),
+		bson.M{"_id": accountID},
+		bson.M{"$set": bson.M{"balance": newBalance, "updated_at": time.Now()}},
+	)
+	return err
 }

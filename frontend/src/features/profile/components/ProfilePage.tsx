@@ -18,11 +18,13 @@ import EditIcon from '@mui/icons-material/Edit';
 import PersonIcon from '@mui/icons-material/Person';
 import SecurityIcon from '@mui/icons-material/Security';
 import SettingsIcon from '@mui/icons-material/Settings';
+import WalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { useAuth } from '@/features/auth';
 import { profileService } from '../services/profileService';
 import { ProfileEditForm } from './ProfileEditForm';
 import { SecuritySettings } from './SecuritySettings';
 import { UserPreferences } from './UserPreferences';
+import { FinanceSettings } from './FinanceSettings';
 import type { User } from '@/features/auth/types';
 
 export function ProfilePage() {
@@ -70,6 +72,7 @@ export function ProfilePage() {
                     <Tab icon={<PersonIcon />} iconPosition="start" label="Personal Identity" />
                     <Tab icon={<SecurityIcon />} iconPosition="start" label="Account Security" />
                     <Tab icon={<SettingsIcon />} iconPosition="start" label="Preferences" />
+                    <Tab icon={<WalletIcon />} iconPosition="start" label="Finances" />
                 </Tabs>
             </Box>
 
@@ -158,6 +161,7 @@ export function ProfilePage() {
             )}
             {activeTab === 1 && <SecuritySettings user={user} />}
             {activeTab === 2 && <UserPreferences user={user} onUpdate={setUser} />}
+            {activeTab === 3 && <FinanceSettings />}
 
             <Snackbar
                 open={!!successMessage}
