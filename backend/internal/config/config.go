@@ -36,6 +36,8 @@ func parseAllowedOrigins(origins string) []string {
 	for _, p := range parts {
 		trimmed := strings.TrimSpace(p)
 		if trimmed != "" {
+			// Trim trailing slash as browsers send Origin without it
+			trimmed = strings.TrimSuffix(trimmed, "/")
 			result = append(result, trimmed)
 		}
 	}
