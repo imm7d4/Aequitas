@@ -108,7 +108,7 @@ func main() {
 	router := mux.NewRouter()
 
 	// Apply CORS first to handle all requests including subrouters
-	router.Use(middleware.CORS)
+	router.Use(middleware.CORS(cfg.AllowedOrigins))
 	router.Use(middleware.Logger)
 	router.Use(middleware.ErrorHandler)
 
