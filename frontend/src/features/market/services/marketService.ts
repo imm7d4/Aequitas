@@ -8,8 +8,41 @@ import type {
 
 export const marketService = {
     async getMarketStatus(exchange: string): Promise<MarketStatus> {
-        const response = await apiClient.get(`/market/status/${exchange}`);
-        return response.data.data;
+        const startTime = window.performance.now();
+        try {
+            const response = await apiClient.get(`/market/status/${exchange}`);
+            const duration = window.performance.now() - startTime;
+
+            import('@/shared/services/telemetry/telemetryService').then(({ telemetryService }) => {
+                telemetryService.track({
+                    event_name: 'api.latency',
+                    event_version: 'v1',
+                    classification: 'SYSTEM_EVENT',
+                    metadata: {
+                        endpoint: `/market/status/${exchange}`,
+                        duration_ms: duration,
+                        success: true
+                    }
+                });
+            });
+
+            return response.data.data;
+        } catch (error) {
+            import('@/shared/services/telemetry/telemetryService').then(({ telemetryService }) => {
+                telemetryService.track({
+                    event_name: 'api.error',
+                    event_version: 'v1',
+                    classification: 'ERROR_EVENT',
+                    severity: 'error',
+                    metadata: {
+                        endpoint: `/market/status/${exchange}`,
+                        error: (error as any).message,
+                        success: false
+                    }
+                });
+            });
+            throw error;
+        }
     },
 
     async createMarketHours(

@@ -13,23 +13,28 @@ import {
     TextField,
     InputAdornment,
     Button,
+    Link as MuiLink,
 } from '@mui/material';
 import {
     Menu as MenuIcon,
     Notifications as NotificationsIcon,
     Search as SearchIcon,
     AccountCircle,
-    Logout,
-    Settings,
+    ChevronRight as ChevronRightIcon,
+    TrendingUp as TrendingUpIcon,
     History as HistoryIcon,
     Bolt as BoltIcon,
+    Settings,
+    Logout,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/features/auth';
 import { useLayoutStore } from '@/shared/store/layoutStore';
 import { instrumentService } from '@/features/instruments/services/instrumentService';
 import { MarketStatusBadge } from '@/features/market/components/MarketStatusBadge';
+import { useTelemetry } from '@/shared/services/telemetry/TelemetryProvider';
 import type { Instrument } from '@/features/instruments/types/instrument.types';
+import logoFull from '@/assets/logo/logo-full.png';
 
 const RECENT_SEARCHES_KEY = 'aequitas_recent_searches';
 
@@ -46,6 +51,8 @@ export const Header: React.FC = () => {
     const { user, logout } = useAuth();
     const { toggleSidebar, notificationCount } = useLayoutStore();
     const navigate = useNavigate();
+
+    const { track } = useTelemetry();
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [options, setOptions] = useState<Instrument[]>([]);
@@ -89,6 +96,11 @@ export const Header: React.FC = () => {
     };
 
     const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+        track({
+            event_name: 'profile.menu_opened',
+            event_version: 'v1',
+            classification: 'USER_ACTION',
+        });
         setAnchorEl(event.currentTarget);
     };
 
@@ -97,6 +109,11 @@ export const Header: React.FC = () => {
     };
 
     const handleLogout = () => {
+        track({
+            event_name: 'profile.logout_clicked',
+            event_version: 'v1',
+            classification: 'USER_ACTION',
+        });
         handleMenuClose();
         logout();
     };
@@ -159,29 +176,39 @@ export const Header: React.FC = () => {
                     <MenuIcon />
                 </IconButton>
 
-                <Typography
-                    variant="h6"
-                    noWrap
-                    component="div"
+                <Box
+                    component={Link}
+                    to="/dashboard"
                     sx={{
-                        display: { xs: 'none', sm: 'block' },
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        color: 'primary.main',
-                        letterSpacing: 1,
-                        mr: 4
+                        display: 'flex',
+                        alignItems: 'center',
+                        textDecoration: 'none',
+                        mr: 4,
+                        '&:hover': {
+                            opacity: 0.9,
+                        },
                     }}
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => {
+                        track({
+                            event_name: 'navigation.logo_clicked',
+                            event_version: 'v1',
+                            classification: 'USER_ACTION',
+                        });
+                    }}
                 >
-                    AEQUITAS
-                </Typography>
+                    <img
+                        src={logoFull}
+                        alt="Aequitas Logo"
+                        style={{ height: '32px', display: 'block' }}
+                    />
+                </Box>
 
                 <Box sx={{ flexGrow: 1, maxWidth: 640 }}>
                     <Autocomplete
                         size="small"
                         options={inputValue ? options : recentSearches}
                         loading={loading}
-                        getOptionLabel={(option) => `${option.symbol} - ${option.name}`}
+                        getOptionLabel={(option) => `${option.symbol} - ${option.name} `}
                         filterOptions={(x) => x}
                         onInputChange={(_, value) => {
                             setInputValue(value);
@@ -189,6 +216,16 @@ export const Header: React.FC = () => {
                         }}
                         onChange={(_, value) => {
                             if (value) {
+                                track({
+                                    event_name: 'search.query_submitted',
+                                    event_version: 'v1',
+                                    classification: 'USER_ACTION',
+                                    metadata: {
+                                        instrument_id: value.id,
+                                        symbol: value.symbol,
+                                        query: inputValue,
+                                    }
+                                });
                                 addToRecentSearches(value);
                                 navigate(`/instruments/${value.id}`);
                             }
@@ -265,6 +302,15 @@ export const Header: React.FC = () => {
                                                 }}
                                                 onClick={(e) => {
                                                     e.stopPropagation();
+                                                    track({
+                                                        event_name: 'search.quick_trade_clicked',
+                                                        event_version: 'v1',
+                                                        classification: 'USER_ACTION',
+                                                        metadata: {
+                                                            instrument_id: option.id,
+                                                            symbol: option.symbol,
+                                                        }
+                                                    });
                                                     addToRecentSearches(option);
                                                     console.log('Quick Trade triggered for', option.symbol);
                                                     // This will be linked to a trade dialog later
@@ -287,7 +333,18 @@ export const Header: React.FC = () => {
                         <MarketStatusBadge />
                     </Box>
 
-                    <IconButton size="large" color="inherit">
+                    <IconButton
+                        size="large"
+                        color="inherit"
+                        onClick={() => {
+                            track({
+                                event_name: 'notification.dropdown_opened',
+                                event_version: 'v1',
+                                classification: 'USER_ACTION',
+                                metadata: { count: notificationCount }
+                            });
+                        }}
+                    >
                         <Badge badgeContent={notificationCount} color="error">
                             <NotificationsIcon />
                         </Badge>

@@ -59,6 +59,7 @@ func main() {
 	marketRepo := repositories.NewMarketRepository(db)
 	watchlistRepo := repositories.NewWatchlistRepository(db)
 	marketDataRepo := repositories.NewMarketDataRepository(db)
+	telemetryRepo := repositories.NewTelemetryRepository(db)
 
 	// Initialize services
 	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo)
@@ -66,6 +67,7 @@ func main() {
 	instrumentService := services.NewInstrumentService(instrumentRepo)
 	marketService := services.NewMarketService(marketRepo, marketDataRepo)
 	watchlistService := services.NewWatchlistService(watchlistRepo, instrumentRepo)
+	telemetryService := services.NewTelemetryService(telemetryRepo)
 
 	// Initialize pricing engine
 	pricingService := services.NewPricingService(instrumentRepo, marketDataRepo)
@@ -77,6 +79,7 @@ func main() {
 	instrumentController := controllers.NewInstrumentController(instrumentService)
 	marketController := controllers.NewMarketController(marketService)
 	watchlistController := controllers.NewWatchlistController(watchlistService)
+	telemetryController := controllers.NewTelemetryController(telemetryService)
 
 	// Set up router
 	router := mux.NewRouter()
@@ -114,6 +117,9 @@ func main() {
 	protected.HandleFunc("/watchlists/{id}/default", watchlistController.SetDefaultWatchlist).Methods("POST", "OPTIONS")
 	protected.HandleFunc("/watchlists/{id}/instruments/{instrumentId}", watchlistController.AddToWatchlist).Methods("POST", "OPTIONS")
 	protected.HandleFunc("/watchlists/{id}/instruments/{instrumentId}", watchlistController.RemoveFromWatchlist).Methods("DELETE", "OPTIONS")
+
+	// Telemetry routes
+	protected.HandleFunc("/telemetry", telemetryController.IngestTelemetry).Methods("POST", "OPTIONS")
 
 	// Admin routes (require admin role)
 	admin := protected.PathPrefix("/admin").Subrouter()

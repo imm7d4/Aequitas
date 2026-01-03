@@ -85,6 +85,19 @@ Frontend runs on `http://localhost:5173`
 - ✅ Token persistence across page refreshes
 - ✅ CORS properly configured for frontend-backend communication
 
+#### US-0.2.1 - Global UI Shell
+- ✅ Responsive Header & Sidebar
+- ✅ Enterprise-Level Global Search (Autocomplete + Quick Trade)
+- ✅ Real-time Market Status Badge & Server Clock
+- ✅ Centralized Notification Center
+
+#### US-0.2.2 - Observability & Analytics
+- ✅ Unified Telemetry Service (Buffering + Batching)
+- ✅ Real-time Performance Tracking (TTI, API Latency)
+- ✅ User Interaction Analytics (anonymized search, navigation)
+- ✅ Intelligent Correlation (ID per route lifecycle)
+- ✅ Resilient Backend Persistence (MongoDB Store)
+
 ## ✅ Phase 1 - Market & Instrument Setup (Completed)
 
 ### User Stories Implemented
@@ -103,6 +116,16 @@ Frontend runs on `http://localhost:5173`
 - ✅ Market holidays calendar for 2026
 - ✅ Trading session enforcement (Status badge)
 - ✅ Seed script for NSE/BSE market hours and holidays
+
+## 📊 Observability & Analytics
+
+The platform features a production-grade observability suite that monitors system health and user experience without blocking the main UI thread.
+
+- **Unified Telemetry**: Custom-built `telemetryService` on the frontend with event buffering and batching.
+- **Performance Monitoring**: Real-time tracking of Time to Interactive (TTI) and API latency.
+- **User Journey Tracing**: Automatic generation of `correlation_id` per route change, linking all subsequent events and API calls.
+- **Resilient Persistence**: High-performance batch ingestion API on the backend storing events in MongoDB for future analytics and auditing.
+- **Fail-Safe Design**: Telemetry failures never interrupt user interactions; fatal errors trigger immediate flushes.
 
 ## 📡 API Endpoints
 
@@ -130,6 +153,9 @@ All endpoints follow standardized response format:
 - `GET /api/market/status/{exchange}` - Get real-time market status (protected)
 - `POST /api/admin/market/hours` - Configure market hours (admin)
 - `POST /api/admin/market/holidays` - Add market holiday (admin)
+
+### Telemetry
+- `POST /api/telemetry` - Batch ingest telemetry events (protected)
 
 ## 🧪 Testing
 

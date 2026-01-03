@@ -10,33 +10,37 @@ import { AdminInstrumentForm } from '@/features/instruments/components/AdminInst
 import { AdminMarketHoursForm } from '@/features/market/components/AdminMarketHoursForm';
 import { AdminMarketHolidayForm } from '@/features/market/components/AdminMarketHolidayForm';
 
+import { TelemetryProvider } from '@/shared/services/telemetry/TelemetryProvider';
+
 export function Router(): JSX.Element {
     return (
         <BrowserRouter>
-            <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Navigate to="/login" replace />} />
-                <Route path="/login" element={<LoginForm />} />
-                <Route path="/register" element={<RegisterForm />} />
+            <TelemetryProvider>
+                <Routes>
+                    {/* Public Routes */}
+                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    <Route path="/login" element={<LoginForm />} />
+                    <Route path="/register" element={<RegisterForm />} />
 
-                {/* Protected Routes inside Layout */}
-                <Route
-                    element={
-                        <ProtectedRoute>
-                            <Layout />
-                        </ProtectedRoute>
-                    }
-                >
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/instruments" element={<InstrumentsPage />} />
-                    <Route path="/instruments/:id" element={<InstrumentDetail />} />
-                    <Route path="/admin" element={<AdminPanel />} />
-                    <Route path="/admin/instruments/new" element={<AdminInstrumentForm />} />
-                    <Route path="/admin/instruments/edit/:id" element={<AdminInstrumentForm />} />
-                    <Route path="/admin/market-hours" element={<AdminMarketHoursForm />} />
-                    <Route path="/admin/market-holidays" element={<AdminMarketHolidayForm />} />
-                </Route>
-            </Routes>
+                    {/* Protected Routes inside Layout */}
+                    <Route
+                        element={
+                            <ProtectedRoute>
+                                <Layout />
+                            </ProtectedRoute>
+                        }
+                    >
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/instruments" element={<InstrumentsPage />} />
+                        <Route path="/instruments/:id" element={<InstrumentDetail />} />
+                        <Route path="/admin" element={<AdminPanel />} />
+                        <Route path="/admin/instruments/new" element={<AdminInstrumentForm />} />
+                        <Route path="/admin/instruments/edit/:id" element={<AdminInstrumentForm />} />
+                        <Route path="/admin/market-hours" element={<AdminMarketHoursForm />} />
+                        <Route path="/admin/market-holidays" element={<AdminMarketHolidayForm />} />
+                    </Route>
+                </Routes>
+            </TelemetryProvider>
         </BrowserRouter>
     );
 }

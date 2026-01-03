@@ -23,6 +23,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { alpha, useTheme } from '@mui/material/styles';
 import { useLayoutStore } from '@/shared/store/layoutStore';
 import { useAuth } from '@/features/auth';
+import { useTelemetry } from '@/shared/services/telemetry/TelemetryProvider';
+import logoFull from '@/assets/logo/logo-full.png';
+import logoIcon from '@/assets/logo/logo-icon.png';
 
 const drawerWidth = 240;
 
@@ -32,6 +35,7 @@ export const Sidebar: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const theme = useTheme();
+    const { track } = useTelemetry();
 
     const menuItems = [
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
@@ -63,7 +67,7 @@ export const Sidebar: React.FC = () => {
             }}
         >
             <Toolbar />
-            <Box sx={{ overflowY: 'auto', overflowX: 'hidden' }}>
+            <Box sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'hidden' }}>
                 <List>
                     {menuItems.map((item) => {
                         const isActive = location.pathname.startsWith(item.path);
@@ -71,7 +75,18 @@ export const Sidebar: React.FC = () => {
                             <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
                                 <Tooltip title={!isSidebarOpen ? item.text : ''} placement="right">
                                     <ListItemButton
-                                        onClick={() => navigate(item.path)}
+                                        onClick={() => {
+                                            track({
+                                                event_name: 'navigation.sidebar_clicked',
+                                                event_version: 'v1',
+                                                classification: 'USER_ACTION',
+                                                metadata: {
+                                                    path: item.path,
+                                                    label: item.text,
+                                                }
+                                            });
+                                            navigate(item.path);
+                                        }}
                                         sx={{
                                             minHeight: 48,
                                             justifyContent: isSidebarOpen ? 'initial' : 'center',
@@ -107,7 +122,36 @@ export const Sidebar: React.FC = () => {
                         );
                     })}
                 </List>
-                <Divider />
+            </Box>
+
+            <Divider />
+
+            <Box
+                sx={{
+                    p: 2,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: 64,
+                    transition: theme.transitions.create(['padding', 'min-height'], {
+                        easing: theme.transitions.easing.sharp,
+                        duration: theme.transitions.duration.enteringScreen,
+                    }),
+                }}
+            >
+                {isSidebarOpen ? (
+                    <img
+                        src={logoFull}
+                        alt="Aequitas Logo"
+                        style={{ width: '100%', maxWidth: '160px', height: 'auto', display: 'block' }}
+                    />
+                ) : (
+                    <img
+                        src={logoIcon}
+                        alt="Aequitas Icon"
+                        style={{ width: '32px', height: '32px', display: 'block' }}
+                    />
+                )}
             </Box>
         </Drawer>
     );

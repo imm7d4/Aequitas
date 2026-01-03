@@ -25,7 +25,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        // Skip auto-logout for telemetry endpoint to avoid refresh loops
+        const isTelemetry = error.config?.url?.includes('/telemetry');
+
+        if (error.response?.status === 401 && !isTelemetry) {
             // Auto-logout on 401
             localStorage.removeItem('token');
             localStorage.removeItem('user');
