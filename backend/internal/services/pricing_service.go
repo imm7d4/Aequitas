@@ -13,16 +13,20 @@ type PricingService struct {
 	instrumentRepo *repositories.InstrumentRepository
 	marketDataRepo *repositories.MarketDataRepository
 	stopChan       chan struct{}
+	rng            *rand.Rand
 }
 
 func NewPricingService(
 	instrumentRepo *repositories.InstrumentRepository,
 	marketDataRepo *repositories.MarketDataRepository,
 ) *PricingService {
+	// Create a new random source with current time seed for varied randomness
+	source := rand.NewSource(time.Now().UnixNano())
 	return &PricingService{
 		instrumentRepo: instrumentRepo,
 		marketDataRepo: marketDataRepo,
 		stopChan:       make(chan struct{}),
+		rng:            rand.New(source),
 	}
 }
 
@@ -61,29 +65,45 @@ func (s *PricingService) simulatePrices() {
 		}
 
 		if data == nil {
-			// Initialize market data
+			// Initialize market data with varied base prices
 			// NSE stocks roughly ₹100-₹5000 range for top stocks
-			basePrice := 100.0 + rand.Float64()*1000.0
+			basePrice := 100.0 + s.rng.Float64()*4900.0
+
+			// Add some initial variance to open/high/low
+			variance := basePrice * 0.02 // 2% variance
+			open := basePrice + (s.rng.Float64()-0.5)*variance
+			high := basePrice + s.rng.Float64()*variance
+			low := basePrice - s.rng.Float64()*variance
+
 			data = &models.MarketData{
 				InstrumentID: inst.ID,
 				Symbol:       inst.Symbol,
 				LastPrice:    basePrice,
-				PrevClose:    basePrice,
-				Open:         basePrice,
-				High:         basePrice,
-				Low:          basePrice,
-				Volume:       100000,
+				PrevClose:    basePrice * (0.98 + s.rng.Float64()*0.04), // -2% to +2% from current
+				Open:         open,
+				High:         high,
+				Low:          low,
+				Volume:       int64(50000 + s.rng.Intn(950000)), // 50k to 1M volume
 			}
 		}
 
-		// Move price
+		// Move price with more realistic variance
 		tick := inst.TickSize
 		if tick <= 0 {
 			tick = 0.05 // default to 5 paisa
 		}
 
-		// Random movement: -2 to +2 ticks
-		moveTicks := float64(rand.Intn(5) - 2)
+		// More varied movement: -5 to +5 ticks with weighted probability
+		// 60% chance of small movement (-1 to +1), 40% chance of larger movement
+		var moveTicks float64
+		if s.rng.Float64() < 0.6 {
+			// Small movement
+			moveTicks = float64(s.rng.Intn(3) - 1) // -1, 0, or 1
+		} else {
+			// Larger movement
+			moveTicks = float64(s.rng.Intn(11) - 5) // -5 to +5
+		}
+
 		movement := moveTicks * tick
 
 		data.LastPrice += movement
@@ -93,17 +113,20 @@ func (s *PricingService) simulatePrices() {
 
 		// Update metrics
 		data.Change = data.LastPrice - data.PrevClose
-		data.ChangePct = (data.Change / data.PrevClose) * 100
+		if data.PrevClose > 0 {
+			data.ChangePct = (data.Change / data.PrevClose) * 100
+		}
 
 		if data.LastPrice > data.High {
 			data.High = data.LastPrice
 		}
-		if data.LastPrice < data.Low {
+		if data.LastPrice < data.Low || data.Low == 0 {
 			data.Low = data.LastPrice
 		}
 
-		// Volume is now static until matching engine (Phase 6) is implemented
-		// data.Volume will only be set during initialization
+		// Simulate volume changes (small increments)
+		volumeIncrease := int64(s.rng.Intn(10000))
+		data.Volume += volumeIncrease
 
 		if err := s.marketDataRepo.Upsert(data); err != nil {
 			log.Printf("Pricing engine error: failed to update %s: %v", inst.Symbol, err)

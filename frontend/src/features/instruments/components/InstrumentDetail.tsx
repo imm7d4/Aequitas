@@ -33,7 +33,8 @@ export function InstrumentDetail() {
     const [balance, setBalance] = useState<number>(0);
 
     const { prices } = useMarketData(id ? [id] : []);
-    const ltp = id && prices[id] ? prices[id].lastPrice : 0;
+    const marketData = id && prices[id] ? prices[id] : null;
+    const ltp = marketData ? marketData.lastPrice : 0;
 
     const {
         watchlists,
@@ -183,9 +184,15 @@ export function InstrumentDetail() {
                                 <Typography variant="h3" fontWeight={700} color="primary.main">
                                     ₹{ltp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </Typography>
-                                <Typography variant="body2" color="success.main" fontWeight={600}>
-                                    +0.72%
-                                </Typography>
+                                {marketData && (
+                                    <Typography
+                                        variant="body2"
+                                        color={marketData.changePct >= 0 ? "success.main" : "error.main"}
+                                        fontWeight={600}
+                                    >
+                                        {marketData.changePct >= 0 ? '+' : ''}{marketData.changePct.toFixed(2)}%
+                                    </Typography>
+                                )}
                             </Box>
                             <Typography variant="caption" color="text.secondary">
                                 {new Date().toLocaleDateString()} • Close price
