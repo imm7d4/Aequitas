@@ -5,9 +5,11 @@ export interface User {
     displayName?: string;
     bio?: string;
     avatar?: string;
+    lastLoginAt?: string;
+    lastLoginIP?: string;
     isAdmin: boolean;
     status: 'ACTIVE' | 'INACTIVE';
-    createdAt: Date;
+    createdAt: string;
 }
 
 export interface AuthResponse {

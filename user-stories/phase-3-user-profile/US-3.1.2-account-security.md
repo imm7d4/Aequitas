@@ -2,7 +2,7 @@
 
 **Epic:** User Profile & Personalization
 **Phase:** Phase 3 - User Profile
-**Status:** Not Started
+**Status:** Completed
 
 ## User Story
 
@@ -12,10 +12,10 @@ So that I can keep my account secure.
 
 ## Acceptance Criteria
 
-- [ ] Users can update their password by providing their current password and a new, strong password.
-- [ ] Password update requires validation (min length, complexity).
-- [ ] Users can view their "Last Login" time and IP address in the security section.
-- [ ] Users receive a notification (or UI confirmation) after a successful password change.
+- [x] Users can update their password by providing their current password and a new, strong password.
+- [x] Password update requires validation (min length, complexity).
+- [x] Users can view their "Last Login" time and IP address in the security section.
+- [x] Users receive a notification (or UI confirmation) after a successful password change.
 
 ## Technical Requirements
 

@@ -75,3 +75,40 @@ func (c *UserController) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 
 	utils.RespondJSON(w, http.StatusOK, user, "Profile updated successfully")
 }
+
+type UpdatePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword     string `json:"newPassword"`
+}
+
+// UpdatePassword handles PUT /api/user/password
+func (c *UserController) UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var req UpdatePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if req.CurrentPassword == "" || req.NewPassword == "" {
+		utils.RespondError(w, http.StatusBadRequest, "Current and new passwords are required")
+		return
+	}
+
+	err := c.userService.UpdatePassword(userID, req.CurrentPassword, req.NewPassword)
+	if err != nil {
+		statusCode := http.StatusInternalServerError
+		if err.Error() == "invalid current password" || err.Error() == "password must be at least 8 characters" {
+			statusCode = http.StatusBadRequest
+		}
+		utils.RespondError(w, statusCode, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, nil, "Password updated successfully")
+}

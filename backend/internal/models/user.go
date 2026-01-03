@@ -14,6 +14,8 @@ type User struct {
 	DisplayName string             `bson:"display_name" json:"displayName"`
 	Bio         string             `bson:"bio" json:"bio"`
 	Avatar      string             `bson:"avatar" json:"avatar"`
+	LastLoginAt *time.Time         `bson:"last_login_at,omitempty" json:"lastLoginAt,omitempty"`
+	LastLoginIP string             `bson:"last_login_ip,omitempty" json:"lastLoginIP,omitempty"`
 	IsAdmin     bool               `bson:"is_admin" json:"isAdmin"`
 	Status      string             `bson:"status" json:"status"`
 	CreatedAt   time.Time          `bson:"created_at" json:"createdAt"`

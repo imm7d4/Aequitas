@@ -5,6 +5,7 @@ import (
 
 	"aequitas/internal/models"
 	"aequitas/internal/repositories"
+	"aequitas/internal/utils"
 )
 
 type UserService struct {
@@ -49,4 +50,33 @@ func (s *UserService) UpdateProfile(userID string, fullName, displayName, bio, a
 	}
 
 	return user, nil
+}
+
+// UpdatePassword allows a user to change their password securely
+func (s *UserService) UpdatePassword(userID string, currentPassword, newPassword string) error {
+	if len(newPassword) < 8 {
+		return errors.New("password must be at least 8 characters")
+	}
+
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return errors.New("user not found")
+	}
+
+	// Verify current password
+	if !utils.CheckPassword(currentPassword, user.Password) {
+		return errors.New("invalid current password")
+	}
+
+	// Hash new password
+	hashedPassword, err := utils.HashPassword(newPassword)
+	if err != nil {
+		return errors.New("failed to hash password")
+	}
+
+	user.Password = hashedPassword
+	return s.userRepo.Update(user)
 }

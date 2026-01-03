@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"time"
 
 	"aequitas/internal/config"
 	"aequitas/internal/models"
@@ -77,7 +78,7 @@ func (s *AuthService) Register(email, password string) (*models.User, error) {
 }
 
 // Login handles user authentication (US-0.1.3)
-func (s *AuthService) Login(email, password string) (string, *models.User, error) {
+func (s *AuthService) Login(email, password, ipAddress string) (string, *models.User, error) {
 	// Find user by email
 	user, err := s.userRepo.FindByEmail(email)
 	if err != nil {
@@ -91,6 +92,12 @@ func (s *AuthService) Login(email, password string) (string, *models.User, error
 	if !utils.CheckPassword(password, user.Password) {
 		return "", nil, errors.New("invalid email or password")
 	}
+
+	// Update last login info
+	now := time.Now()
+	user.LastLoginAt = &now
+	user.LastLoginIP = ipAddress
+	s.userRepo.Update(user)
 
 	// Generate JWT token
 	token, err := utils.GenerateToken(

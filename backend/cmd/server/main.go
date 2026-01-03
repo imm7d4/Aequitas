@@ -126,6 +126,7 @@ func main() {
 	// User Profile routes
 	protected.HandleFunc("/user/profile", userController.GetProfile).Methods("GET", "OPTIONS")
 	protected.HandleFunc("/user/profile", userController.UpdateProfile).Methods("PUT", "OPTIONS")
+	protected.HandleFunc("/user/password", userController.UpdatePassword).Methods("PUT", "OPTIONS")
 
 	// Admin routes (require admin role)
 	admin := protected.PathPrefix("/admin").Subrouter()

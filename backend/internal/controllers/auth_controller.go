@@ -49,9 +49,9 @@ func (c *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	user, err := c.authService.Register(req.Email, req.Password)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
-		if err.Error() == "email already registered" || 
-		   err.Error() == "invalid email format" || 
-		   err.Error() == "password must be at least 8 characters" {
+		if err.Error() == "email already registered" ||
+			err.Error() == "invalid email format" ||
+			err.Error() == "password must be at least 8 characters" {
 			statusCode = http.StatusBadRequest
 		}
 		utils.RespondError(w, statusCode, err.Error())
@@ -76,7 +76,7 @@ func (c *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delegate to service
-	token, user, err := c.authService.Login(req.Email, req.Password)
+	token, user, err := c.authService.Login(req.Email, req.Password, r.RemoteAddr)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
 		if err.Error() == "invalid email or password" {
