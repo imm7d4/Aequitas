@@ -36,6 +36,7 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
             timeScale: {
                 timeVisible: true,
                 secondsVisible: false,
+                rightBarStaysOnScroll: true,
                 tickMarkFormatter: (time: number) => {
                     const date = new Date(time * 1000);
                     return date.toLocaleTimeString('en-IN', {

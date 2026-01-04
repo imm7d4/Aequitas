@@ -3,6 +3,7 @@ import { LoginForm, RegisterForm } from '@/features/auth';
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute';
 import { Layout } from '@/shared/components/Layout';
 import { Dashboard } from './Dashboard';
+import { OrdersPage } from './OrdersPage';
 import { InstrumentsPage } from './InstrumentsPage';
 import { InstrumentDetail } from '@/features/instruments/components/InstrumentDetail';
 import { AdminPanel } from '@/features/instruments/components/AdminPanel';
@@ -34,6 +35,7 @@ export function Router(): JSX.Element {
                         }
                     >
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/orders" element={<OrdersPage />} />
                         <Route path="/instruments" element={<InstrumentsPage />} />
                         <Route path="/instruments/:id" element={<InstrumentDetail />} />
                         <Route path="/profile" element={<ProfilePage />} />

@@ -161,6 +161,9 @@ func main() {
 
 	// Order routes
 	protected.HandleFunc("/orders", orderController.PlaceOrder).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/orders", orderController.GetOrders).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/orders/{id}", orderController.ModifyOrder).Methods("PUT", "OPTIONS")
+	protected.HandleFunc("/orders/{id}", orderController.CancelOrder).Methods("DELETE", "OPTIONS")
 
 	// Admin routes (require admin role)
 	admin := protected.PathPrefix("/admin").Subrouter()
