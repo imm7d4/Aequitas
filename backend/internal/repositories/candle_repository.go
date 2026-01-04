@@ -139,8 +139,9 @@ func (r *CandleRepository) GetCandles(
 		},
 	}
 
+	// Fetch LATEST candles first (descending order) to ensure we get recent data
 	opts := options.Find().
-		SetSort(bson.D{{Key: "time", Value: 1}}). // Ascending order
+		SetSort(bson.D{{Key: "time", Value: -1}}). // Descending - newest first
 		SetLimit(int64(limit))
 
 	cursor, err := r.collection.Find(context.Background(), filter, opts)
@@ -152,6 +153,11 @@ func (r *CandleRepository) GetCandles(
 	var candles []*models.Candle
 	if err = cursor.All(context.Background(), &candles); err != nil {
 		return nil, fmt.Errorf("failed to decode candles: %w", err)
+	}
+
+	// Reverse to ascending order for chart display (oldest to newest)
+	for i, j := 0, len(candles)-1; i < j; i, j = i+1, j-1 {
+		candles[i], candles[j] = candles[j], candles[i]
 	}
 
 	return candles, nil

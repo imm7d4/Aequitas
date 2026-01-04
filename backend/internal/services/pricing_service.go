@@ -93,20 +93,15 @@ func (s *PricingService) simulatePrices() {
 				log.Printf("Pricing: Initialized %s with default price ₹%.2f (no candle history)", inst.Symbol, basePrice)
 			}
 
-			// Add small initial variance to open/high/low
-			variance := basePrice * 0.01 // 1% variance
-			open := basePrice + (s.rng.Float64()-0.5)*variance
-			high := basePrice + s.rng.Float64()*variance
-			low := basePrice - s.rng.Float64()*variance
-
+			// Initialize with base price (no variance) to maintain continuity
 			data = &models.MarketData{
 				InstrumentID: inst.ID,
 				Symbol:       inst.Symbol,
 				LastPrice:    basePrice,
-				PrevClose:    basePrice * (0.99 + s.rng.Float64()*0.02), // -1% to +1% from current
-				Open:         open,
-				High:         high,
-				Low:          low,
+				PrevClose:    basePrice, // Use same price for continuity
+				Open:         basePrice,
+				High:         basePrice,
+				Low:          basePrice,
 				Volume:       int64(50000 + s.rng.Intn(950000)), // 50k to 1M volume
 			}
 		}
