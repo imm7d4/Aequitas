@@ -96,15 +96,15 @@ func (s *PricingService) simulatePrices() {
 			tick = 0.05 // default to 5 paisa
 		}
 
-		// More varied movement: -5 to +5 ticks with weighted probability
-		// 60% chance of small movement (-1 to +1), 40% chance of larger movement
+		// More realistic movement: -2 to +2 ticks with weighted probability
+		// 80% chance of small movement (-1 to +1), 20% chance of larger movement
 		var moveTicks float64
-		if s.rng.Float64() < 0.6 {
-			// Small movement
+		if s.rng.Float64() < 0.8 {
+			// Small movement (most common)
 			moveTicks = float64(s.rng.Intn(3) - 1) // -1, 0, or 1
 		} else {
-			// Larger movement
-			moveTicks = float64(s.rng.Intn(11) - 5) // -5 to +5
+			// Larger movement (less common)
+			moveTicks = float64(s.rng.Intn(5) - 2) // -2 to +2
 		}
 
 		movement := moveTicks * tick

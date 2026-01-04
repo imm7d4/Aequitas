@@ -102,7 +102,14 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
 
     useEffect(() => {
         if (candleSeriesRef.current && volumeSeriesRef.current && candles.length > 0) {
-            const sanitizedData = candles
+            // Filter out any future candles (safety check)
+            const now = Date.now();
+            const validCandles = candles.filter(c => {
+                const candleTime = new Date(c.time).getTime();
+                return candleTime <= now;
+            });
+
+            const sanitizedData = validCandles
                 .filter(c => {
                     const time = new Date(c.time).getTime();
                     const isValidTime = !isNaN(time);
@@ -134,54 +141,11 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
 
             if (uniqueData.length === 0) return;
 
-            // Fill gaps to prevent visual breaks in the chart
-            const intervalSeconds: Record<CandleInterval, number> = {
-                '1m': 60,
-                '5m': 300,
-                '15m': 900,
-                '1h': 3600,
-                '1d': 86400,
-            };
-
-            const intervalSec = intervalSeconds[interval] || 60;
-            const filledData = [];
-
-            for (let i = 0; i < uniqueData.length; i++) {
-                filledData.push(uniqueData[i]);
-
-                if (i < uniqueData.length - 1) {
-                    const currentTime = uniqueData[i].time;
-                    const nextTime = uniqueData[i + 1].time;
-                    const gap = nextTime - currentTime;
-
-                    // If there's a gap larger than the interval, fill it
-                    if (gap > intervalSec * 1.5) {
-                        const gapCount = Math.floor(gap / intervalSec);
-                        // Only fill reasonable gaps (up to 100 intervals)
-                        const fillCount = Math.min(gapCount - 1, 100);
-
-                        for (let j = 1; j <= fillCount; j++) {
-                            const fillTime = currentTime + (j * intervalSec);
-                            const lastClose = uniqueData[i].close;
-
-                            filledData.push({
-                                time: fillTime,
-                                open: lastClose,
-                                high: lastClose,
-                                low: lastClose,
-                                close: lastClose,
-                                volume: 0,
-                            });
-                        }
-                    }
-                }
-            }
-
-            const chartData = filledData.map(({ time, open, high, low, close }) => ({
+            const chartData = uniqueData.map(({ time, open, high, low, close }) => ({
                 time, open, high, low, close
             }));
 
-            const volumeData = filledData.map(({ time, open, close, volume }) => ({
+            const volumeData = uniqueData.map(({ time, open, close, volume }) => ({
                 time,
                 value: volume,
                 color: close >= open ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)',
@@ -190,7 +154,7 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
             candleSeriesRef.current.setData(chartData);
             volumeSeriesRef.current.setData(volumeData);
 
-            // Adjust the view to show the latest data
+            // Fit all available candles for the current day
             chartRef.current?.timeScale().fitContent();
         }
     }, [candles, interval]);
