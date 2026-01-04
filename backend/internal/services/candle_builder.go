@@ -103,14 +103,26 @@ func (cb *CandleBuilder) updateCandle(
 		cb.activeCandles[key] = active
 		// Skip standard update as initialization already handled this tick
 	} else if !exists {
-		// Very first candle for this instrument/interval
+		// Very first candle for this instrument/interval in memory
+		// Check database for last candle to maintain price continuity
+		var openPrice float64
+		lastCandle, err := cb.repo.GetLatestCandle(instrumentID.Hex(), string(interval))
+		if err == nil && lastCandle != nil {
+			// Use last saved candle's close as open price for continuity
+			openPrice = lastCandle.Close
+			log.Printf("Candle continuity: Starting %s candle for instrument at ₹%.2f (from last saved candle)", interval, openPrice)
+		} else {
+			// No previous candle exists, use current price
+			openPrice = price
+		}
+
 		active = &ActiveCandle{
 			InstrumentID: instrumentID,
 			Interval:     interval,
 			StartTime:    startTime,
-			Open:         price,
-			High:         price,
-			Low:          price,
+			Open:         openPrice,
+			High:         max(openPrice, price),
+			Low:          min(openPrice, price),
 			Close:        price,
 			Volume:       volume,
 			TickCount:    1,
