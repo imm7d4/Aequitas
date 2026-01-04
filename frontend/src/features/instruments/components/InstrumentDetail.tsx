@@ -19,9 +19,11 @@ import StarBorderIcon from '@mui/icons-material/StarBorder';
 import { instrumentService } from '../services/instrumentService';
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
 import { useMarketData } from '@/features/market/hooks/useMarketData';
+import { usePrevious } from '@/shared/hooks/usePrevious';
 import { TradePanel } from '@/features/trading/components/TradePanel';
 import { StockChart } from '@/features/market/components/StockChart';
 import type { Instrument } from '../types/instrument.types';
+
 
 export function InstrumentDetail() {
     const { id } = useParams<{ id: string }>();
@@ -34,6 +36,15 @@ export function InstrumentDetail() {
     const { prices } = useMarketData(id ? [id] : []);
     const marketData = id && prices[id] ? prices[id] : null;
     const ltp = marketData ? marketData.lastPrice : 0;
+
+    // Track previous price for tick-to-tick color comparison
+    const previousLtp = usePrevious(ltp);
+    const isPositive = marketData ? marketData.change >= 0 : true;
+
+    // Determine color based on tick-to-tick change
+    const tickColor = !previousLtp || ltp === 0
+        ? (isPositive ? 'success.main' : 'error.main')  // Fallback to overall change
+        : (ltp >= previousLtp ? 'success.main' : 'error.main');
 
     const {
         watchlists,

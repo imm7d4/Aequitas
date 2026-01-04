@@ -31,7 +31,9 @@ import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
 import { useMarketData } from '@/features/market/hooks/useMarketData';
 import { InstrumentCard } from './InstrumentCard';
 import { InstrumentSearch } from './InstrumentSearch';
+import { TickColoredPrice } from '@/shared/components/TickColoredPrice';
 import type { Instrument } from '../types/instrument.types';
+
 
 export const InstrumentList = () => {
     // Trigger data fetching on mount via useInstruments hook
@@ -284,7 +286,7 @@ export const InstrumentList = () => {
                                         <TableCell sx={{ fontWeight: 'bold' }}>{instrument.symbol}</TableCell>
                                         <TableCell>{instrument.name}</TableCell>
                                         <TableCell align="right" sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                            {marketData ? `₹${marketData.lastPrice.toFixed(2)}` : '--'}
+                                            <TickColoredPrice marketData={marketData} />
                                         </TableCell>
                                         <TableCell align="right" sx={{ color: isPositive ? 'success.main' : 'error.main', fontWeight: 600, whiteSpace: 'nowrap' }}>
                                             {marketData ? `${isPositive ? '+' : '-'}₹${Math.abs(marketData.change).toFixed(2)}` : '--'}

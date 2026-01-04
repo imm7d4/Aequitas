@@ -3,7 +3,9 @@ import { Card, CardContent, Typography, Chip, Box, Grid, IconButton } from '@mui
 import { Star as StarIcon, StarBorder as StarBorderIcon, TrendingUp, TrendingDown } from '@mui/icons-material';
 import type { Instrument } from '../types/instrument.types';
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
+import { usePrevious } from '@/shared/hooks/usePrevious';
 import type { MarketData } from '@/features/market/types/market.types';
+
 
 interface InstrumentCardProps {
     instrument: Instrument;
@@ -64,6 +66,15 @@ export const InstrumentCard = ({ instrument, onClick, marketData }: InstrumentCa
 
     const isPositive = marketData ? marketData.change >= 0 : true;
 
+    // Track previous price for tick-to-tick color comparison
+    const currentPrice = marketData?.lastPrice;
+    const previousPrice = usePrevious(currentPrice);
+
+    // Determine color based on tick-to-tick change
+    const tickColor = !previousPrice
+        ? (isPositive ? 'success.main' : 'error.main')  // Fallback to overall change
+        : (currentPrice && currentPrice >= previousPrice ? 'success.main' : 'error.main');
+
     return (
         <Card
             sx={{
@@ -99,11 +110,16 @@ export const InstrumentCard = ({ instrument, onClick, marketData }: InstrumentCa
                     {instrument.name}
                 </Typography>
 
+
                 {/* Price Section */}
                 {marketData && (
                     <Box sx={{ my: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
                         <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 0.5 }}>
-                            <Typography variant="h5" fontWeight={700}>
+                            <Typography
+                                variant="h5"
+                                fontWeight={700}
+                                color={tickColor}
+                            >
                                 ₹{marketData.lastPrice.toFixed(2)}
                             </Typography>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -138,6 +154,6 @@ export const InstrumentCard = ({ instrument, onClick, marketData }: InstrumentCa
                     </Grid>
                 </Grid>
             </CardContent>
-        </Card>
+        </Card >
     );
 };
