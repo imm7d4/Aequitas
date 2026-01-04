@@ -93,6 +93,11 @@ func main() {
 	pricingService.Start()
 	defer pricingService.Stop()
 
+	// Initialize candle cleanup service (runs every hour)
+	candleCleanupService := services.NewCandleCleanupService(candleRepo)
+	candleCleanupService.Start()
+	defer candleCleanupService.Stop()
+
 	// Initialize controllers
 	authController := controllers.NewAuthController(authService)
 	instrumentController := controllers.NewInstrumentController(instrumentService)
