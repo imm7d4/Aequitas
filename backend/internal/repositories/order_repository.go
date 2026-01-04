@@ -46,23 +46,64 @@ func (r *OrderRepository) Create(order *models.Order) (*models.Order, error) {
 	return order, nil
 }
 
-func (r *OrderRepository) FindByUserID(userID string) ([]*models.Order, error) {
-	objID, _ := primitive.ObjectIDFromHex(userID)
-	cursor, err := r.collection.Find(
-		context.Background(),
-		bson.M{"user_id": objID},
-		options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}}),
-	)
+func (r *OrderRepository) FindByUserID(userID string, filters map[string]interface{}, skip int, limit int) ([]*models.Order, int64, error) {
+	objID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	// Build query
+	query := bson.M{"user_id": objID}
+
+	// Add filters
+	if instrumentID, ok := filters["instrumentId"].(string); ok && instrumentID != "" {
+		instrObjID, err := primitive.ObjectIDFromHex(instrumentID)
+		if err == nil {
+			query["instrument_id"] = instrObjID
+		}
+	}
+
+	if status, ok := filters["status"].(string); ok && status != "" {
+		query["status"] = status
+	}
+
+	if startDate, ok := filters["startDate"].(time.Time); ok {
+		if endDate, ok := filters["endDate"].(time.Time); ok {
+			query["created_at"] = bson.M{
+				"$gte": startDate,
+				"$lte": endDate,
+			}
+		} else {
+			query["created_at"] = bson.M{"$gte": startDate}
+		}
+	} else if endDate, ok := filters["endDate"].(time.Time); ok {
+		query["created_at"] = bson.M{"$lte": endDate}
+	}
+
+	// Get total count
+	total, err := r.collection.CountDocuments(context.Background(), query)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Find with pagination
+	opts := options.Find().
+		SetSort(bson.D{{Key: "created_at", Value: -1}}).
+		SetSkip(int64(skip)).
+		SetLimit(int64(limit))
+
+	cursor, err := r.collection.Find(context.Background(), query, opts)
+	if err != nil {
+		return nil, 0, err
 	}
 	defer cursor.Close(context.Background())
 
 	var orders []*models.Order
 	if err = cursor.All(context.Background(), &orders); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return orders, nil
+
+	return orders, total, nil
 }
 
 func (r *OrderRepository) FindByID(id string) (*models.Order, error) {
@@ -77,4 +118,16 @@ func (r *OrderRepository) FindByID(id string) (*models.Order, error) {
 		return nil, nil
 	}
 	return &order, err
+}
+func (r *OrderRepository) Update(order *models.Order) (*models.Order, error) {
+	order.UpdatedAt = time.Now()
+	_, err := r.collection.ReplaceOne(
+		context.Background(),
+		bson.M{"_id": order.ID},
+		order,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return order, nil
 }

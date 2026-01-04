@@ -30,18 +30,19 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp }) => {
     const [orderType, setOrderType] = useState<'MARKET' | 'LIMIT'>('LIMIT');
     const [quantity, setQuantity] = useState<string>('');
     const [price, setPrice] = useState<string>(ltp > 0 ? ltp.toFixed(2) : '0');
+    const [isPriceTouched, setIsPriceTouched] = useState(false);
 
     useEffect(() => {
-        if (ltp > 0 && (price === '0' || price === '')) {
+        if (ltp > 0 && (price === '0' || price === '') && !isPriceTouched) {
             setPrice(ltp.toFixed(2));
         }
-    }, [ltp, price]);
+    }, [ltp, price, isPriceTouched]);
 
     useEffect(() => {
-        if (ltp > 0) {
-            setPrice(ltp.toFixed(2));
-        }
-    }, [instrument.id, ltp]);
+        // Only reset price when instrument changes, not on every LTP update
+        setPrice(ltp > 0 ? ltp.toFixed(2) : '0');
+        setIsPriceTouched(false);
+    }, [instrument.id]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -155,7 +156,10 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp }) => {
                             type="number"
                             size="small"
                             value={price}
-                            onChange={(e) => setPrice(e.target.value)}
+                            onChange={(e) => {
+                                setPrice(e.target.value);
+                                setIsPriceTouched(true);
+                            }}
                             helperText={`Tick Size: ${instrument.tickSize}`}
                             InputProps={{
                                 startAdornment: <InputAdornment position="start">₹</InputAdornment>,
