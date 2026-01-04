@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { createChart, ColorType, CandlestickSeries, HistogramSeries } from 'lightweight-charts';
+import { createChart, ColorType, CandlestickSeries, HistogramSeries, LineSeries } from 'lightweight-charts';
 import { Box, CircularProgress, Typography, Paper, ToggleButton, ToggleButtonGroup, useTheme } from '@mui/material';
 import { CandleInterval } from '../types/market.types';
 import { useStockChart } from '../hooks/useStockChart';
+import { useMarketData } from '../hooks/useMarketData';
 
 interface StockChartProps {
     instrumentId: string;
@@ -15,9 +16,12 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
     const chartRef = useRef<any>(null);
     const candleSeriesRef = useRef<any>(null);
     const volumeSeriesRef = useRef<any>(null);
+    const priceLineSeriesRef = useRef<any>(null);
 
     const [interval, setInterval] = useState<CandleInterval>('1m');
     const { candles, isLoading, error } = useStockChart(instrumentId, interval);
+    const { prices } = useMarketData([instrumentId]);
+    const currentPrice = prices[instrumentId]?.lastPrice || 0;
 
     useEffect(() => {
         if (!chartContainerRef.current) return;
@@ -82,9 +86,20 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
             },
         });
 
+        // Add current price line series
+        const priceLineSeries = chart.addSeries(LineSeries, {
+            color: theme.palette.primary.main,
+            lineWidth: 2,
+            priceLineVisible: false,
+            lastValueVisible: true,
+            crosshairMarkerVisible: true,
+            crosshairMarkerRadius: 4,
+        });
+
         chartRef.current = chart;
         candleSeriesRef.current = candleSeries;
         volumeSeriesRef.current = volumeSeries;
+        priceLineSeriesRef.current = priceLineSeries;
 
         const handleResize = () => {
             if (chartContainerRef.current) {
@@ -158,6 +173,20 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
             chartRef.current?.timeScale().fitContent();
         }
     }, [candles, interval]);
+
+    // Update current price line when price changes
+    useEffect(() => {
+        if (priceLineSeriesRef.current && currentPrice > 0 && candles.length > 0) {
+            // Get the last candle's time
+            const lastCandle = candles[candles.length - 1];
+            const lastTime = Math.floor(new Date(lastCandle.time).getTime() / 1000);
+
+            // Update price line to show current price at the latest time
+            priceLineSeriesRef.current.setData([
+                { time: lastTime, value: currentPrice }
+            ]);
+        }
+    }, [currentPrice, candles]);
 
     const handleIntervalChange = (
         _event: React.MouseEvent<HTMLElement>,

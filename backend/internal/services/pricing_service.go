@@ -12,6 +12,7 @@ import (
 type PricingService struct {
 	instrumentRepo *repositories.InstrumentRepository
 	marketDataRepo *repositories.MarketDataRepository
+	candleRepo     *repositories.CandleRepository
 	candleBuilder  *CandleBuilder
 	stopChan       chan struct{}
 	rng            *rand.Rand
@@ -20,6 +21,7 @@ type PricingService struct {
 func NewPricingService(
 	instrumentRepo *repositories.InstrumentRepository,
 	marketDataRepo *repositories.MarketDataRepository,
+	candleRepo *repositories.CandleRepository,
 	candleBuilder *CandleBuilder,
 ) *PricingService {
 	// Create a new random source with current time seed for varied randomness
@@ -27,6 +29,7 @@ func NewPricingService(
 	return &PricingService{
 		instrumentRepo: instrumentRepo,
 		marketDataRepo: marketDataRepo,
+		candleRepo:     candleRepo,
 		candleBuilder:  candleBuilder,
 		stopChan:       make(chan struct{}),
 		rng:            rand.New(source),
@@ -60,6 +63,13 @@ func (s *PricingService) simulatePrices() {
 		return
 	}
 
+	// Track updated instruments for logging
+	type updatedStock struct {
+		symbol string
+		price  float64
+	}
+	var updatedStocks []updatedStock
+
 	for _, inst := range instruments {
 		data, err := s.marketDataRepo.FindByInstrumentID(inst.ID.Hex())
 		if err != nil {
@@ -68,12 +78,23 @@ func (s *PricingService) simulatePrices() {
 		}
 
 		if data == nil {
-			// Initialize market data with varied base prices
-			// NSE stocks roughly ₹100-₹5000 range for top stocks
-			basePrice := 100.0 + s.rng.Float64()*4900.0
+			// Initialize market data using last candle price to maintain continuity
+			var basePrice float64
 
-			// Add some initial variance to open/high/low
-			variance := basePrice * 0.02 // 2% variance
+			// Try to get the last candle price for 1m interval
+			lastCandle, err := s.candleRepo.GetLatestCandle(inst.ID.Hex(), "1m")
+			if err == nil && lastCandle != nil {
+				// Use last candle's close price
+				basePrice = lastCandle.Close
+				log.Printf("Pricing: Initialized %s from last candle at ₹%.2f", inst.Symbol, basePrice)
+			} else {
+				// No candle history, use sensible default for NSE stocks
+				basePrice = 1000.0
+				log.Printf("Pricing: Initialized %s with default price ₹%.2f (no candle history)", inst.Symbol, basePrice)
+			}
+
+			// Add small initial variance to open/high/low
+			variance := basePrice * 0.01 // 1% variance
 			open := basePrice + (s.rng.Float64()-0.5)*variance
 			high := basePrice + s.rng.Float64()*variance
 			low := basePrice - s.rng.Float64()*variance
@@ -82,7 +103,7 @@ func (s *PricingService) simulatePrices() {
 				InstrumentID: inst.ID,
 				Symbol:       inst.Symbol,
 				LastPrice:    basePrice,
-				PrevClose:    basePrice * (0.98 + s.rng.Float64()*0.04), // -2% to +2% from current
+				PrevClose:    basePrice * (0.99 + s.rng.Float64()*0.02), // -1% to +1% from current
 				Open:         open,
 				High:         high,
 				Low:          low,
@@ -138,6 +159,19 @@ func (s *PricingService) simulatePrices() {
 
 		if err := s.marketDataRepo.Upsert(data); err != nil {
 			log.Printf("Pricing engine error: failed to update %s: %v", inst.Symbol, err)
+		} else {
+			// Track successfully updated stock
+			updatedStocks = append(updatedStocks, updatedStock{
+				symbol: inst.Symbol,
+				price:  data.LastPrice,
+			})
 		}
+	}
+
+	// Log one random stock price update per tick
+	if len(updatedStocks) > 0 {
+		randomIdx := s.rng.Intn(len(updatedStocks))
+		stock := updatedStocks[randomIdx]
+		log.Printf("📊 Price Update: %s = ₹%.2f", stock.symbol, stock.price)
 	}
 }

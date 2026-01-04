@@ -89,7 +89,7 @@ func main() {
 	})
 
 	// Initialize pricing engine
-	pricingService := services.NewPricingService(instrumentRepo, marketDataRepo, candleBuilder)
+	pricingService := services.NewPricingService(instrumentRepo, marketDataRepo, candleRepo, candleBuilder)
 	pricingService.Start()
 	defer pricingService.Stop()
 
