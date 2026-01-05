@@ -4,11 +4,17 @@ import { APIResponse } from '@/features/auth/types';
 export interface OrderRequest {
     instrumentId: string;
     side: 'BUY' | 'SELL';
-    orderType: 'MARKET' | 'LIMIT';
+    orderType: 'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT' | 'TRAILING_STOP';
     quantity: number;
     price?: number;
     clientOrderId: string;
     symbol: string;
+
+    // Stop Order Fields
+    stopPrice?: number;
+    limitPrice?: number;
+    trailAmount?: number;
+    trailType?: 'ABSOLUTE' | 'PERCENTAGE';
 }
 
 export interface OrderResponse {
@@ -16,12 +22,21 @@ export interface OrderResponse {
     orderId: string;
     symbol: string;
     side: 'BUY' | 'SELL';
-    orderType: 'MARKET' | 'LIMIT';
+    orderType: 'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT' | 'TRAILING_STOP';
     quantity: number;
     price?: number;
     status: string;
     createdAt: string;
     validatedAt: string;
+
+    // Stop Order Fields
+    stopPrice?: number;
+    limitPrice?: number;
+    trailAmount?: number;
+    trailType?: 'ABSOLUTE' | 'PERCENTAGE';
+    currentStopPrice?: number;
+    triggeredAt?: string;
+    triggerPrice?: number;
 }
 
 export interface PaginatedOrdersResponse {

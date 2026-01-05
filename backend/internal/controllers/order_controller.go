@@ -33,6 +33,12 @@ type OrderRequest struct {
 	Quantity      int      `json:"quantity"`
 	Price         *float64 `json:"price,omitempty"`
 	ClientOrderID string   `json:"clientOrderId"`
+
+	// Stop Order Fields
+	StopPrice   *float64 `json:"stopPrice,omitempty"`
+	LimitPrice  *float64 `json:"limitPrice,omitempty"`
+	TrailAmount *float64 `json:"trailAmount,omitempty"`
+	TrailType   string   `json:"trailType,omitempty"`
 }
 
 func (c *OrderController) PlaceOrder(w http.ResponseWriter, r *http.Request) {
@@ -64,6 +70,12 @@ func (c *OrderController) PlaceOrder(w http.ResponseWriter, r *http.Request) {
 		Price:         req.Price,
 		ClientOrderID: req.ClientOrderID,
 		Source:        "UI",
+
+		// Stop Order Fields
+		StopPrice:   req.StopPrice,
+		LimitPrice:  req.LimitPrice,
+		TrailAmount: req.TrailAmount,
+		TrailType:   req.TrailType,
 	}
 
 	res, err := c.orderService.PlaceOrder(userID, order)

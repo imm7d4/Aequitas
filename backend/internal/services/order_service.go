@@ -45,8 +45,16 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 	}
 
 	// Validate order type
-	if req.OrderType != "MARKET" && req.OrderType != "LIMIT" {
-		return nil, errors.New("invalid order type. Must be MARKET or LIMIT")
+	validOrderTypes := []string{"MARKET", "LIMIT", "STOP", "STOP_LIMIT", "TRAILING_STOP"}
+	isValidType := false
+	for _, validType := range validOrderTypes {
+		if req.OrderType == validType {
+			isValidType = true
+			break
+		}
+	}
+	if !isValidType {
+		return nil, errors.New("invalid order type. Must be MARKET, LIMIT, STOP, STOP_LIMIT, or TRAILING_STOP")
 	}
 
 	// Market orders must not have a price
@@ -59,7 +67,7 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 		return nil, errors.New("quantity must be positive")
 	}
 
-	// 2. Instrument Validation
+	// 2. Get Instrument for Validation (needed for stop order validation)
 	instrument, err := s.instrumentRepo.FindByID(req.InstrumentID.Hex())
 	if err != nil || instrument == nil {
 		return nil, errors.New("instrument not found or inactive")
@@ -68,12 +76,31 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 		return nil, errors.New("instrument is not active for trading")
 	}
 
-	// 3. Lot Size Validation
+	// 3. Stop Order Validation (if applicable)
+	if req.OrderType == "STOP" || req.OrderType == "STOP_LIMIT" || req.OrderType == "TRAILING_STOP" {
+		// Get current market price for validation
+		marketData, err := s.marketDataRepo.FindByInstrumentID(instrument.ID.Hex())
+		if err != nil || marketData == nil {
+			return nil, errors.New("market data unavailable for stop order validation")
+		}
+		currentPrice := marketData.LastPrice
+
+		if err := s.validateStopOrder(&req, instrument, currentPrice); err != nil {
+			return nil, err
+		}
+
+		// Initialize trailing stop if applicable
+		if req.OrderType == "TRAILING_STOP" {
+			s.initializeTrailingStop(&req, currentPrice)
+		}
+	}
+
+	// 4. Lot Size Validation
 	if req.Quantity%instrument.LotSize != 0 {
 		return nil, fmt.Errorf("quantity must be a multiple of lot size (%d)", instrument.LotSize)
 	}
 
-	// 4. Price & Tick Size Validation
+	// 6. Price & Tick Size Validation
 	var orderPrice float64
 	if req.OrderType == "LIMIT" {
 		if req.Price == nil || *req.Price <= 0 {
@@ -95,11 +122,21 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 		}
 		// Market orders don't have a fixed price, but we use LTP + 1% buffer for risk check
 		orderPrice = marketData.LastPrice * 1.01
+	} else if req.OrderType == "STOP" || req.OrderType == "STOP_LIMIT" || req.OrderType == "TRAILING_STOP" {
+		// For stop orders, use stop price for balance validation
+		if req.StopPrice != nil {
+			orderPrice = *req.StopPrice
+		} else if req.CurrentStopPrice != nil {
+			// For trailing stops
+			orderPrice = *req.CurrentStopPrice
+		} else {
+			return nil, errors.New("stop price required for stop orders")
+		}
 	} else {
 		return nil, errors.New("invalid order type")
 	}
 
-	// 5. Get Trading Account and Risk Check
+	// 7. Get Trading Account and Risk Check
 	account, err := s.tradingAccountRepo.FindByUserID(userID)
 	if err != nil || account == nil {
 		return nil, errors.New("trading account not found")
@@ -117,11 +154,18 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 		return nil, errors.New("SELL orders are not yet supported. Position tracking will be implemented in Phase 7")
 	}
 
-	// 6. Finalize Order
+	// 8. Finalize Order
 	userUID, _ := primitive.ObjectIDFromHex(userID)
 	req.UserID = userUID
 	req.AccountID = account.ID
-	req.Status = "NEW"
+
+	// Set status based on order type
+	if req.OrderType == "STOP" || req.OrderType == "STOP_LIMIT" || req.OrderType == "TRAILING_STOP" {
+		req.Status = "PENDING" // Stop orders start as PENDING
+	} else {
+		req.Status = "NEW" // Regular orders start as NEW
+	}
+
 	req.OrderID = fmt.Sprintf("ORD-%d", time.Now().UnixNano())
 	req.ValidatedAt = time.Now()
 
@@ -224,4 +268,121 @@ func (s *OrderService) ModifyOrder(userID string, orderID string, newQuantity in
 	order.UpdatedAt = time.Now()
 
 	return s.orderRepo.Update(order)
+}
+
+// validateStopOrder validates stop-specific order fields
+func (s *OrderService) validateStopOrder(order *models.Order, instrument *models.Instrument, currentPrice float64) error {
+	// 1. Validate stop price for STOP and STOP_LIMIT orders
+	if order.OrderType == "STOP" || order.OrderType == "STOP_LIMIT" {
+		if order.StopPrice == nil || *order.StopPrice <= 0 {
+			return errors.New("stop price is required and must be positive")
+		}
+
+		// Tick size validation
+		remainder := math.Mod(*order.StopPrice, instrument.TickSize)
+		if remainder > 0.000001 && instrument.TickSize-remainder > 0.000001 {
+			return fmt.Errorf("stop price must be a multiple of tick size (%v)", instrument.TickSize)
+		}
+
+		// Logical placement validation
+		if order.Side == "SELL" && *order.StopPrice >= currentPrice {
+			return fmt.Errorf("SELL stop price must be below current market price (₹%.2f). You entered ₹%.2f. Tip: SELL stops protect long positions by triggering when price falls", currentPrice, *order.StopPrice)
+		}
+		if order.Side == "BUY" && *order.StopPrice <= currentPrice {
+			return fmt.Errorf("BUY stop price must be above current market price (₹%.2f). You entered ₹%.2f. Tip: BUY stops trigger breakout entries when price rises", currentPrice, *order.StopPrice)
+		}
+
+		// Warning for stop price too close to market (within 0.5%)
+		minDistance := currentPrice * 0.005
+		if math.Abs(currentPrice-*order.StopPrice) < minDistance {
+			// This is a warning, not an error - allow the order but user should be warned in UI
+			// For now, we'll allow it
+		}
+	}
+
+	// 2. Validate limit price for STOP_LIMIT orders
+	if order.OrderType == "STOP_LIMIT" {
+		if order.LimitPrice == nil || *order.LimitPrice <= 0 {
+			return errors.New("limit price is required for stop-limit orders")
+		}
+
+		// Tick size validation
+		remainder := math.Mod(*order.LimitPrice, instrument.TickSize)
+		if remainder > 0.000001 && instrument.TickSize-remainder > 0.000001 {
+			return fmt.Errorf("limit price must be a multiple of tick size (%v)", instrument.TickSize)
+		}
+
+		// Validate logical relationship between stop and limit price
+		if order.Side == "BUY" && *order.LimitPrice < *order.StopPrice {
+			return fmt.Errorf("BUY stop-limit: limit price (₹%.2f) must be >= stop price (₹%.2f). Tip: After price rises to ₹%.2f, you're willing to buy up to ₹%.2f", *order.LimitPrice, *order.StopPrice, *order.StopPrice, *order.LimitPrice)
+		}
+		if order.Side == "SELL" && *order.LimitPrice > *order.StopPrice {
+			return fmt.Errorf("SELL stop-limit: limit price (₹%.2f) must be <= stop price (₹%.2f). Tip: After price falls to ₹%.2f, you're willing to sell down to ₹%.2f", *order.LimitPrice, *order.StopPrice, *order.StopPrice, *order.LimitPrice)
+		}
+	}
+
+	// 3. Validate trailing stop parameters
+	if order.OrderType == "TRAILING_STOP" {
+		if order.TrailAmount == nil || *order.TrailAmount <= 0 {
+			return errors.New("trail amount is required and must be positive")
+		}
+
+		if order.TrailType == "" {
+			return errors.New("trail type is required (ABSOLUTE or PERCENTAGE)")
+		}
+
+		if order.TrailType != "ABSOLUTE" && order.TrailType != "PERCENTAGE" {
+			return errors.New("trail type must be ABSOLUTE or PERCENTAGE")
+		}
+
+		// Validate percentage range
+		if order.TrailType == "PERCENTAGE" {
+			if *order.TrailAmount < 0.1 || *order.TrailAmount > 50 {
+				return errors.New("percentage trail amount must be between 0.1% and 50%")
+			}
+		}
+
+		// Validate absolute amount
+		if order.TrailType == "ABSOLUTE" {
+			if *order.TrailAmount < instrument.TickSize {
+				return fmt.Errorf("absolute trail amount must be >= tick size (%v)", instrument.TickSize)
+			}
+		}
+	}
+
+	return nil
+}
+
+// initializeTrailingStop initializes trailing stop fields based on current price
+func (s *OrderService) initializeTrailingStop(order *models.Order, currentPrice float64) {
+	if order.TrailAmount == nil || order.TrailType == "" {
+		return
+	}
+
+	var initialStopPrice float64
+
+	if order.Side == "SELL" {
+		// For SELL trailing stops (protecting long positions)
+		order.HighestPrice = &currentPrice
+
+		if order.TrailType == "PERCENTAGE" {
+			initialStopPrice = currentPrice * (1 - *order.TrailAmount/100)
+		} else {
+			// ABSOLUTE
+			initialStopPrice = currentPrice - *order.TrailAmount
+		}
+	} else {
+		// For BUY trailing stops (protecting short positions)
+		order.LowestPrice = &currentPrice
+
+		if order.TrailType == "PERCENTAGE" {
+			initialStopPrice = currentPrice * (1 + *order.TrailAmount/100)
+		} else {
+			// ABSOLUTE
+			initialStopPrice = currentPrice + *order.TrailAmount
+		}
+	}
+
+	order.CurrentStopPrice = &initialStopPrice
+	order.StopPrice = &initialStopPrice // Also set StopPrice for consistency
 }

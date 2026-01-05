@@ -2,7 +2,7 @@
 
 **Epic:** User Profile & Personalization
 **Phase:** Phase 3 - User Profile
-**Status:** Not Started
+**Status:** Completed
 
 ## User Story
 
