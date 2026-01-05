@@ -17,6 +17,7 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
     const candleSeriesRef = useRef<any>(null);
     const volumeSeriesRef = useRef<any>(null);
     const priceLineSeriesRef = useRef<any>(null);
+    const hasFittedRef = useRef(false);
 
     const [interval, setInterval] = useState<CandleInterval>('1m');
     const { candles, isLoading, error } = useStockChart(instrumentId, interval);
@@ -169,10 +170,18 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
             candleSeriesRef.current.setData(chartData);
             volumeSeriesRef.current.setData(volumeData);
 
-            // Fit all available candles for the current day
-            chartRef.current?.timeScale().fitContent();
+            // Fit only once after initial REST load, never on live ticks
+            if (!hasFittedRef.current) {
+                chartRef.current?.timeScale().fitContent();
+                hasFittedRef.current = true;
+            }
         }
     }, [candles, interval]);
+
+    // Reset fit flag when interval changes
+    useEffect(() => {
+        hasFittedRef.current = false;
+    }, [interval]);
 
     // Update current price line when price changes
     useEffect(() => {

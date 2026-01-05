@@ -17,9 +17,15 @@ class WebSocketService {
     private url: string;
 
     constructor() {
-        // In development, assume localhost:8080
-        // In production, this would be determined by the environment
-        this.url = 'ws://localhost:8080/ws';
+        // Get base URL from environment or default to localhost
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
+        // Convert HTTP(S) URL to WS(S) URL
+        const wsProtocol = apiUrl.startsWith('https') ? 'wss' : 'ws';
+        const baseUrl = apiUrl.replace(/^https?:\/\//, '').replace(/\/api$/, '');
+
+        this.url = `${wsProtocol}://${baseUrl}/ws`;
+        console.log('WebSocket URL configured:', this.url);
     }
 
     connect() {

@@ -102,4 +102,23 @@ Frontend will start on `http://localhost:5173`
 
 ## Environment Variables
 
-See `.env` file for configuration.
+Create a `.env` file in the frontend directory (copy from `.env.example`):
+
+```bash
+# API Base URL
+VITE_API_URL=http://localhost:8080/api
+```
+
+### Production Deployment
+
+For production, set `VITE_API_URL` to your backend API URL:
+
+```bash
+# Example production configuration
+VITE_API_URL=https://api.yourdomain.com/api
+```
+
+**Note**: The WebSocket connection will automatically use the same host as the API URL:
+- `http://` → `ws://`
+- `https://` → `wss://` (secure WebSocket)
+

@@ -86,6 +86,8 @@ func (cb *CandleBuilder) updateCandle(
 	if exists && !active.StartTime.Equal(startTime) {
 		// Store previous close to maintain continuity (Standard Charting Behavior)
 		prevClose := active.Close
+		log.Printf("🔄 Candle transition [%s]: Completing candle with Close=%.2f, Starting new candle with Open=%.2f",
+			interval, prevClose, prevClose)
 		cb.completeCandle(active)
 
 		// Start new candle using prevClose as Open
