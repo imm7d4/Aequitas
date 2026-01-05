@@ -174,7 +174,7 @@ export function InstrumentDetail() {
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <Box sx={{ textAlign: 'right' }}>
-                            <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ lineHeight: 1, fontFamily: '"Outfit", sans-serif' }}>
+                            <Typography variant="h5" fontWeight={800} color={tickColor} sx={{ lineHeight: 1, fontFamily: '"Outfit", sans-serif' }}>
                                 ₹{ltp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </Typography>
                             {marketData && (

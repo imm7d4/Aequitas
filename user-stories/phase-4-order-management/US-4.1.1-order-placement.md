@@ -2,7 +2,7 @@
 
 **Epic:** Trading Engine
 **Phase:** Phase 4 - Order Management System
-**Status:** In Progress
+**Status:** Complete
 
 ## User Story
 
@@ -13,37 +13,37 @@ So that my orders are accurate, compliant, and safely accepted by the trading sy
 ## Acceptance Criteria
 
 ### 1. Order Input & Types
-- [ ] Users can select BUY or SELL.
-- [ ] Users can select MARKET or LIMIT order types.
-- [ ] Order side, type, instrument, and quantity are mandatory.
-- [ ] Quantity must be a positive whole number.
-- [ ] LIMIT orders require a valid price; MARKET orders must not accept a price input.
+- [x] Users can select BUY or SELL.
+- [x] Users can select MARKET or LIMIT order types.
+- [x] Order side, type, instrument, and quantity are mandatory.
+- [x] Quantity must be a positive whole number.
+- [x] LIMIT orders require a valid price; MARKET orders must not accept a price input.
 
 ### 2. Price & Quantity Validation
-- [ ] Price and quantity must be positive numbers.
-- [ ] Price precision must follow instrument tick size.
-- [ ] Quantity must respect instrument lot size / minimum order size.
-- [ ] Orders violating constraints are rejected with descriptive errors.
+- [x] Price and quantity must be positive numbers.
+- [x] Price precision must follow instrument tick size.
+- [x] Quantity must respect instrument lot size / minimum order size.
+- [x] Orders violating constraints are rejected with descriptive errors.
 
 ### 3. Balance & Risk Validation
-- [ ] **BUY orders** validate available balance:
+- [x] **BUY orders** validate available balance:
     - LIMIT: `qty × price`
     - MARKET: `qty × current LTP × buffer` (e.g., +1%)
-- [ ] **SELL orders** validate available holdings.
-- [ ] Orders exceeding balance/holdings are rejected.
+- [/] **SELL orders** validate available holdings (deferred to Phase 7 - position tracking).
+- [x] Orders exceeding balance/holdings are rejected.
 
 ### 4. Order Lifecycle & Status
-- [ ] Orders created with status: **NEW** (validated, accepted).
-- [ ] Orders include timestamps: `created_at` and `validated_at`.
-- [ ] Orders remain NEW until sent to the Matching Engine (Phase 6).
+- [x] Orders created with status: **NEW** (validated, accepted).
+- [x] Orders include timestamps: `created_at` and `validated_at`.
+- [x] Orders remain NEW until sent to the Matching Engine (Phase 6).
 
 ### 5. Idempotency & Safety
-- [ ] Duplicate order submissions (same `clientOrderId`) are rejected.
-- [ ] Orders are atomic: Either fully accepted or fully rejected. No partial persistence.
+- [x] Duplicate order submissions (same `clientOrderId`) are rejected via unique DB index.
+- [x] Orders are atomic: Either fully accepted or fully rejected. No partial persistence.
 
 ### 6. User Feedback
-- [ ] Users receive immediate confirmation with an order reference ID.
-- [ ] Rejection reasons are clear and actionable.
+- [x] Users receive immediate confirmation with an order reference ID.
+- [x] Rejection reasons are clear and actionable.
 
 ## Technical Requirements
 

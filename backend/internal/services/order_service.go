@@ -34,7 +34,27 @@ func NewOrderService(
 }
 
 func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Order, error) {
-	// 1. Basic Validation
+	// 1. Basic Input Validation
+	if req.Side == "" || req.OrderType == "" || req.InstrumentID.IsZero() || req.Quantity <= 0 {
+		return nil, errors.New("side, type, instrument, and quantity are mandatory fields")
+	}
+
+	// Validate side
+	if req.Side != "BUY" && req.Side != "SELL" {
+		return nil, errors.New("invalid order side. Must be BUY or SELL")
+	}
+
+	// Validate order type
+	if req.OrderType != "MARKET" && req.OrderType != "LIMIT" {
+		return nil, errors.New("invalid order type. Must be MARKET or LIMIT")
+	}
+
+	// Market orders must not have a price
+	if req.OrderType == "MARKET" && req.Price != nil {
+		return nil, errors.New("market orders must not specify a price")
+	}
+
+	// Quantity must be positive
 	if req.Quantity <= 0 {
 		return nil, errors.New("quantity must be positive")
 	}
@@ -79,28 +99,28 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 		return nil, errors.New("invalid order type")
 	}
 
-	// 5. Risk Check (BUY only for now)
-	if req.Side == "BUY" {
-		account, err := s.tradingAccountRepo.FindByUserID(userID)
-		if err != nil || account == nil {
-			return nil, errors.New("trading account not found")
-		}
+	// 5. Get Trading Account and Risk Check
+	account, err := s.tradingAccountRepo.FindByUserID(userID)
+	if err != nil || account == nil {
+		return nil, errors.New("trading account not found")
+	}
 
+	// Risk Check based on side
+	if req.Side == "BUY" {
 		requiredFunds := float64(req.Quantity) * orderPrice
 		if account.Balance < requiredFunds {
-			return nil, fmt.Errorf("insufficient balance. Required: %0.2f, Available: %0.2f (includes 1%% market buffer if applicable)", requiredFunds, account.Balance)
+			return nil, fmt.Errorf("insufficient balance. Required: ₹%0.2f, Available: ₹%0.2f (includes 1%% market buffer if applicable)", requiredFunds, account.Balance)
 		}
 	} else if req.Side == "SELL" {
 		// TODO: Implement position tracking in Phase 7
 		// For now, reject all SELL orders to prevent short selling
 		return nil, errors.New("SELL orders are not yet supported. Position tracking will be implemented in Phase 7")
-	} else {
-		return nil, errors.New("invalid order side")
 	}
 
 	// 6. Finalize Order
 	userUID, _ := primitive.ObjectIDFromHex(userID)
 	req.UserID = userUID
+	req.AccountID = account.ID
 	req.Status = "NEW"
 	req.OrderID = fmt.Sprintf("ORD-%d", time.Now().UnixNano())
 	req.ValidatedAt = time.Now()
