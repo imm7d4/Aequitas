@@ -16,6 +16,8 @@ import { TelemetryProvider } from '@/shared/services/telemetry/TelemetryProvider
 import { ProfilePage } from '@/features/profile/components/ProfilePage';
 import { NotFound } from '@/shared/components/NotFound';
 
+import { PortfolioPage } from '@/features/portfolio/pages/PortfolioPage';
+
 export function Router(): JSX.Element {
     return (
         <BrowserRouter>
@@ -35,6 +37,7 @@ export function Router(): JSX.Element {
                         }
                     >
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/portfolio" element={<PortfolioPage />} />
                         <Route path="/orders" element={<OrdersPage />} />
                         <Route path="/instruments" element={<InstrumentsPage />} />
                         <Route path="/instruments/:id" element={<InstrumentDetail />} />

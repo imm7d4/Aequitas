@@ -66,6 +66,7 @@ func main() {
 	orderRepo := repositories.NewOrderRepository(db)
 	candleRepo := repositories.NewCandleRepository(db)
 	tradeRepo := repositories.NewTradeRepository(db)
+	portfolioRepo := repositories.NewPortfolioRepository(db)
 
 	// Initialize services
 	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo, transactionRepo)
@@ -75,7 +76,8 @@ func main() {
 	watchlistService := services.NewWatchlistService(watchlistRepo, instrumentRepo)
 	telemetryService := services.NewTelemetryService(telemetryRepo)
 	userService := services.NewUserService(userRepo)
-	matchingService := services.NewMatchingService(orderRepo, tradeRepo, marketDataRepo, tradingAccountService)
+	portfolioService := services.NewPortfolioService(portfolioRepo, marketService, tradingAccountService)
+	matchingService := services.NewMatchingService(orderRepo, tradeRepo, marketDataRepo, tradingAccountService, portfolioService)
 	orderService := services.NewOrderService(orderRepo, instrumentRepo, tradingAccountRepo, marketDataRepo, matchingService)
 	candleService := services.NewCandleService(candleRepo)
 	candleBuilder := services.NewCandleBuilder(candleRepo)
@@ -121,6 +123,7 @@ func main() {
 	orderController := controllers.NewOrderController(orderService)
 	candleController := controllers.NewCandleController(candleService)
 	tradeController := controllers.NewTradeController(tradeService)
+	portfolioController := controllers.NewPortfolioController(portfolioService)
 
 	// Set up router
 	router := mux.NewRouter()
@@ -187,6 +190,12 @@ func main() {
 	// Trade routes
 	protected.HandleFunc("/trades", tradeController.GetUserTrades).Methods("GET", "OPTIONS")
 	protected.HandleFunc("/trades/order/{orderId}", tradeController.GetTradesByOrder).Methods("GET", "OPTIONS")
+
+	// Portfolio routes
+	protected.HandleFunc("/portfolio/holdings", portfolioController.GetHoldings).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/portfolio/summary", portfolioController.GetSummary).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/portfolio/snapshot", portfolioController.CaptureSnapshot).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/portfolio/history", portfolioController.GetHistory).Methods("GET", "OPTIONS")
 
 	// Admin routes (require admin role)
 	admin := protected.PathPrefix("/admin").Subrouter()

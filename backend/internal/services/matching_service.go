@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -10,11 +11,12 @@ import (
 )
 
 type MatchingService struct {
-	orderRepo      *repositories.OrderRepository
-	tradeRepo      *repositories.TradeRepository
-	marketDataRepo *repositories.MarketDataRepository
-	accountService *TradingAccountService
-	stopChan       chan struct{}
+	orderRepo        *repositories.OrderRepository
+	tradeRepo        *repositories.TradeRepository
+	marketDataRepo   *repositories.MarketDataRepository
+	accountService   *TradingAccountService
+	portfolioService *PortfolioService
+	stopChan         chan struct{}
 }
 
 func NewMatchingService(
@@ -22,13 +24,15 @@ func NewMatchingService(
 	tradeRepo *repositories.TradeRepository,
 	marketDataRepo *repositories.MarketDataRepository,
 	accountService *TradingAccountService,
+	portfolioService *PortfolioService,
 ) *MatchingService {
 	return &MatchingService{
-		orderRepo:      orderRepo,
-		tradeRepo:      tradeRepo,
-		marketDataRepo: marketDataRepo,
-		accountService: accountService,
-		stopChan:       make(chan struct{}),
+		orderRepo:        orderRepo,
+		tradeRepo:        tradeRepo,
+		marketDataRepo:   marketDataRepo,
+		accountService:   accountService,
+		portfolioService: portfolioService,
+		stopChan:         make(chan struct{}),
 	}
 }
 
@@ -85,6 +89,12 @@ func (s *MatchingService) ExecuteMarketOrder(order *models.Order) (*models.Trade
 	err = s.accountService.SettleTrade(order.UserID.Hex(), trade.NetValue, trade.TradeID, trade.Side)
 	if err != nil {
 		log.Printf("ERROR: Settlement failed for trade %s: %v", trade.TradeID, err)
+	}
+
+	// 5. Update Portfolio (Holdings)
+	err = s.portfolioService.UpdatePosition(context.Background(), trade)
+	if err != nil {
+		log.Printf("ERROR: Portfolio update failed for trade %s: %v", trade.TradeID, err)
 	}
 
 	log.Printf("MATCHED: Market Order %s FILLED at ₹%.2f (Qty: %d)", order.OrderID, executionPrice, order.Quantity)
@@ -152,6 +162,12 @@ func (s *MatchingService) MatchLimitOrders() {
 			settleErr := s.accountService.SettleTrade(order.UserID.Hex(), trade.NetValue, trade.TradeID, trade.Side)
 			if settleErr != nil {
 				log.Printf("ERROR: Settlement failed for limit trade %s: %v", trade.TradeID, settleErr)
+			}
+
+			// Update Portfolio (Holdings)
+			portfolioErr := s.portfolioService.UpdatePosition(context.Background(), trade)
+			if portfolioErr != nil {
+				log.Printf("ERROR: Portfolio update failed for trade %s: %v", trade.TradeID, portfolioErr)
 			}
 
 			log.Printf("MATCHED: Limit Order %s FILLED at ₹%.2f (Target: ₹%.2f, Qty: %d)", order.OrderID, fillPrice, *order.Price, order.Quantity)
