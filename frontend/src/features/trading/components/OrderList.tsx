@@ -37,6 +37,7 @@ import { OrderResponse } from '../services/orderService';
 import { useState } from 'react';
 import { EditOrderDialog } from './EditOrderDialog';
 import { useMarketData } from '@/features/market/hooks/useMarketData';
+import { OrderTypeBadge } from './OrderTypeBadge';
 
 interface OrderListProps {
     orders: OrderResponse[];
@@ -217,6 +218,7 @@ export const OrderList: React.FC<OrderListProps> = ({ orders = [], onCancel, onM
                         <TableCell sx={{ fontWeight: 700 }}>Side</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 700 }}>Qty</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 700 }}>Price</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 700 }}>Stop Price</TableCell>
                         <TableCell align="center" sx={{ fontWeight: 700 }}>Status</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
                     </TableRow>
@@ -271,9 +273,7 @@ export const OrderList: React.FC<OrderListProps> = ({ orders = [], onCancel, onM
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
-                                        <Typography variant="caption" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
-                                            {order.orderType}
-                                        </Typography>
+                                        <OrderTypeBadge orderType={order.orderType as any} />
                                     </TableCell>
                                     <TableCell>
                                         <Box
@@ -290,20 +290,26 @@ export const OrderList: React.FC<OrderListProps> = ({ orders = [], onCancel, onM
                                         {order.quantity}
                                     </TableCell>
                                     <TableCell align="right" sx={{ fontWeight: 700 }}>
-                                        {order.orderType === 'MARKET'
-                                            ? 'MARKET'
-                                            : order.orderType === 'STOP' || order.orderType === 'STOP_LIMIT' || order.orderType === 'TRAILING_STOP'
-                                                ? order.currentStopPrice
-                                                    ? `Stop: ₹${order.currentStopPrice.toLocaleString()}`
-                                                    : order.stopPrice
-                                                        ? `Stop: ₹${order.stopPrice.toLocaleString()}`
-                                                        : order.price
-                                                            ? `₹${order.price.toLocaleString()}`
-                                                            : 'MARKET'
-                                                : order.price
-                                                    ? `₹${order.price.toLocaleString()}`
-                                                    : 'MARKET'
-                                        }
+                                        {order.price ? `₹${order.price.toLocaleString()}` : 'MARKET'}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {order.stopPrice || order.currentStopPrice ? (
+                                            <Box>
+                                                <Typography variant="body2" fontWeight={700} fontFamily="monospace" color="warning.main">
+                                                    ₹{(order.currentStopPrice || order.stopPrice)!.toLocaleString()}
+                                                </Typography>
+                                                {isExpanded && order.orderType === 'TRAILING_STOP' && currentPrice && (
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {order.side === 'BUY'
+                                                            ? `+${(((order.currentStopPrice || order.stopPrice)! - currentPrice.lastPrice) / currentPrice.lastPrice * 100).toFixed(2)}%`
+                                                            : `-${((currentPrice.lastPrice - (order.currentStopPrice || order.stopPrice)!) / currentPrice.lastPrice * 100).toFixed(2)}%`
+                                                        }
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                        ) : (
+                                            <Typography variant="body2" color="text.disabled">—</Typography>
+                                        )}
                                     </TableCell>
                                     <TableCell align="center">
                                         {getStatusChip(order.status)}

@@ -8,17 +8,12 @@ import {
     Tooltip,
     Pagination,
     Stack,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Button,
+    Tabs,
+    Tab,
 } from '@mui/material';
 import {
     Refresh as RefreshIcon,
     History as OrdersIcon,
-    FilterList as FilterIcon,
-    Clear as ClearIcon,
 } from '@mui/icons-material';
 import { OrderList } from '@/features/trading/components/OrderList';
 import { orderService, OrderResponse, OrderFilters } from '@/features/trading/services/orderService';
@@ -30,17 +25,35 @@ export function OrdersPage(): JSX.Element {
     const [totalPages, setTotalPages] = useState(1);
     const [statusFilter, setStatusFilter] = useState<string>('');
 
+    // For "pending" and "executed" tabs, we need client-side filtering
     const filters: OrderFilters = {
-        limit: 10,
-        status: statusFilter || undefined,
+        limit: statusFilter === 'pending' || statusFilter === 'executed' ? 100 : 10,
+        status: (statusFilter === 'pending' || statusFilter === 'executed') ? undefined : (statusFilter || undefined),
     };
 
     const fetchOrders = async () => {
         setIsLoading(true);
         try {
             const data = await orderService.getOrders({ ...filters, page });
-            setOrders(data.orders || []);
-            setTotalPages(data.pagination.totalPages);
+            let filteredOrders = data.orders || [];
+
+            // Client-side filter for pending tab (NEW + PENDING)
+            if (statusFilter === 'pending') {
+                filteredOrders = filteredOrders.filter(order =>
+                    order.status === 'NEW' || order.status === 'PENDING'
+                );
+            }
+
+            // Client-side filter for executed tab (TRIGGERED + FILLED)
+            if (statusFilter === 'executed') {
+                filteredOrders = filteredOrders.filter(order =>
+                    order.status === 'TRIGGERED' || order.status === 'FILLED'
+                );
+            }
+
+            setOrders(filteredOrders);
+            // For pending/executed tabs with client-side filtering, hide pagination
+            setTotalPages((statusFilter === 'pending' || statusFilter === 'executed') ? 1 : data.pagination.totalPages);
         } catch (error) {
             console.error('Failed to fetch orders:', error);
             setOrders([]);
@@ -65,11 +78,6 @@ export function OrdersPage(): JSX.Element {
         } catch (error) {
             console.error('Failed to modify order:', error);
         }
-    };
-
-    const handleClearFilters = () => {
-        setStatusFilter('');
-        setPage(1);
     };
 
     useEffect(() => {
@@ -117,52 +125,40 @@ export function OrdersPage(): JSX.Element {
                     </Tooltip>
                 </Box>
 
-                {/* Filters */}
+                {/* Status Tabs */}
                 <Paper
                     elevation={0}
                     sx={{
-                        p: 2,
                         mb: 3,
                         border: '1px solid',
                         borderColor: 'divider',
                         borderRadius: 2,
+                        overflow: 'hidden',
                     }}
                 >
-                    <Stack direction="row" spacing={2} alignItems="center">
-                        <FilterIcon color="action" />
-                        <Typography variant="subtitle2" fontWeight={600} sx={{ minWidth: 60 }}>
-                            Filters:
-                        </Typography>
-
-                        <FormControl size="small" sx={{ minWidth: 150 }}>
-                            <InputLabel>Status</InputLabel>
-                            <Select
-                                value={statusFilter}
-                                label="Status"
-                                onChange={(e) => {
-                                    setStatusFilter(e.target.value);
-                                    setPage(1);
-                                }}
-                            >
-                                <MenuItem value="">All</MenuItem>
-                                <MenuItem value="NEW">Pending</MenuItem>
-                                <MenuItem value="FILLED">Filled</MenuItem>
-                                <MenuItem value="CANCELLED">Cancelled</MenuItem>
-                                <MenuItem value="REJECTED">Rejected</MenuItem>
-                            </Select>
-                        </FormControl>
-
-                        {statusFilter && (
-                            <Button
-                                size="small"
-                                startIcon={<ClearIcon />}
-                                onClick={handleClearFilters}
-                                sx={{ textTransform: 'none', fontWeight: 600 }}
-                            >
-                                Clear Filters
-                            </Button>
-                        )}
-                    </Stack>
+                    <Tabs
+                        value={statusFilter || 'all'}
+                        onChange={(_, value) => {
+                            setStatusFilter(value === 'all' ? '' : value);
+                            setPage(1);
+                        }}
+                        sx={{
+                            borderBottom: '1px solid',
+                            borderColor: 'divider',
+                            '& .MuiTab-root': {
+                                fontWeight: 600,
+                                textTransform: 'none',
+                                fontSize: '0.9375rem',
+                                minHeight: 56,
+                            },
+                        }}
+                    >
+                        <Tab label="All Orders" value="all" />
+                        <Tab label="Pending" value="pending" />
+                        <Tab label="Executed" value="executed" />
+                        <Tab label="Cancelled" value="CANCELLED" />
+                        <Tab label="Rejected" value="REJECTED" />
+                    </Tabs>
                 </Paper>
             </Box>
 
