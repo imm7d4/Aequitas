@@ -271,13 +271,32 @@ export const FinanceSettings: React.FC = () => {
                                             )}
                                         </TableCell>
                                         <TableCell align="right">
-                                            <Typography
-                                                variant="body2"
-                                                fontWeight={600}
-                                                color={tx.type === 'DEPOSIT' ? 'success.main' : 'text.primary'}
-                                            >
-                                                {tx.type === 'DEPOSIT' ? '+' : '-'}{tx.amount.toLocaleString(undefined, { style: 'currency', currency: tx.currency })}
-                                            </Typography>
+                                            {(() => {
+                                                const trade = trades[tx.reference?.replace('TRADE_', '')];
+                                                const isTrade = tx.type === 'TRADE' && trade;
+                                                const isBuy = isTrade && trade.side === 'BUY';
+
+                                                // If it's a trade, force sign based on Side (BUY = -, SELL = +)
+                                                // This handles both old (stored as +) and new (stored as -) data correctly via Math.abs
+                                                // Non-trade transactions rely on stored sign
+                                                const displayAmount = isTrade
+                                                    ? Math.abs(tx.amount)
+                                                    : Math.abs(tx.amount); // For non-trades, we usually respect the sign, but here let's just format the number part and add prefix manually
+
+                                                const isNegative = isTrade ? isBuy : tx.amount < 0;
+                                                const color = isNegative ? 'text.primary' : 'success.main';
+                                                const prefix = isNegative ? '-' : '+';
+
+                                                return (
+                                                    <Typography
+                                                        variant="body2"
+                                                        fontWeight={600}
+                                                        color={color}
+                                                    >
+                                                        {prefix}{displayAmount.toLocaleString(undefined, { style: 'currency', currency: tx.currency })}
+                                                    </Typography>
+                                                );
+                                            })()}
                                         </TableCell>
                                         <TableCell align="center">
                                             <Chip

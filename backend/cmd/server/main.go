@@ -78,7 +78,7 @@ func main() {
 	userService := services.NewUserService(userRepo)
 	portfolioService := services.NewPortfolioService(portfolioRepo, marketService, tradingAccountService)
 	matchingService := services.NewMatchingService(orderRepo, tradeRepo, marketDataRepo, tradingAccountService, portfolioService)
-	orderService := services.NewOrderService(orderRepo, instrumentRepo, tradingAccountRepo, marketDataRepo, matchingService)
+	orderService := services.NewOrderService(orderRepo, instrumentRepo, tradingAccountRepo, marketDataRepo, matchingService, portfolioService)
 	candleService := services.NewCandleService(candleRepo)
 	candleBuilder := services.NewCandleBuilder(candleRepo)
 	tradeService := services.NewTradeService(tradeRepo)

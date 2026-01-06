@@ -140,12 +140,20 @@ func (s *TradingAccountService) SettleTrade(userID string, netAmount float64, tr
 		return err
 	}
 
+	// Calculate signed amount for transaction record
+	var signedAmount float64
+	if side == "BUY" {
+		signedAmount = -netAmount
+	} else {
+		signedAmount = netAmount
+	}
+
 	// Create transaction record
 	tx := &models.Transaction{
 		AccountID: account.ID,
 		UserID:    account.UserID,
 		Type:      "TRADE",
-		Amount:    netAmount,
+		Amount:    signedAmount,
 		Currency:  account.Currency,
 		Status:    "COMPLETED",
 		Reference: fmt.Sprintf("TRADE_%s", tradeID),

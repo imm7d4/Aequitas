@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Box, Typography, Container, CircularProgress, Tab, Tabs, Button } from '@mui/material';
-import { useDocumentTitle } from '../../../shared/hooks/useDocumentTitle';
 import { portfolioService, Holding } from '../services/portfolioService';
 import { HoldingsTable } from '../components/HoldingsTable';
 import { accountService } from '../../profile/services/accountService';
@@ -35,7 +34,7 @@ function CustomTabPanel(props: TabPanelProps) {
 }
 
 export const PortfolioPage: React.FC = () => {
-    useDocumentTitle('Portfolio');
+
 
     const [holdings, setHoldings] = useState<Holding[]>([]);
     const [cashBalance, setCashBalance] = useState(0);

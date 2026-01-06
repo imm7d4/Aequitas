@@ -9,8 +9,10 @@ import {
     Paper,
     Typography,
     Box,
-    styled
+    styled,
+    Button
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { Holding } from '../services/portfolioService';
 import { useMarketData } from '../../market/hooks/useMarketData';
 
@@ -26,6 +28,7 @@ interface HoldingsTableProps {
 }
 
 export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
+    const navigate = useNavigate();
     // Extract all instrument IDs for batch subscription
     const instrumentIds = useMemo(() => holdings.map(h => h.instrumentId), [holdings]);
     const marketData = useMarketData(instrumentIds);
@@ -50,6 +53,7 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
                         <StyledTableCell align="right">LTP</StyledTableCell>
                         <StyledTableCell align="right">Current Value</StyledTableCell>
                         <StyledTableCell align="right">P&L</StyledTableCell>
+                        <StyledTableCell align="right">Action</StyledTableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -104,11 +108,25 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
                                         </Typography>
                                     </Box>
                                 </StyledTableCell>
+
+                                <StyledTableCell align="right">
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        color="error"
+                                        onClick={() => navigate(`/instruments/${holding.instrumentId}`, {
+                                            state: { side: 'SELL', quantity: holding.quantity }
+                                        })}
+                                        sx={{ minWidth: '60px', fontWeight: 700 }}
+                                    >
+                                        Sell
+                                    </Button>
+                                </StyledTableCell>
                             </TableRow>
                         );
                     })}
                 </TableBody>
-            </Table>
-        </TableContainer>
+            </Table >
+        </TableContainer >
     );
 };

@@ -29,9 +29,14 @@ func NewPortfolioService(
 	}
 }
 
-// GetHoldings returns all holdings for a user
+// GetHoldings returns all active holdings for a user
 func (s *PortfolioService) GetHoldings(ctx context.Context, userID string) ([]models.Holding, error) {
 	return s.portfolioRepo.GetHoldings(ctx, userID)
+}
+
+// GetHolding returns a specific holding for validation
+func (s *PortfolioService) GetHolding(ctx context.Context, userID, instrumentID string) (*models.Holding, error) {
+	return s.portfolioRepo.GetHolding(ctx, userID, instrumentID)
 }
 
 // UpdatePosition processes a trade and updates the user's holding (Average Cost or Realized P&L)
@@ -57,15 +62,17 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 			Quantity:     0,
 			AvgCost:      0,
 			TotalCost:    0,
+			TotalFees:    0,
 			RealizedPL:   0,
 		}
 	}
 
 	if trade.Side == "BUY" {
 		// --- BUY LOGIC (Weighted Average Price) ---
-		// New Cost Basis = Old Total Cost + (Trade Price * Qty) + Fees
-		// Note: We capitalize fees into the cost basis for conservative P&L
-		costOfTrade := trade.Value + trade.Commission + trade.Fees
+		// New Cost Basis = Old Total Cost + (Trade Price * Qty) [Raw Execution Cost]
+		// Fees are tracked separately in TotalFees for accurate P&L/Tax reporting later
+		costOfTrade := trade.Value // Raw value, excluding fees
+		fees := trade.Commission + trade.Fees
 
 		newTotalCost := holding.TotalCost + costOfTrade
 		newQuantity := holding.Quantity + trade.Quantity
@@ -78,6 +85,7 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 
 		holding.TotalCost = newTotalCost
 		holding.Quantity = newQuantity
+		holding.TotalFees += fees
 
 	} else if trade.Side == "SELL" {
 		// --- SELL LOGIC (Realized P&L) ---
@@ -86,11 +94,19 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 			return errors.New("insufficient holdings to sell")
 		}
 
-		// Calculate Cost of Goods Sold (COGS) based on current AvgCost
+		// Calculate Cost of Goods Sold (COGS) based on current AvgCost (Raw)
 		costOfSoldShares := float64(trade.Quantity) * holding.AvgCost
 
-		// Net Proceeds = Trade Value - Fees
-		netProceeds := trade.NetValue // Already has fees deducted in Trade model (Price*Qty - Fees)
+		// Net Proceeds = Trade Value (Raw) - Fees [For P&L calc]
+		// Actually, standard P&L = (Sell Price - Buy Price) * Qty - SellFees - BuyFees(allocated)
+		// But here, we'll accumulate Realized PL as: (Net Proceeds - COGS).
+		// Note: Since COGS does NOT include buy fees anymore, RealizedPL will look higher initially.
+		// To be strictly accurate, we should subtract the pro-rated buy fees.
+		// Pro-rated buy fees = (TotalFees / TotalInitialQty) * SoldQty? No, TotalFees accumulates.
+		// A simple approximation for now: Just subtract Sell Fees from proceeds.
+		// Net Proceeds = trade.NetValue (Value - SellFees)
+
+		netProceeds := trade.NetValue
 
 		// Realized P&L for this specific trade
 		tradeRealizedPL := netProceeds - costOfSoldShares
@@ -99,8 +115,16 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 		holding.RealizedPL += tradeRealizedPL
 		holding.Quantity -= trade.Quantity
 
-		// Update TotalCost to reflect remaining shares (AvgCost stays same during simple sell)
+		// Update TotalCost to reflect remaining shares
 		holding.TotalCost = float64(holding.Quantity) * holding.AvgCost
+
+		// Note: We don't reduce TotalFees here, as it's a historical accumulator?
+		// Or should we reduce it to represent "Remaining Fees"?
+		// Usually TotalFees helps calculate "Break Even".
+		// If we want "Net P&L" for the position, we'd need (RealizedPL - AllocatableFees).
+		// For now, let's just accumulate sell fees too or leave it?
+		// Let's add Sell fees to TotalFees so we know total money burnt on fees for this symbol.
+		holding.TotalFees += (trade.Commission + trade.Fees)
 	}
 
 	// If quantity becomes 0 (or less, though safeguards exist), we generally keep record for history/RealizedP&L

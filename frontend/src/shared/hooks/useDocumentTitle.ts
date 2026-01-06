@@ -1,22 +1,17 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 /**
  * Custom hook to manage the browser's document title
  * @param title - The title to set for the document
  */
-export const useDocumentTitle = (title: string) => {
-    const defaultTitle = useRef(document.title);
-
+// Custom hook to manage the browser's document title
+export const useDocumentTitle = (title: string, fallbackTitle: string = 'Aequitas') => {
     useEffect(() => {
-        if (title) {
-            document.title = title;
-        }
-    }, [title]);
+        document.title = title;
 
-    useEffect(() => {
-        // Restore original title on unmount
+        // Restore original/fallback title on unmount
         return () => {
-            document.title = defaultTitle.current;
+            document.title = fallbackTitle;
         };
-    }, []);
+    }, [title, fallbackTitle]);
 };

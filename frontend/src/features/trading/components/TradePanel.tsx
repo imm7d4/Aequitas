@@ -29,12 +29,14 @@ import { orderService } from '../services/orderService';
 interface TradePanelProps {
     instrument: Instrument;
     ltp: number;
+    initialSide?: 'BUY' | 'SELL';
+    initialQuantity?: number;
 }
 
-export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp }) => {
-    const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
+export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initialSide = 'BUY', initialQuantity }) => {
+    const [side, setSide] = useState<'BUY' | 'SELL'>(initialSide);
     const [orderType, setOrderType] = useState<'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT' | 'TRAILING_STOP'>('LIMIT');
-    const [quantity, setQuantity] = useState<string>('');
+    const [quantity, setQuantity] = useState<string>(initialQuantity ? initialQuantity.toString() : '');
     const [price, setPrice] = useState<string>(ltp > 0 ? ltp.toFixed(2) : '0');
     const [isPriceTouched, setIsPriceTouched] = useState(false);
 

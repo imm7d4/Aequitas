@@ -16,6 +16,7 @@ type Holding struct {
 	Quantity  int     `bson:"quantity" json:"quantity"`
 	AvgCost   float64 `bson:"avg_cost" json:"avgCost"`     // Weighted Average Price
 	TotalCost float64 `bson:"total_cost" json:"totalCost"` // Quantity * AvgCost
+	TotalFees float64 `bson:"total_fees" json:"totalFees"` // Accumulated fees for position tracking
 
 	RealizedPL float64 `bson:"realized_pl" json:"realizedPL"` // Accumulated P&L from selling
 

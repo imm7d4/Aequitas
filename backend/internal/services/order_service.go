@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -19,6 +20,7 @@ type OrderService struct {
 	tradingAccountRepo *repositories.TradingAccountRepository
 	marketDataRepo     *repositories.MarketDataRepository
 	matchingService    *MatchingService
+	portfolioService   *PortfolioService
 }
 
 func NewOrderService(
@@ -27,6 +29,7 @@ func NewOrderService(
 	tradingAccountRepo *repositories.TradingAccountRepository,
 	marketDataRepo *repositories.MarketDataRepository,
 	matchingService *MatchingService,
+	portfolioService *PortfolioService,
 ) *OrderService {
 	return &OrderService{
 		orderRepo:          orderRepo,
@@ -34,6 +37,7 @@ func NewOrderService(
 		tradingAccountRepo: tradingAccountRepo,
 		marketDataRepo:     marketDataRepo,
 		matchingService:    matchingService,
+		portfolioService:   portfolioService,
 	}
 }
 
@@ -153,13 +157,25 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 			return nil, fmt.Errorf("insufficient balance. Required: ₹%0.2f, Available: ₹%0.2f (includes 1%% market buffer if applicable)", requiredFunds, account.Balance)
 		}
 	} else if req.Side == "SELL" {
-		// Allow SELL orders for stop types (they are PENDING and won't execute immediately)
-		// Reject immediate SELL orders (MARKET/LIMIT) as they require position tracking
-		if req.OrderType == "MARKET" || req.OrderType == "LIMIT" {
-			return nil, errors.New("immediate SELL orders are not yet supported. Position tracking will be implemented in Phase 7. You can place SELL stop orders (STOP, STOP_LIMIT, TRAILING_STOP) which will trigger later")
+		// Validating SELL orders: Ensure user owns enough shares
+		// Only strictly enforce for MARKET/LIMIT. For stops, we can allow pending but preferably validate too.
+		// Let's validate for all types to prevent cluttering order book with invalid stops.
+
+		// Use a background context or pass one if available? PlaceOrder signature doesn't have ctx yet.
+		// Using Background for now as OrderService doesn't take context (Phase 7 task to add ctx everywhere)
+		holding, err := s.portfolioService.GetHolding(context.Background(), userID, instrument.ID.Hex())
+		if err != nil {
+			return nil, fmt.Errorf("failed to validate holdings: %v", err)
 		}
-		// For stop orders, we'll validate holdings when they trigger (in StopOrderService)
-		// For now, just allow the PENDING order to be created
+
+		ownedQty := 0
+		if holding != nil {
+			ownedQty = holding.Quantity
+		}
+
+		if ownedQty < req.Quantity {
+			return nil, fmt.Errorf("insufficient holdings to sell. Owned: %d, Requested: %d", ownedQty, req.Quantity)
+		}
 	}
 
 	// 8. Finalize Order

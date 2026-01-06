@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
     Container,
     Box,
@@ -29,6 +29,7 @@ import type { Instrument } from '../types/instrument.types';
 export function InstrumentDetail() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
     const [instrument, setInstrument] = useState<Instrument | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -98,7 +99,7 @@ export function InstrumentDetail() {
         ? `${instrument.symbol} ${movementArrow} ${formattedPrice}`
         : 'Aequitas';
 
-    useDocumentTitle(documentTitle);
+    useDocumentTitle(documentTitle, 'Aequitas');
 
     useEffect(() => {
         const fetchInstrument = async () => {
@@ -333,6 +334,8 @@ export function InstrumentDetail() {
                             <TradePanel
                                 instrument={instrument}
                                 ltp={ltp}
+                                initialSide={(location.state as any)?.side}
+                                initialQuantity={(location.state as any)?.quantity}
                             />
                         </Box>
                     </Grid>
