@@ -84,6 +84,79 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp }) => {
         return qty * p * buffer;
     }, [quantity, price, orderType, ltp]);
 
+    // Generate inline validation warnings
+    const validationWarnings = useMemo(() => {
+        const warnings: string[] = [];
+
+        if (orderType === 'STOP' || orderType === 'STOP_LIMIT') {
+            const sp = parseFloat(stopPrice);
+            if (!isNaN(sp) && sp > 0) {
+                if (side === 'BUY' && sp <= ltp) {
+                    warnings.push('⚠ Stop price must be ABOVE current price (₹' + ltp.toFixed(2) + ') for BUY orders');
+                } else if (side === 'SELL' && sp >= ltp) {
+                    warnings.push('⚠ Stop price must be BELOW current price (₹' + ltp.toFixed(2) + ') for SELL orders');
+                }
+            }
+        }
+
+        if (orderType === 'STOP_LIMIT') {
+            const sp = parseFloat(stopPrice);
+            const lp = parseFloat(limitPrice);
+            if (!isNaN(sp) && !isNaN(lp) && sp > 0 && lp > 0) {
+                if (side === 'BUY' && lp < sp) {
+                    warnings.push('❌ Limit price must be >= stop price for BUY stop-limit orders');
+                } else if (side === 'SELL' && lp > sp) {
+                    warnings.push('❌ Limit price must be <= stop price for SELL stop-limit orders');
+                }
+            }
+        }
+
+        return warnings;
+    }, [orderType, side, stopPrice, limitPrice, ltp]);
+
+    // Generate live interpretation text
+    const liveInterpretation = useMemo(() => {
+        if (orderType === 'MARKET') {
+            return `Order will execute immediately at best available price (around ₹${ltp.toFixed(2)})`;
+        }
+
+        if (orderType === 'LIMIT') {
+            const p = parseFloat(price);
+            if (isNaN(p)) return null;
+            return side === 'BUY'
+                ? `Order will execute when price falls to ₹${p.toFixed(2)} or better`
+                : `Order will execute when price rises to ₹${p.toFixed(2)} or better`;
+        }
+
+        if (orderType === 'STOP') {
+            const sp = parseFloat(stopPrice);
+            if (isNaN(sp)) return null;
+            return side === 'BUY'
+                ? `When price rises to ₹${sp.toFixed(2)}, system will place a MARKET BUY order`
+                : `When price falls to ₹${sp.toFixed(2)}, system will place a MARKET SELL order`;
+        }
+
+        if (orderType === 'STOP_LIMIT') {
+            const sp = parseFloat(stopPrice);
+            const lp = parseFloat(limitPrice);
+            if (isNaN(sp) || isNaN(lp)) return null;
+            return side === 'BUY'
+                ? `When price rises to ₹${sp.toFixed(2)}, system will try to buy at ₹${lp.toFixed(2)} or better. ⚠ Fast breakout may skip your order.`
+                : `When price falls to ₹${sp.toFixed(2)}, system will try to sell at ₹${lp.toFixed(2)} or better. ⚠ Fast breakdown may skip your order.`;
+        }
+
+        if (orderType === 'TRAILING_STOP') {
+            const ta = parseFloat(trailAmount);
+            if (isNaN(ta)) return null;
+            const trailText = trailType === 'PERCENTAGE' ? `${ta}%` : `₹${ta}`;
+            return side === 'BUY'
+                ? `Stop price will trail ${trailText} above the lowest price. When triggered, places MARKET BUY order.`
+                : `Stop price will trail ${trailText} below the highest price. When triggered, places MARKET SELL order.`;
+        }
+
+        return null;
+    }, [orderType, side, price, stopPrice, limitPrice, trailAmount, trailType, ltp]);
+
     const isValid = useMemo(() => {
         const qty = parseInt(quantity);
         if (isNaN(qty) || qty <= 0 || qty % instrument.lotSize !== 0) return false;
@@ -236,7 +309,28 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp }) => {
                     </ToggleButton>
                 </ToggleButtonGroup>
 
-                {/* Order Type Selection - Redesigned for better UX */}
+                {/* SECTION 1: Quantity (Primary Input) - Always First */}
+                <Box>
+                    <TextField
+                        fullWidth
+                        label="Quantity"
+                        type="number"
+                        size="small"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        helperText={`Lot Size: ${instrument.lotSize}`}
+                        InputProps={{
+                            endAdornment: <InputAdornment position="end">Qty</InputAdornment>,
+                        }}
+                    />
+                    {estValue > 0 && (
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                            Estimated Value: ₹{estValue.toLocaleString()}
+                        </Typography>
+                    )}
+                </Box>
+
+                {/* SECTION 2: Order Type Selection */}
                 <Stack spacing={1.5}>
                     {/* Basic Order Types - Always Visible */}
                     <ToggleButtonGroup
@@ -309,46 +403,21 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp }) => {
 
                 {/* Compact Input Fields */}
                 <Stack spacing={1.5}>
-                    {/* Quantity and Price in two-column grid for LIMIT orders */}
-                    {orderType === 'LIMIT' ? (
-                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-                            <TextField
-                                label="Quantity"
-                                type="number"
-                                size="small"
-                                value={quantity}
-                                onChange={(e) => setQuantity(e.target.value)}
-                                helperText={`Lot: ${instrument.lotSize}`}
-                                InputProps={{
-                                    endAdornment: <InputAdornment position="end">Qty</InputAdornment>,
-                                }}
-                            />
-                            <TextField
-                                label="Price"
-                                type="number"
-                                size="small"
-                                value={price}
-                                onChange={(e) => {
-                                    setPrice(e.target.value);
-                                    setIsPriceTouched(true);
-                                }}
-                                helperText={`Tick: ${instrument.tickSize}`}
-                                InputProps={{
-                                    startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                                }}
-                            />
-                        </Box>
-                    ) : (
+                    {/* Price input for LIMIT orders */}
+                    {orderType === 'LIMIT' && (
                         <TextField
                             fullWidth
-                            label="Quantity"
+                            label="Price"
                             type="number"
                             size="small"
-                            value={quantity}
-                            onChange={(e) => setQuantity(e.target.value)}
-                            helperText={`Lot Size: ${instrument.lotSize}`}
+                            value={price}
+                            onChange={(e) => {
+                                setPrice(e.target.value);
+                                setIsPriceTouched(true);
+                            }}
+                            helperText={`Tick Size: ${instrument.tickSize}`}
                             InputProps={{
-                                endAdornment: <InputAdornment position="end">Qty</InputAdornment>,
+                                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
                             }}
                         />
                     )}
@@ -423,13 +492,53 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp }) => {
                     )}
                 </Stack>
 
-                {/* Compact Order Summary */}
-                <Box sx={{ bgcolor: 'action.hover', p: 1.5, borderRadius: 1 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="body2" color="text.secondary">Est. Value</Typography>
-                        <Typography variant="body1" fontWeight={700}>₹{estValue.toLocaleString()}</Typography>
+                {/* SECTION 3: Inline Validation Warnings */}
+                {validationWarnings.length > 0 && (
+                    <Stack spacing={0.5}>
+                        {validationWarnings.map((warning, idx) => (
+                            <Typography
+                                key={idx}
+                                variant="caption"
+                                sx={{
+                                    color: warning.startsWith('❌') ? 'error.main' : 'warning.main',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.5
+                                }}
+                            >
+                                {warning}
+                            </Typography>
+                        ))}
+                    </Stack>
+                )}
+
+                {/* SECTION 4: Live Interpretation Box - Game Changer */}
+                {liveInterpretation && (
+                    <Box
+                        sx={{
+                            bgcolor: side === 'BUY' ? 'success.50' : 'error.50',
+                            border: '1px solid',
+                            borderColor: side === 'BUY' ? 'success.200' : 'error.200',
+                            borderRadius: 1,
+                            p: 1.5
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                            <Typography sx={{ fontSize: 18 }}>💡</Typography>
+                            <Box sx={{ flex: 1 }}>
+                                <Typography variant="caption" fontWeight={600} display="block" sx={{ mb: 0.5 }}>
+                                    What This Order Will Do
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Current Price: ₹{ltp.toFixed(2)}
+                                </Typography>
+                                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                    {liveInterpretation}
+                                </Typography>
+                            </Box>
+                        </Box>
                     </Box>
-                </Box>
+                )}
 
                 <Button
                     fullWidth
@@ -440,7 +549,11 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp }) => {
                     onClick={handlePlaceOrder}
                     sx={{ py: 1.5, fontWeight: 700 }}
                 >
-                    {isLoading ? <CircularProgress size={24} color="inherit" /> : `PLACE ${side} ORDER`}
+                    {isLoading ? (
+                        <CircularProgress size={24} color="inherit" />
+                    ) : (
+                        `PLACE ${side} ${orderType === 'STOP_LIMIT' ? 'STOP-LIMIT' : orderType === 'TRAILING_STOP' ? 'TRAILING STOP' : orderType} ORDER`
+                    )}
                 </Button>
             </Stack>
         </Paper>

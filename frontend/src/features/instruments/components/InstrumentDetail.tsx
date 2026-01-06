@@ -20,6 +20,7 @@ import { instrumentService } from '../services/instrumentService';
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
 import { useMarketData } from '@/features/market/hooks/useMarketData';
 import { usePrevious } from '@/shared/hooks/usePrevious';
+import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { TradePanel } from '@/features/trading/components/TradePanel';
 import { StockChart } from '@/features/market/components/StockChart';
 import type { Instrument } from '../types/instrument.types';
@@ -87,6 +88,17 @@ export function InstrumentDetail() {
             console.error('Failed to update watchlist', err);
         }
     };
+
+    // Dynamic browser tab title
+    const movementArrow = marketData && marketData.change >= 0 ? '↑' : '↓';
+    const formattedPrice = ltp > 0
+        ? `₹${ltp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : '₹--';
+    const documentTitle = instrument
+        ? `${instrument.symbol} ${movementArrow} ${formattedPrice}`
+        : 'Aequitas';
+
+    useDocumentTitle(documentTitle);
 
     useEffect(() => {
         const fetchInstrument = async () => {
