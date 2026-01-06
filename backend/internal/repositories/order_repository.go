@@ -131,3 +131,21 @@ func (r *OrderRepository) Update(order *models.Order) (*models.Order, error) {
 	}
 	return order, nil
 }
+
+// FindPendingStopOrders returns all orders with PENDING status for monitoring
+func (r *OrderRepository) FindPendingStopOrders() ([]*models.Order, error) {
+	query := bson.M{"status": "PENDING"}
+
+	cursor, err := r.collection.Find(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	var orders []*models.Order
+	if err = cursor.All(context.Background(), &orders); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}

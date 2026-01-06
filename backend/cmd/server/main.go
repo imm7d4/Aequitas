@@ -98,6 +98,11 @@ func main() {
 	candleCleanupService.Start()
 	defer candleCleanupService.Stop()
 
+	// Initialize stop order monitoring service (runs every 3 seconds)
+	stopOrderService := services.NewStopOrderService(orderRepo, marketDataRepo, orderService)
+	stopOrderService.Start()
+	defer stopOrderService.Stop()
+
 	// Initialize controllers
 	authController := controllers.NewAuthController(authService)
 	instrumentController := controllers.NewInstrumentController(instrumentService)
@@ -167,6 +172,7 @@ func main() {
 	// Order routes
 	protected.HandleFunc("/orders", orderController.PlaceOrder).Methods("POST", "OPTIONS")
 	protected.HandleFunc("/orders", orderController.GetOrders).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/orders/pending-stops", orderController.GetPendingStops).Methods("GET", "OPTIONS")
 	protected.HandleFunc("/orders/{id}", orderController.ModifyOrder).Methods("PUT", "OPTIONS")
 	protected.HandleFunc("/orders/{id}", orderController.CancelOrder).Methods("DELETE", "OPTIONS")
 

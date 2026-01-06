@@ -63,13 +63,6 @@ func (s *PricingService) simulatePrices() {
 		return
 	}
 
-	// Track updated instruments for logging
-	type updatedStock struct {
-		symbol string
-		price  float64
-	}
-	var updatedStocks []updatedStock
-
 	for _, inst := range instruments {
 		data, err := s.marketDataRepo.FindByInstrumentID(inst.ID.Hex())
 		if err != nil {
@@ -86,11 +79,9 @@ func (s *PricingService) simulatePrices() {
 			if err == nil && lastCandle != nil {
 				// Use last candle's close price
 				basePrice = lastCandle.Close
-				log.Printf("Pricing: Initialized %s from last candle at ₹%.2f", inst.Symbol, basePrice)
 			} else {
 				// No candle history, use sensible default for NSE stocks
 				basePrice = 1000.0
-				log.Printf("Pricing: Initialized %s with default price ₹%.2f (no candle history)", inst.Symbol, basePrice)
 			}
 
 			// Initialize with base price (no variance) to maintain continuity
@@ -154,19 +145,6 @@ func (s *PricingService) simulatePrices() {
 
 		if err := s.marketDataRepo.Upsert(data); err != nil {
 			log.Printf("Pricing engine error: failed to update %s: %v", inst.Symbol, err)
-		} else {
-			// Track successfully updated stock
-			updatedStocks = append(updatedStocks, updatedStock{
-				symbol: inst.Symbol,
-				price:  data.LastPrice,
-			})
 		}
-	}
-
-	// Log one random stock price update per tick
-	if len(updatedStocks) > 0 {
-		randomIdx := s.rng.Intn(len(updatedStocks))
-		stock := updatedStocks[randomIdx]
-		log.Printf("📊 Price Update: %s = ₹%.2f", stock.symbol, stock.price)
 	}
 }

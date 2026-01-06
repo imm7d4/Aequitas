@@ -149,9 +149,13 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 			return nil, fmt.Errorf("insufficient balance. Required: ₹%0.2f, Available: ₹%0.2f (includes 1%% market buffer if applicable)", requiredFunds, account.Balance)
 		}
 	} else if req.Side == "SELL" {
-		// TODO: Implement position tracking in Phase 7
-		// For now, reject all SELL orders to prevent short selling
-		return nil, errors.New("SELL orders are not yet supported. Position tracking will be implemented in Phase 7")
+		// Allow SELL orders for stop types (they are PENDING and won't execute immediately)
+		// Reject immediate SELL orders (MARKET/LIMIT) as they require position tracking
+		if req.OrderType == "MARKET" || req.OrderType == "LIMIT" {
+			return nil, errors.New("immediate SELL orders are not yet supported. Position tracking will be implemented in Phase 7. You can place SELL stop orders (STOP, STOP_LIMIT, TRAILING_STOP) which will trigger later")
+		}
+		// For stop orders, we'll validate holdings when they trigger (in StopOrderService)
+		// For now, just allow the PENDING order to be created
 	}
 
 	// 8. Finalize Order
@@ -186,8 +190,8 @@ func (s *OrderService) CancelOrder(userID string, orderID string) (*models.Order
 		return nil, errors.New("unauthorized")
 	}
 
-	// Only NEW orders can be cancelled
-	if order.Status != "NEW" {
+	// Only NEW and PENDING orders can be cancelled
+	if order.Status != "NEW" && order.Status != "PENDING" {
 		return nil, fmt.Errorf("cannot cancel order with status: %s", order.Status)
 	}
 

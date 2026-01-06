@@ -20,6 +20,7 @@ export interface OrderRequest {
 export interface OrderResponse {
     id: string;
     orderId: string;
+    instrumentId: string;
     symbol: string;
     side: 'BUY' | 'SELL';
     orderType: 'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT' | 'TRAILING_STOP';

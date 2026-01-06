@@ -216,3 +216,29 @@ func (c *OrderController) ModifyOrder(w http.ResponseWriter, r *http.Request) {
 
 	utils.RespondJSON(w, http.StatusOK, order, "Order modified successfully")
 }
+
+func (c *OrderController) GetPendingStops(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// Use existing GetOrders with status filter
+	filters := map[string]interface{}{
+		"status": "PENDING",
+	}
+
+	orders, total, err := c.orderService.GetUserOrders(userID, filters, 0, 100)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to fetch pending stop orders")
+		return
+	}
+
+	response := map[string]interface{}{
+		"orders": orders,
+		"total":  total,
+	}
+
+	utils.RespondJSON(w, http.StatusOK, response, "Pending stop orders fetched successfully")
+}

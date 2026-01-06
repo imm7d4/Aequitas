@@ -18,6 +18,9 @@ import {
     DialogContent,
     DialogContentText,
     DialogActions,
+    Collapse,
+    IconButton,
+    Grid,
 } from '@mui/material';
 import {
     Cancel as CancelIcon,
@@ -25,10 +28,15 @@ import {
     CheckCircle as SuccessIcon,
     Error as ErrorIcon,
     Warning as WarningIcon,
+    KeyboardArrowDown as ExpandMoreIcon,
+    KeyboardArrowUp as ExpandLessIcon,
+    TrendingUp,
+    TrendingDown,
 } from '@mui/icons-material';
 import { OrderResponse } from '../services/orderService';
 import { useState } from 'react';
 import { EditOrderDialog } from './EditOrderDialog';
+import { useMarketData } from '@/features/market/hooks/useMarketData';
 
 interface OrderListProps {
     orders: OrderResponse[];
@@ -43,6 +51,26 @@ export const OrderList: React.FC<OrderListProps> = ({ orders = [], onCancel, onM
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<OrderResponse | null>(null);
+    const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+    // Only fetch market data for expanded PENDING orders
+    const expandedPendingOrders = orders.filter(order =>
+        expandedRows.has(order.id)
+    );
+    const instrumentIds = [...new Set(expandedPendingOrders.map(order => order.instrumentId))];
+    const { prices } = useMarketData(instrumentIds);
+
+    const toggleRow = (orderId: string) => {
+        setExpandedRows(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(orderId)) {
+                newSet.delete(orderId);
+            } else {
+                newSet.add(orderId);
+            }
+            return newSet;
+        });
+    };
 
     const handleOpenCancelDialog = (id: string) => {
         setSelectedOrderId(id);
@@ -181,6 +209,7 @@ export const OrderList: React.FC<OrderListProps> = ({ orders = [], onCancel, onM
             <Table sx={{ minWidth: 650 }}>
                 <TableHead sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02) }}>
                     <TableRow>
+                        <TableCell sx={{ width: 50 }} />
                         <TableCell sx={{ fontWeight: 700 }}>Time</TableCell>
                         <TableCell sx={{ fontWeight: 700 }}>ID</TableCell>
                         <TableCell sx={{ fontWeight: 700 }}>Instrument</TableCell>
@@ -193,88 +222,246 @@ export const OrderList: React.FC<OrderListProps> = ({ orders = [], onCancel, onM
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {orders.map((order) => (
-                        <TableRow
-                            key={order.id}
-                            sx={{
-                                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.01) },
-                                transition: 'background-color 0.2s',
-                            }}
-                        >
-                            <TableCell sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
-                                {formatDate(order.createdAt)}
-                            </TableCell>
-                            <TableCell sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
-                                {order.orderId.split('-')[1].slice(-8)}
-                            </TableCell>
-                            <TableCell>
-                                <Typography variant="body2" fontWeight={700}>
-                                    {order.symbol}
-                                </Typography>
-                            </TableCell>
-                            <TableCell>
-                                <Typography variant="caption" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
-                                    {order.orderType}
-                                </Typography>
-                            </TableCell>
-                            <TableCell>
-                                <Box
+                    {orders.map((order) => {
+                        const isExpanded = expandedRows.has(order.id);
+                        // Try both instrumentId and symbol for price lookup
+                        const currentPrice = prices[order.instrumentId] || prices[order.symbol];
+
+                        // Debug logging
+                        if (isExpanded) {
+                            console.log('Expanded order:', {
+                                id: order.id,
+                                status: order.status,
+                                statusUpper: order.status.toUpperCase(),
+                                isPending: order.status.toUpperCase() === 'PENDING',
+                                symbol: order.symbol,
+                                instrumentId: order.instrumentId,
+                                prices: prices,
+                                currentPrice: currentPrice
+                            });
+                        }
+
+                        return (
+                            <>
+                                <TableRow
+                                    key={order.id}
                                     sx={{
-                                        color: order.side === 'BUY' ? 'success.main' : 'error.main',
-                                        fontWeight: 800,
-                                        fontSize: '0.75rem',
+                                        '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.01) },
+                                        transition: 'background-color 0.2s',
                                     }}
                                 >
-                                    {order.side}
-                                </Box>
-                            </TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 600 }}>
-                                {order.quantity}
-                            </TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 700 }}>
-                                {order.price ? `₹${order.price.toLocaleString()}` : 'MARKET'}
-                            </TableCell>
-                            <TableCell align="center">
-                                {getStatusChip(order.status)}
-                            </TableCell>
-                            <TableCell align="right">
-                                {order.status === 'NEW' && (
-                                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                                        <Button
+                                    <TableCell>
+                                        <IconButton
                                             size="small"
-                                            color="primary"
-                                            variant="outlined"
-                                            onClick={() => handleOpenEditDialog(order)}
+                                            onClick={() => toggleRow(order.id)}
+                                            sx={{ color: 'text.secondary' }}
+                                        >
+                                            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                        </IconButton>
+                                    </TableCell>
+                                    <TableCell sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
+                                        {formatDate(order.createdAt)}
+                                    </TableCell>
+                                    <TableCell sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
+                                        {order.orderId.split('-')[1].slice(-8)}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="body2" fontWeight={700}>
+                                            {order.symbol}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="caption" sx={{ fontWeight: 600, textTransform: 'uppercase' }}>
+                                            {order.orderType}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Box
                                             sx={{
-                                                borderRadius: 2,
-                                                textTransform: 'none',
-                                                fontWeight: 600,
-                                                height: 32,
-                                                '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) },
+                                                color: order.side === 'BUY' ? 'success.main' : 'error.main',
+                                                fontWeight: 800,
+                                                fontSize: '0.75rem',
                                             }}
                                         >
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            size="small"
-                                            color="error"
-                                            variant="outlined"
-                                            onClick={() => handleOpenCancelDialog(order.id)}
-                                            sx={{
-                                                borderRadius: 2,
-                                                textTransform: 'none',
-                                                fontWeight: 600,
-                                                height: 32,
-                                                '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.1) },
-                                            }}
-                                        >
-                                            Cancel
-                                        </Button>
-                                    </Box>
-                                )}
-                            </TableCell>
-                        </TableRow>
-                    ))}
+                                            {order.side}
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 600 }}>
+                                        {order.quantity}
+                                    </TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 700 }}>
+                                        {order.orderType === 'MARKET'
+                                            ? 'MARKET'
+                                            : order.orderType === 'STOP' || order.orderType === 'STOP_LIMIT' || order.orderType === 'TRAILING_STOP'
+                                                ? order.currentStopPrice
+                                                    ? `Stop: ₹${order.currentStopPrice.toLocaleString()}`
+                                                    : order.stopPrice
+                                                        ? `Stop: ₹${order.stopPrice.toLocaleString()}`
+                                                        : order.price
+                                                            ? `₹${order.price.toLocaleString()}`
+                                                            : 'MARKET'
+                                                : order.price
+                                                    ? `₹${order.price.toLocaleString()}`
+                                                    : 'MARKET'
+                                        }
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        {getStatusChip(order.status)}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        {(order.status === 'NEW' || order.status === 'PENDING') && (
+                                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                                {order.status === 'NEW' && (
+                                                    <Button
+                                                        size="small"
+                                                        color="primary"
+                                                        variant="outlined"
+                                                        onClick={() => handleOpenEditDialog(order)}
+                                                        sx={{
+                                                            borderRadius: 2,
+                                                            textTransform: 'none',
+                                                            fontWeight: 600,
+                                                            height: 32,
+                                                            '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.1) },
+                                                        }}
+                                                    >
+                                                        Edit
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    size="small"
+                                                    color="error"
+                                                    variant="outlined"
+                                                    onClick={() => handleOpenCancelDialog(order.id)}
+                                                    sx={{
+                                                        borderRadius: 2,
+                                                        textTransform: 'none',
+                                                        fontWeight: 600,
+                                                        height: 32,
+                                                        '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.1) },
+                                                    }}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            </Box>
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+
+                                {/* Expandable Row */}
+                                <TableRow>
+                                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={10}>
+                                        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                            <Box sx={{ py: 3, px: 2, bgcolor: alpha(theme.palette.primary.main, 0.01) }}>
+                                                <Typography variant="subtitle2" fontWeight={700} gutterBottom sx={{ mb: 2 }}>
+                                                    Order Details
+                                                </Typography>
+
+                                                <Grid container spacing={3}>
+                                                    {/* Live Price Section */}
+                                                    <Grid item xs={12} md={4}>
+                                                        <Paper elevation={0} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                                                            <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                                                                Live Market Price
+                                                            </Typography>
+                                                            {currentPrice ? (
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                    <Typography variant="h6" fontWeight={700}>
+                                                                        ₹{currentPrice.lastPrice.toLocaleString()}
+                                                                    </Typography>
+                                                                    <Box sx={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        color: currentPrice.change >= 0 ? 'success.main' : 'error.main',
+                                                                        fontSize: '0.875rem',
+                                                                        fontWeight: 600
+                                                                    }}>
+                                                                        {currentPrice.change >= 0 ? <TrendingUp fontSize="small" /> : <TrendingDown fontSize="small" />}
+                                                                        {currentPrice.changePct.toFixed(2)}%
+                                                                    </Box>
+                                                                </Box>
+                                                            ) : (
+                                                                <Typography variant="body2" color="text.secondary">Loading...</Typography>
+                                                            )}
+                                                        </Paper>
+                                                    </Grid>
+
+                                                    {/* Order Info */}
+                                                    <Grid item xs={12} md={8}>
+                                                        <Grid container spacing={2}>
+                                                            <Grid item xs={6} sm={4}>
+                                                                <Typography variant="caption" color="text.secondary">Order ID</Typography>
+                                                                <Typography variant="body2" fontWeight={600} fontFamily="monospace">{order.orderId}</Typography>
+                                                            </Grid>
+                                                            <Grid item xs={6} sm={4}>
+                                                                <Typography variant="caption" color="text.secondary">Created At</Typography>
+                                                                <Typography variant="body2" fontWeight={600}>{formatDate(order.createdAt)}</Typography>
+                                                            </Grid>
+                                                            <Grid item xs={6} sm={4}>
+                                                                <Typography variant="caption" color="text.secondary">Validated At</Typography>
+                                                                <Typography variant="body2" fontWeight={600}>{formatDate(order.validatedAt)}</Typography>
+                                                            </Grid>
+                                                        </Grid>
+                                                    </Grid>
+
+                                                    {/* Stop Order Details */}
+                                                    {(order.orderType === 'STOP' || order.orderType === 'STOP_LIMIT' || order.orderType === 'TRAILING_STOP') && (
+                                                        <Grid item xs={12}>
+                                                            <Paper elevation={0} sx={{ p: 2, border: '1px solid', borderColor: 'warning.main', borderRadius: 2, bgcolor: alpha(theme.palette.warning.main, 0.05) }}>
+                                                                <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+                                                                    Stop Order Configuration
+                                                                </Typography>
+                                                                <Grid container spacing={2} sx={{ mt: 0.5 }}>
+                                                                    {order.stopPrice && (
+                                                                        <Grid item xs={6} sm={3}>
+                                                                            <Typography variant="caption" color="text.secondary">Stop Price</Typography>
+                                                                            <Typography variant="body2" fontWeight={700}>₹{order.stopPrice.toLocaleString()}</Typography>
+                                                                        </Grid>
+                                                                    )}
+                                                                    {order.limitPrice && (
+                                                                        <Grid item xs={6} sm={3}>
+                                                                            <Typography variant="caption" color="text.secondary">Limit Price</Typography>
+                                                                            <Typography variant="body2" fontWeight={700}>₹{order.limitPrice.toLocaleString()}</Typography>
+                                                                        </Grid>
+                                                                    )}
+                                                                    {order.currentStopPrice && (
+                                                                        <Grid item xs={6} sm={3}>
+                                                                            <Typography variant="caption" color="text.secondary">Current Stop Price</Typography>
+                                                                            <Typography variant="body2" fontWeight={700} color="warning.main">₹{order.currentStopPrice.toLocaleString()}</Typography>
+                                                                        </Grid>
+                                                                    )}
+                                                                    {order.trailAmount && (
+                                                                        <Grid item xs={6} sm={3}>
+                                                                            <Typography variant="caption" color="text.secondary">Trail Amount</Typography>
+                                                                            <Typography variant="body2" fontWeight={700}>
+                                                                                {order.trailType === 'PERCENTAGE' ? `${order.trailAmount}%` : `₹${order.trailAmount}`}
+                                                                            </Typography>
+                                                                        </Grid>
+                                                                    )}
+                                                                    {order.triggeredAt && (
+                                                                        <Grid item xs={6} sm={3}>
+                                                                            <Typography variant="caption" color="text.secondary">Triggered At</Typography>
+                                                                            <Typography variant="body2" fontWeight={700}>{formatDate(order.triggeredAt)}</Typography>
+                                                                        </Grid>
+                                                                    )}
+                                                                    {order.triggerPrice && (
+                                                                        <Grid item xs={6} sm={3}>
+                                                                            <Typography variant="caption" color="text.secondary">Trigger Price</Typography>
+                                                                            <Typography variant="body2" fontWeight={700}>₹{order.triggerPrice.toLocaleString()}</Typography>
+                                                                        </Grid>
+                                                                    )}
+                                                                </Grid>
+                                                            </Paper>
+                                                        </Grid>
+                                                    )}
+                                                </Grid>
+                                            </Box>
+                                        </Collapse>
+                                    </TableCell>
+                                </TableRow>
+                            </>
+                        );
+                    })}
                 </TableBody>
             </Table>
 
