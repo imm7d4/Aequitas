@@ -138,90 +138,6 @@ All endpoints follow standardized response format:
 }
 ```
 
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-
-### Instruments
-- `GET /api/instruments` - List active instruments (protected)
-- `GET /api/instruments/search?q=query` - Search instruments (protected)
-- `GET /api/instruments/{id}` - Get instrument details (protected)
-- `POST /api/admin/instruments` - Create instrument (admin)
-- `PUT /api/admin/instruments/{id}` - Update instrument (admin)
-
-### Market
-- `GET /api/market/status/{exchange}` - Get real-time market status (protected)
-- `POST /api/admin/market/hours` - Configure market hours (admin)
-- `POST /api/admin/market/holidays` - Add market holiday (admin)
-
-### Telemetry
-- `POST /api/telemetry` - Batch ingest telemetry events (protected)
-
-## 🧪 Testing
-
-### Manual Testing
-
-1. **Register a new user**
-   - Navigate to `http://localhost:5173/register`
-   - Enter email and password (min 8 characters)
-   - Click "Register"
-
-2. **Login**
-   - Navigate to `http://localhost:5173/login`
-   - Enter credentials
-   - Click "Login"
-
-3. **Access Dashboard**
-   - After login, you'll be redirected to `/dashboard`
-   - Trading account info displayed
-
-4. **Logout**
-   - Click "Logout" button
-   - Redirected to login page
-
-5. **Token Persistence**
-   - Login
-   - Refresh page
-   - Expected: Still logged in, dashboard loads
-
-## 🔧 Troubleshooting
-
-### Backend Issues
-
-**Go Module Cache Permission Error**
-```bash
-# If you see "Access is denied" for module cache
-$env:GOPATH = "$env:USERPROFILE\go"
-go mod tidy
-```
-
-**JWT Secret Not Loading**
-- Ensure `.env` file is in the `backend/` directory
-- Check file encoding (should be ASCII or UTF-8 without BOM)
-- Verify `JWT_SECRET` is set in `.env`
-
-**Port Already in Use**
-```bash
-# Find process using port 8080
-netstat -ano | findstr :8080
-
-# Kill the process (replace PID)
-taskkill /PID <PID> /F
-```
-
-### Frontend Issues
-
-**CORS Errors**
-- Ensure backend server is running
-- Check CORS middleware is applied first in `main.go`
-- Verify frontend is accessing `http://localhost:8080`
-
-**Token Not Persisting**
-- Clear browser localStorage
-- Check browser console for errors
-- Ensure `initialize()` is called in `App.tsx`
-
-
 ## 📚 Documentation
 
 - [Backend README](./backend/README.md)
@@ -255,9 +171,183 @@ taskkill /PID <PID> /F
 - Zustand (state management)
 - Vite
 
-## 📋 Next Steps
+## ✅ Phase 2 - Watchlist & Market Data (Completed)
 
-Phase 2 - Watchlist & Market Data (Next)
+### User Stories Implemented
+
+#### US-2.1.1 - Watchlists
+- ✅ Create/manage custom watchlists
+- ✅ Add/remove instruments
+- ✅ Real-time price updates in watchlist
+
+#### US-2.2.1 - Market Data Feed
+- ✅ Real-time market data service
+- ✅ Live price updates (simulated)
+- ✅ Batch price fetching
+
+#### US-2.3.1 - Live Stock Charts
+- ✅ Interactive candlestick charts
+- ✅ Real-time price line overlay
+- ✅ Multiple timeframes
+- ✅ Dynamic tab titles with price updates
+
+---
+
+## ✅ Phase 3 - User Profile & Personalization (Completed)
+
+### User Stories Implemented
+
+#### US-3.1.1 - Identity & Branding
+- ✅ User profile management
+- ✅ Personal branding
+
+#### US-3.1.2 - Account Security
+- ✅ Password management
+- ✅ Security settings
+
+#### US-3.1.3 - User Preferences
+- ✅ Trading preferences
+- ✅ UI customization
+
+#### US-3.1.4 - Account Finances
+- ✅ Account balance tracking
+- ✅ Financial overview
+
+---
+
+## 🚧 Phase 4 - Order Management System (In Progress - 7/8 Complete)
+
+### User Stories Implemented
+
+#### US-4.1.1 - Order Placement ✅
+- ✅ MARKET orders
+- ✅ LIMIT orders
+- ✅ Order validation
+- ✅ TradePanel UI
+
+#### US-4.1.2 - Order Management ✅
+- ✅ Modify orders
+- ✅ Cancel orders
+- ✅ Order status tracking
+
+#### US-4.1.3 - Order History ✅
+- ✅ Order list with filters
+- ✅ Order details
+- ✅ Status badges
+
+#### US-4.1.4 - Stop & Contingent Orders ✅
+- ✅ Phase 1: Foundation (STOP/STOP_LIMIT/TRAILING_STOP)
+- ✅ Phase 2: Trigger Monitoring (Background service)
+- ✅ Trailing stop price adjustments
+- ✅ Stop order execution
+
+#### US-4.1.5 - Stop Order UI Enhancements ✅
+- ✅ Phase 1: Enhanced Order List
+  - OrderTypeBadge component
+  - Stop Price column
+  - Tab navigation (All/Pending/Executed/Cancelled/Rejected)
+  - Distance indicators for trailing stops
+
+### Pending
+- ❌ US-4.1.5: Advanced Validity (GTC/IOC) & Margin Control
+
+---
+
+## 🎯 Phase 6 - Matching Engine (CRITICAL - Current Focus)
+
+**Status:** Not Started (BLOCKS Phase 5)
+
+### Why Critical?
+Currently, orders are placed but **never execute**:
+- Orders stuck in NEW/PENDING status forever
+- No trades created
+- No positions generated
+- Portfolio & Holdings feature blocked
+
+### US-6.1 - Order Matching & Execution Engine ❌
+
+**Must Implement:**
+- ✅ MARKET order instant execution
+- ✅ LIMIT order price matching
+- ✅ Trade record creation
+- ✅ Order status updates (FILLED)
+- ✅ Background limit order monitor
+- ✅ Stop order integration
+
+**Implementation Priority:** **HIGHEST** - Required before Phase 5
+
+---
+
+## 📋 Phase 5 - Portfolio Management (Blocked)
+
+**Status:** Blocked by Phase 6
+
+### US-5.1 - Portfolio Overview & Holdings ❌
+
+**Blocked Because:**
+- Requires order execution (Phase 6)
+- Needs filled orders to create positions
+- Can't calculate P&L without trades
+
+**Planned Features:**
+- Portfolio summary dashboard
+- Holdings list with real-time P&L
+- Position details & transaction history
+- Quick trade actions from portfolio
+
+---
+
+## 📚 Documentation
+
+- [Backend README](./backend/README.md)
+- [Frontend README](./frontend/README.md)
+- [User Stories](./user-stories/)
+- [Coding Standards](./user-stories/README.md)
+
+## 🔐 Security
+
+- Passwords hashed with bcrypt (cost factor 14)
+- JWT tokens with configurable expiry
+- Auto-generated secure JWT secret
+- CORS enabled for frontend
+- Protected routes with authentication middleware
+
+## 🛠️ Tech Stack
+
+### Backend
+- Go 1.21+
+- MongoDB
+- Gorilla Mux (routing)
+- JWT (authentication)
+- bcrypt (password hashing)
+
+### Frontend
+- React 18
+- TypeScript (strict mode)
+- Material UI
+- React Router
+- Axios
+- Zustand (state management)
+- Vite
+
+## 📋 Current Status & Next Steps
+
+### Completed Phases
+- ✅ Phase 0: Foundation (6 user stories)
+- ✅ Phase 1: Market & Instrument (2 user stories)
+- ✅ Phase 2: Watchlist & Market Data (3 user stories)
+- ✅ Phase 3: User Profile (4 user stories)
+- 🚧 Phase 4: Order Management (7/8 user stories)
+
+### Current Priority
+**🎯 Phase 6: Order Matching & Execution Engine**
+- Critical blocker for portfolio features
+- Orders need to actually execute and fill
+- Required for complete trading workflow
+
+### Next After Phase 6
+- Phase 5: Portfolio & Holdings Management
+- Phase 4: Complete remaining (Validity & Margin Control)
 
 ## 📄 License
 

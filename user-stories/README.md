@@ -11,21 +11,34 @@ user-stories/
 │   ├── US-0.1.1-user-registration.md
 │   ├── US-0.1.2-trading-account-creation.md
 │   ├── US-0.1.3-authentication-session.md
-│   └── US-0.2.1-global-ui-shell.md
+│   ├── US-0.2.1-global-ui-shell.md
+│   ├── US-0.2.2-observability-analytics.md
+│   └── US-0.2.3-logo-branding.md
 ├── phase-1-market-instrument/
+│   ├── US-1.1.1-instrument-master-data.md
+│   └── US-1.1.2-market-hours-trading-sessions.md
 ├── phase-2-watchlist-market-data/
+│   ├── US-2.1.1-watchlists.md
+│   ├── US-2.2.1-market-data-feed.md
+│   └── US-2.3.1-live-stock-charts.md
 ├── phase-3-user-profile/
 │   ├── US-3.1.1-identity-branding.md
 │   ├── US-3.1.2-account-security.md
 │   ├── US-3.1.3-user-preferences.md
 │   └── US-3.1.4-account-finances.md
 ├── phase-4-order-management/
-├── phase-5-risk-management/
-├── phase-6-matching-engine/
-├── phase-7-settlement-positions/
-├── phase-8-orderbook-marketdata/
-├── phase-9-reporting-pnl/
-└── phase-10-audit-admin/
+│   ├── US-4.1.1-order-placement.md
+│   ├── US-4.1.2-order-management.md
+│   ├── US-4.1.3-order-history.md
+│   ├── US-4.1.4-edge-cases.md
+│   ├── US-4.1.4-implementation-examples.md
+│   ├── US-4.1.4-stop-contingent-orders.md
+│   ├── US-4.1.5-stop-order-ui-enhancements.md
+│   └── US-4.1.5-validity-margin-control.md
+├── phase-5-portfolio-management/
+│   └── US-5.1-portfolio-holdings.md
+└── phase-6-matching-engine/
+    └── US-6.1-order-matching-execution.md
 ```
 
 ## User Story Template
@@ -91,51 +104,173 @@ So that [benefit]
 
 ## Phase Overview
 
-### Phase 0 - Foundation
+### Phase 0 - Foundation ✅
+**Status:** Complete  
 Core user and account management, authentication, and global UI shell.
 
-### Phase 1 - Market & Instrument Setup
+**User Stories:**
+- US-0.1.1: User Registration
+- US-0.1.2: Trading Account Creation
+- US-0.1.3: Authentication & Session Management
+- US-0.2.1: Global UI Shell
+- US-0.2.2: Observability & Analytics
+- US-0.2.3: Logo & Branding
+
+---
+
+### Phase 1 - Market & Instrument Setup ✅
+**Status:** Complete  
 Define tradable instruments and market structure.
 
-### Phase 2 - Watchlist & Market Data
+**User Stories:**
+- US-1.1.1: Instrument Master Data
+- US-1.1.2: Market Hours & Trading Sessions
+
+---
+
+### Phase 2 - Watchlist & Market Data ✅
+**Status:** Complete  
 Customizable watchlists and real-time (simulated) price updates.
 
-### Phase 3 - User Profile & Personalization
+**User Stories:**
+- US-2.1.1: Watchlists
+- US-2.2.1: Market Data Feed
+- US-2.3.1: Live Stock Charts
+
+---
+
+### Phase 3 - User Profile & Personalization ✅
+**Status:** Complete  
 Personal identity management, account security, and trading preferences.
 
-### Phase 4 - Order Management System (OMS)
-Order placement, modification, and cancellation.
+**User Stories:**
+- US-3.1.1: Identity & Branding
+- US-3.1.2: Account Security
+- US-3.1.3: User Preferences
+- US-3.1.4: Account Finances
 
-### Phase 5 - Risk Management
-Pre-trade risk checks and validations.
+---
 
-### Phase 6 - Matching Engine (CORE)
-Order matching and trade execution.
+### Phase 4 - Order Management System (OMS) 🚧
+**Status:** In Progress (7/8 complete)  
+Order placement, modification, cancellation, and advanced order types.
 
-### Phase 7 - Settlement & Positions
+**User Stories:**
+- ✅ US-4.1.1: Order Placement (MARKET/LIMIT)
+- ✅ US-4.1.2: Order Management (Modify/Cancel)
+- ✅ US-4.1.3: Order History
+- ✅ US-4.1.4: Stop & Contingent Orders (STOP/STOP_LIMIT/TRAILING_STOP)
+  - ✅ Phase 1: Foundation & UI
+  - ✅ Phase 2: Trigger Monitoring
+- ✅ US-4.1.5: Stop Order UI Enhancements
+  - ✅ Phase 1: Enhanced Order List, Tabs, Stop Price Column
+- ❌ US-4.1.5: Advanced Validity (GTC/IOC) & Margin Control
+- 📝 US-4.1.4: Edge Cases & Implementation Examples
+
+---
+
+### Phase 5 - Portfolio Management 📋
+**Status:** Blocked (requires Phase 6)  
+Position tracking, P&L calculation, and portfolio analytics.
+
+**User Stories:**
+- ❌ US-5.1: Portfolio Overview & Holdings Management
+
+**Blocked By:** US-6.1 (needs order execution to create positions)
+
+**Planned Features:**
+- Portfolio summary dashboard
+- Holdings list with real-time P&L
+- Position details & transaction history
+- Quick trade actions from portfolio
+
+---
+
+### Phase 6 - Matching Engine (CORE) �
+**Status:** Critical Priority  
+Order matching and trade execution - **MUST DO BEFORE PHASE 5**
+
+**User Stories:**
+- ❌ US-6.1: Order Matching & Execution Engine
+
+**Why Critical:**
+- Orders currently never execute (stuck in NEW status)
+- No trades = No positions = Portfolio feature blocked
+- Required for complete trading workflow
+
+**Features:**
+- MARKET order instant execution
+- LIMIT order price matching
+- Trade record creation
+- Order status updates (FILLED)
+- Background limit order monitor
+
+---
+
+### Phase 7 - Settlement & Positions 📅
+**Status:** Not Started  
 Post-trade settlement and position management.
 
-### Phase 8 - Order Book & Market Data
+---
+
+### Phase 8 - Order Book & Market Data 📅
+**Status:** Not Started  
 Market transparency and data feeds.
 
-### Phase 9 - Reporting & P&L
+---
+
+### Phase 9 - Reporting & P&L 📅
+**Status:** Not Started  
 Trade history and profit/loss calculations.
 
-### Phase 10 - Audit & Admin
+---
+
+### Phase 10 - Audit & Admin 📅
+**Status:** Not Started  
 Compliance, audit logs, and administrative controls.
+
+---
 
 ## Status Tracking
 
 | Phase | Total Stories | Completed | In Progress | Not Started |
 |-------|--------------|-----------|-------------|-------------|
-| 0 | 4 | 4 | 0 | 0 |
-| 1 | 2 | 2 | 0 | 0 |
-| 2 | 2 | 2 | 0 | 0 |
-| 3 | 4 | 4 | 0 | 0 |
-| 4 | 3 | 2 | 0 | 1 |
-| 5 | 3 | 0 | 0 | 3 |
-| 6 | 2 | 0 | 0 | 2 |
-| 7 | 3 | 0 | 0 | 3 |
-| 8 | 2 | 0 | 0 | 2 |
-| 9 | 2 | 0 | 0 | 2 |
-| 10 | 2 | 0 | 0 | 2 |
+| 0 - Foundation | 6 | 6 | 0 | 0 |
+| 1 - Market & Instrument | 2 | 2 | 0 | 0 |
+| 2 - Watchlist & Market Data | 3 | 3 | 0 | 0 |
+| 3 - User Profile | 4 | 4 | 0 | 0 |
+| 4 - Order Management | 8 | 7 | 0 | 1 |
+| 5 - Portfolio Management | 1 | 0 | 0 | 1 |
+| 6 - Matching Engine | 1 | 0 | 0 | 1 |
+| 7 - Settlement & Positions | 0 | 0 | 0 | 0 |
+| 8 - Order Book & Market Data | 0 | 0 | 0 | 0 |
+| 9 - Reporting & P&L | 0 | 0 | 0 | 0 |
+| 10 - Audit & Admin | 0 | 0 | 0 | 0 |
+
+---
+
+## Recent Updates
+
+**2026-01-06:**
+- ✅ Completed US-4.1.4 Phase 2: Stop Order Trigger Monitoring
+- ✅ Completed US-4.1.5 Phase 1: Stop Order UI Enhancements (OrderTypeBadge, Stop Price Column, Tab Navigation)
+- 📝 Created US-5.1: Portfolio Overview & Holdings Management
+- 📝 Created US-6.1: Order Matching & Execution Engine (CRITICAL - blocks US-5.1)
+- 🎯 **Next Priority:** US-6.1 implementation (orders need to actually execute!)
+
+**2026-01-05:**
+- ✅ Completed US-4.1.4 Phase 1: Stop Order Foundation (STOP/STOP_LIMIT/TRAILING_STOP)
+
+**2026-01-03:**
+- ✅ Completed US-4.1.1, US-4.1.2, US-4.1.3: Basic Order Management
+
+---
+
+## Legend
+
+- ✅ Complete
+- 🚧 In Progress
+- ❌ Not Started
+- 📋 Planning
+- 📅 Future
+- 📝 Documentation
