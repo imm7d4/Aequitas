@@ -90,7 +90,7 @@ export function InstrumentDetail() {
     };
 
     // Dynamic browser tab title
-    const movementArrow = marketData && marketData.change >= 0 ? '↑' : '↓';
+    const movementArrow = marketData && marketData.change >= 0 ? '▲' : '▼';
     const formattedPrice = ltp > 0
         ? `₹${ltp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : '₹--';
