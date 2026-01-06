@@ -111,8 +111,8 @@ func (r *CandleRepository) cleanupOldCandles(instrumentID primitive.ObjectID, in
 
 		deleteResult, err := r.collection.DeleteMany(ctx, deleteFilter)
 		if err == nil && deleteResult.DeletedCount > 0 {
-			fmt.Printf("🧹 Cleaned up %d old candles for interval %s (keeping latest %d)\n",
-				deleteResult.DeletedCount, interval, keepCount)
+			// fmt.Printf("🧹 Cleaned up %d old candles for interval %s (keeping latest %d)\n",
+			// 	deleteResult.DeletedCount, interval, keepCount)
 		}
 	}
 }

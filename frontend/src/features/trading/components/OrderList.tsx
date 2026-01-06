@@ -34,10 +34,12 @@ import {
     TrendingDown,
 } from '@mui/icons-material';
 import { OrderResponse } from '../services/orderService';
-import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { EditOrderDialog } from './EditOrderDialog';
 import { useMarketData } from '@/features/market/hooks/useMarketData';
 import { OrderTypeBadge } from './OrderTypeBadge';
+import { Trade, tradeService } from '../services/tradeService';
+import { useState, useEffect } from 'react';
 
 interface OrderListProps {
     orders: OrderResponse[];
@@ -53,6 +55,31 @@ export const OrderList: React.FC<OrderListProps> = ({ orders = [], onCancel, onM
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<OrderResponse | null>(null);
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+    const [orderTrades, setOrderTrades] = useState<Record<string, Trade[]>>({});
+    const [tradesLoading, setTradesLoading] = useState<Record<string, boolean>>({});
+
+    // Fetch trades for expanded FILLED orders
+    useEffect(() => {
+        const fetchNewTrades = async () => {
+            const filledExpandedIds = orders
+                .filter(o => o.status === 'FILLED' && expandedRows.has(o.id) && !orderTrades[o.id] && !tradesLoading[o.id])
+                .map(o => o.id);
+
+            for (const id of filledExpandedIds) {
+                setTradesLoading(prev => ({ ...prev, [id]: true }));
+                try {
+                    const trades = await tradeService.getTradesByOrder(id);
+                    setOrderTrades(prev => ({ ...prev, [id]: trades }));
+                } catch (error) {
+                    console.error('Failed to fetch trades for order:', id, error);
+                } finally {
+                    setTradesLoading(prev => ({ ...prev, [id]: false }));
+                }
+            }
+        };
+
+        fetchNewTrades();
+    }, [expandedRows, orders, orderTrades, tradesLoading]);
 
     // Only fetch market data for expanded PENDING orders
     const expandedPendingOrders = orders.filter(order =>
@@ -268,7 +295,19 @@ export const OrderList: React.FC<OrderListProps> = ({ orders = [], onCancel, onM
                                         {order.orderId.split('-')[1].slice(-8)}
                                     </TableCell>
                                     <TableCell>
-                                        <Typography variant="body2" fontWeight={700}>
+                                        <Typography
+                                            variant="body2"
+                                            fontWeight={700}
+                                            component={Link}
+                                            to={`/instruments/${order.instrumentId}`}
+                                            sx={{
+                                                textDecoration: 'none',
+                                                color: 'primary.main',
+                                                '&:hover': {
+                                                    textDecoration: 'underline',
+                                                }
+                                            }}
+                                        >
                                             {order.symbol}
                                         </Typography>
                                     </TableCell>
@@ -409,6 +448,55 @@ export const OrderList: React.FC<OrderListProps> = ({ orders = [], onCancel, onM
                                                             </Grid>
                                                         </Grid>
                                                     </Grid>
+
+                                                    {/* Execution Details Section */}
+                                                    {order.status === 'FILLED' && (
+                                                        <Grid item xs={12}>
+                                                            <Paper elevation={0} sx={{ p: 2, border: '1px solid', borderColor: 'success.main', borderRadius: 2, bgcolor: alpha(theme.palette.success.main, 0.05) }}>
+                                                                <Typography variant="subtitle2" fontWeight={700} gutterBottom>
+                                                                    Execution Summary
+                                                                </Typography>
+                                                                <Grid container spacing={2} sx={{ mt: 0.5 }}>
+                                                                    <Grid item xs={6} sm={3}>
+                                                                        <Typography variant="caption" color="text.secondary">Avg. Fill Price</Typography>
+                                                                        <Typography variant="body2" fontWeight={700} color="success.main">₹{order.avgFillPrice?.toLocaleString()}</Typography>
+                                                                    </Grid>
+                                                                    <Grid item xs={6} sm={3}>
+                                                                        <Typography variant="caption" color="text.secondary">Filled Quantity</Typography>
+                                                                        <Typography variant="body2" fontWeight={700}>{order.filledQuantity} / {order.quantity}</Typography>
+                                                                    </Grid>
+                                                                    <Grid item xs={6} sm={3}>
+                                                                        <Typography variant="caption" color="text.secondary">Execution Value</Typography>
+                                                                        <Typography variant="body2" fontWeight={700}>₹{((order.avgFillPrice || 0) * (order.filledQuantity || 0)).toLocaleString()}</Typography>
+                                                                    </Grid>
+                                                                    <Grid item xs={6} sm={3}>
+                                                                        <Typography variant="caption" color="text.secondary">Filled At</Typography>
+                                                                        <Typography variant="body2" fontWeight={700}>{order.filledAt ? formatDate(order.filledAt) : 'N/A'}</Typography>
+                                                                    </Grid>
+                                                                </Grid>
+
+                                                                {orderTrades[order.id] && orderTrades[order.id].length > 0 && (
+                                                                    <Box sx={{ mt: 2 }}>
+                                                                        <Typography variant="caption" fontWeight={700} sx={{ display: 'block', mb: 1, color: 'text.secondary', textTransform: 'uppercase' }}>
+                                                                            Individual Trades
+                                                                        </Typography>
+                                                                        {orderTrades[order.id].map((trade) => (
+                                                                            <Box key={trade.id} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5, borderBottom: '1px dashed', borderColor: alpha(theme.palette.divider, 0.5), '&:last-child': { borderBottom: 0 } }}>
+                                                                                <Typography variant="caption" fontFamily="monospace">{trade.tradeId}</Typography>
+                                                                                <Typography variant="caption" fontWeight={600}>₹{trade.price.toLocaleString()} x {trade.quantity}</Typography>
+                                                                                <Typography variant="caption" color="text.secondary">{trade.executedAt ? formatDate(trade.executedAt) : ''}</Typography>
+                                                                            </Box>
+                                                                        ))}
+                                                                    </Box>
+                                                                )}
+                                                                {tradesLoading[order.id] && (
+                                                                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+                                                                        <CircularProgress size={16} />
+                                                                    </Box>
+                                                                )}
+                                                            </Paper>
+                                                        </Grid>
+                                                    )}
 
                                                     {/* Stop Order Details */}
                                                     {(order.orderType === 'STOP' || order.orderType === 'STOP_LIMIT' || order.orderType === 'TRAILING_STOP') && (

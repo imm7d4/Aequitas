@@ -24,16 +24,21 @@ type Order struct {
 	LimitPrice *float64 `bson:"limit_price,omitempty" json:"limitPrice,omitempty"` // Limit price for STOP_LIMIT orders
 
 	// Trailing Stop Fields
-	TrailAmount      *float64 `bson:"trail_amount,omitempty" json:"trailAmount,omitempty"`           // Trail distance (percentage or absolute)
-	TrailType        string   `bson:"trail_type,omitempty" json:"trailType,omitempty"`               // ABSOLUTE / PERCENTAGE
+	TrailAmount      *float64 `bson:"trail_amount,omitempty" json:"trailAmount,omitempty"`            // Trail distance (percentage or absolute)
+	TrailType        string   `bson:"trail_type,omitempty" json:"trailType,omitempty"`                // ABSOLUTE / PERCENTAGE
 	CurrentStopPrice *float64 `bson:"current_stop_price,omitempty" json:"currentStopPrice,omitempty"` // Current trailing stop price
-	HighestPrice     *float64 `bson:"highest_price,omitempty" json:"highestPrice,omitempty"`         // Highest price reached (for SELL trailing stops)
-	LowestPrice      *float64 `bson:"lowest_price,omitempty" json:"lowestPrice,omitempty"`           // Lowest price reached (for BUY trailing stops)
+	HighestPrice     *float64 `bson:"highest_price,omitempty" json:"highestPrice,omitempty"`          // Highest price reached (for SELL trailing stops)
+	LowestPrice      *float64 `bson:"lowest_price,omitempty" json:"lowestPrice,omitempty"`            // Lowest price reached (for BUY trailing stops)
 
 	// Trigger Tracking
-	TriggeredAt   *time.Time          `bson:"triggered_at,omitempty" json:"triggeredAt,omitempty"`     // When stop order was triggered
-	TriggerPrice  *float64            `bson:"trigger_price,omitempty" json:"triggerPrice,omitempty"`   // Price at which order was triggered
+	TriggeredAt   *time.Time          `bson:"triggered_at,omitempty" json:"triggeredAt,omitempty"`      // When stop order was triggered
+	TriggerPrice  *float64            `bson:"trigger_price,omitempty" json:"triggerPrice,omitempty"`    // Price at which order was triggered
 	ParentOrderID *primitive.ObjectID `bson:"parent_order_id,omitempty" json:"parentOrderId,omitempty"` // Links triggered order to original stop order
+
+	// Fill Details
+	FilledQuantity int        `bson:"filled_quantity" json:"filledQuantity"`
+	AvgFillPrice   float64    `bson:"avg_fill_price" json:"avgFillPrice"`
+	FilledAt       *time.Time `bson:"filled_at,omitempty" json:"filledAt,omitempty"`
 
 	Status        string `bson:"status" json:"status"` // NEW, PENDING, TRIGGERED, FILLED, CANCELLED, REJECTED
 	Source        string `bson:"source" json:"source"` // UI / API

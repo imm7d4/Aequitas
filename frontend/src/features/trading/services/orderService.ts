@@ -34,10 +34,16 @@ export interface OrderResponse {
     stopPrice?: number;
     limitPrice?: number;
     trailAmount?: number;
-    trailType?: 'ABSOLUTE' | 'PERCENTAGE';
+    trailType?: 'PERCENTAGE' | 'ABSOLUTE';
+    highestPrice?: number;
+    lowestPrice?: number;
     currentStopPrice?: number;
+    executedAt?: string;
     triggeredAt?: string;
     triggerPrice?: number;
+    avgFillPrice?: number;
+    filledQuantity?: number;
+    filledAt?: string;
 }
 
 export interface PaginatedOrdersResponse {

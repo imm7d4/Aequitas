@@ -233,7 +233,12 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp }) => {
             }
 
             const res = await orderService.placeOrder(orderRequest);
-            setSuccess(`Order ${res.orderId} placed successfully!`);
+
+            if (res.status === 'FILLED') {
+                setSuccess(`Order ${res.orderId} filled at ₹${res.avgFillPrice?.toLocaleString()}!`);
+            } else {
+                setSuccess(`Order ${res.orderId} placed successfully!`);
+            }
 
             // Clear all fields to prevent accidental duplicate orders
             setQuantity('');

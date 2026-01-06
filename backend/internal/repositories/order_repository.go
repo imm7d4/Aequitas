@@ -149,3 +149,24 @@ func (r *OrderRepository) FindPendingStopOrders() ([]*models.Order, error) {
 
 	return orders, nil
 }
+
+// FindNewLimitOrders returns all orders with status NEW and type LIMIT
+func (r *OrderRepository) FindNewLimitOrders() ([]*models.Order, error) {
+	query := bson.M{
+		"status":     "NEW",
+		"order_type": "LIMIT",
+	}
+
+	cursor, err := r.collection.Find(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	var orders []*models.Order
+	if err = cursor.All(context.Background(), &orders); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}

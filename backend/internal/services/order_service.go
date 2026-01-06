@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"time"
 
@@ -17,6 +18,7 @@ type OrderService struct {
 	instrumentRepo     *repositories.InstrumentRepository
 	tradingAccountRepo *repositories.TradingAccountRepository
 	marketDataRepo     *repositories.MarketDataRepository
+	matchingService    *MatchingService
 }
 
 func NewOrderService(
@@ -24,12 +26,14 @@ func NewOrderService(
 	instrumentRepo *repositories.InstrumentRepository,
 	tradingAccountRepo *repositories.TradingAccountRepository,
 	marketDataRepo *repositories.MarketDataRepository,
+	matchingService *MatchingService,
 ) *OrderService {
 	return &OrderService{
 		orderRepo:          orderRepo,
 		instrumentRepo:     instrumentRepo,
 		tradingAccountRepo: tradingAccountRepo,
 		marketDataRepo:     marketDataRepo,
+		matchingService:    matchingService,
 	}
 }
 
@@ -173,7 +177,22 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 	req.OrderID = fmt.Sprintf("ORD-%d", time.Now().UnixNano())
 	req.ValidatedAt = time.Now()
 
-	return s.orderRepo.Create(&req)
+	order, err := s.orderRepo.Create(&req)
+	if err != nil {
+		return nil, err
+	}
+
+	// 9. Immediate Execution for MARKET orders
+	if order.OrderType == "MARKET" {
+		_, execErr := s.matchingService.ExecuteMarketOrder(order)
+		if execErr != nil {
+			log.Printf("ERROR: Failed to execute market order %s immediately: %v", order.OrderID, execErr)
+			// We don't return error here because the order IS saved, just execution failed (background will try later or manual)
+			// But for MARKET orders, current price SHOULD be available.
+		}
+	}
+
+	return order, nil
 }
 func (s *OrderService) GetUserOrders(userID string, filters map[string]interface{}, skip int, limit int) ([]*models.Order, int64, error) {
 	return s.orderRepo.FindByUserID(userID, filters, skip, limit)

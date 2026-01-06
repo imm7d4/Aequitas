@@ -65,6 +65,7 @@ func main() {
 	transactionRepo := repositories.NewTransactionRepository(db)
 	orderRepo := repositories.NewOrderRepository(db)
 	candleRepo := repositories.NewCandleRepository(db)
+	tradeRepo := repositories.NewTradeRepository(db)
 
 	// Initialize services
 	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo, transactionRepo)
@@ -74,9 +75,11 @@ func main() {
 	watchlistService := services.NewWatchlistService(watchlistRepo, instrumentRepo)
 	telemetryService := services.NewTelemetryService(telemetryRepo)
 	userService := services.NewUserService(userRepo)
-	orderService := services.NewOrderService(orderRepo, instrumentRepo, tradingAccountRepo, marketDataRepo)
+	matchingService := services.NewMatchingService(orderRepo, tradeRepo, marketDataRepo, tradingAccountService)
+	orderService := services.NewOrderService(orderRepo, instrumentRepo, tradingAccountRepo, marketDataRepo, matchingService)
 	candleService := services.NewCandleService(candleRepo)
 	candleBuilder := services.NewCandleBuilder(candleRepo)
+	tradeService := services.NewTradeService(tradeRepo)
 
 	// Initialize WebSocket hub
 	wsHub := websocket.NewHub()
@@ -103,6 +106,10 @@ func main() {
 	stopOrderService.Start()
 	defer stopOrderService.Stop()
 
+	// Initialize matching engine service (runs every 3 seconds)
+	matchingService.Start()
+	defer matchingService.Stop()
+
 	// Initialize controllers
 	authController := controllers.NewAuthController(authService)
 	instrumentController := controllers.NewInstrumentController(instrumentService)
@@ -113,6 +120,7 @@ func main() {
 	accountController := controllers.NewAccountController(tradingAccountService)
 	orderController := controllers.NewOrderController(orderService)
 	candleController := controllers.NewCandleController(candleService)
+	tradeController := controllers.NewTradeController(tradeService)
 
 	// Set up router
 	router := mux.NewRouter()
@@ -175,6 +183,10 @@ func main() {
 	protected.HandleFunc("/orders/pending-stops", orderController.GetPendingStops).Methods("GET", "OPTIONS")
 	protected.HandleFunc("/orders/{id}", orderController.ModifyOrder).Methods("PUT", "OPTIONS")
 	protected.HandleFunc("/orders/{id}", orderController.CancelOrder).Methods("DELETE", "OPTIONS")
+
+	// Trade routes
+	protected.HandleFunc("/trades", tradeController.GetUserTrades).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/trades/order/{orderId}", tradeController.GetTradesByOrder).Methods("GET", "OPTIONS")
 
 	// Admin routes (require admin role)
 	admin := protected.PathPrefix("/admin").Subrouter()

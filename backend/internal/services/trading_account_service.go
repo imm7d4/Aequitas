@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -109,4 +110,47 @@ func (s *TradingAccountService) GetTransactions(userID string) ([]*models.Transa
 	}
 
 	return s.txRepo.FindByAccountID(account.ID.Hex())
+}
+
+// SettleTrade updates the balance and creates a transaction for a filled trade
+func (s *TradingAccountService) SettleTrade(userID string, netAmount float64, tradeID string, side string) error {
+	account, err := s.repo.FindByUserID(userID)
+	if err != nil {
+		return err
+	}
+	if account == nil {
+		return errors.New("trading account not found")
+	}
+
+	var newBalance float64
+	if side == "BUY" {
+		// Net value for BUY includes fees, so we deduct the full amount
+		newBalance = account.Balance - netAmount
+	} else {
+		// Net value for SELL is after deducting fees, so we add the remaining amount
+		newBalance = account.Balance + netAmount
+	}
+
+	if newBalance < 0 {
+		return errors.New("insufficient balance for settlement")
+	}
+
+	err = s.repo.UpdateBalance(account.ID, newBalance)
+	if err != nil {
+		return err
+	}
+
+	// Create transaction record
+	tx := &models.Transaction{
+		AccountID: account.ID,
+		UserID:    account.UserID,
+		Type:      "TRADE",
+		Amount:    netAmount,
+		Currency:  account.Currency,
+		Status:    "COMPLETED",
+		Reference: fmt.Sprintf("TRADE_%s", tradeID),
+	}
+	_, _ = s.txRepo.Create(tx)
+
+	return nil
 }

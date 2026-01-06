@@ -18,18 +18,25 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
+    alpha,
+    useTheme,
     CircularProgress,
+    Divider,
 } from '@mui/material';
 import {
     AccountBalanceWallet as WalletIcon,
     History as HistoryIcon,
     AddCircle as AddIcon,
+    InfoOutlined as InfoIcon,
 } from '@mui/icons-material';
+import { Tooltip, Grid } from '@mui/material';
 import { accountService, TradingAccount, Transaction } from '../services/accountService';
+import { tradeService, Trade as TradeModel } from '../../trading/services/tradeService';
 
 export const FinanceSettings: React.FC = () => {
     const [account, setAccount] = useState<TradingAccount | null>(null);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [trades, setTrades] = useState<Record<string, TradeModel>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [isFunding, setIsFunding] = useState(false);
     const [fundAmount, setFundAmount] = useState('10000');
@@ -38,12 +45,20 @@ export const FinanceSettings: React.FC = () => {
 
     const fetchData = async () => {
         try {
-            const [acc, txs] = await Promise.all([
+            const [acc, txs, userTrades] = await Promise.all([
                 accountService.getBalance(),
                 accountService.getTransactions(),
+                tradeService.getTrades(),
             ]);
             setAccount(acc);
             setTransactions(txs);
+
+            // Create a lookup map for trades by tradeId
+            const tradeMap: Record<string, TradeModel> = {};
+            userTrades.forEach(t => {
+                tradeMap[t.tradeId] = t;
+            });
+            setTrades(tradeMap);
         } catch (err: any) {
             setMessage({ type: 'error', text: 'Failed to load financial data' });
         } finally {
@@ -150,9 +165,110 @@ export const FinanceSettings: React.FC = () => {
                                             </Typography>
                                         </TableCell>
                                         <TableCell>
-                                            <Typography variant="caption" color="text.secondary">
-                                                {tx.reference}
-                                            </Typography>
+                                            {tx.reference?.startsWith('TRADE_') ? (
+                                                <Tooltip
+                                                    title={
+                                                        <Box sx={{ p: 1, minWidth: 240 }}>
+                                                            {trades[tx.reference.replace('TRADE_', '')] ? (
+                                                                <Box>
+                                                                    <Grid container spacing={1.5} sx={{ mb: 1 }}>
+                                                                        <Grid item xs={6}>
+                                                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.65rem', fontWeight: 700 }}>INSTRUMENT</Typography>
+                                                                            <Typography variant="body2" fontWeight={800} color="text.primary">{trades[tx.reference.replace('TRADE_', '')].symbol}</Typography>
+                                                                        </Grid>
+                                                                        <Grid item xs={6}>
+                                                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.65rem', fontWeight: 700 }}>SIDE</Typography>
+                                                                            <Typography variant="body2" fontWeight={800} color={trades[tx.reference.replace('TRADE_', '')].side === 'BUY' ? 'success.main' : 'error.main'}>
+                                                                                {trades[tx.reference.replace('TRADE_', '')].side}
+                                                                            </Typography>
+                                                                        </Grid>
+                                                                        <Grid item xs={6}>
+                                                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.65rem', fontWeight: 700 }}>PRICE</Typography>
+                                                                            <Typography variant="caption" fontWeight={700} color="text.primary" sx={{ display: 'block' }}>₹{trades[tx.reference.replace('TRADE_', '')].price.toLocaleString()}</Typography>
+                                                                        </Grid>
+                                                                        <Grid item xs={6}>
+                                                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.65rem', fontWeight: 700 }}>QTY</Typography>
+                                                                            <Typography variant="caption" fontWeight={700} color="text.primary" sx={{ display: 'block' }}>{trades[tx.reference.replace('TRADE_', '')].quantity}</Typography>
+                                                                        </Grid>
+                                                                        <Grid item xs={12}>
+                                                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.65rem' }}>{new Date(trades[tx.reference.replace('TRADE_', '')].executedAt).toLocaleString()}</Typography>
+                                                                        </Grid>
+                                                                    </Grid>
+
+                                                                    <Stack spacing={0.3} sx={{ p: 1, bgcolor: alpha(useTheme().palette.primary.main, 0.04), borderRadius: 0.5 }}>
+                                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Value</Typography>
+                                                                            <Typography variant="caption" fontWeight={700} color="text.primary" sx={{ fontSize: '0.7rem' }}>₹{trades[tx.reference.replace('TRADE_', '')].value.toLocaleString()}</Typography>
+                                                                        </Box>
+                                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Comm.</Typography>
+                                                                            <Typography variant="caption" fontWeight={700} color="text.primary" sx={{ fontSize: '0.7rem' }}>₹{trades[tx.reference.replace('TRADE_', '')].commission.toLocaleString()}</Typography>
+                                                                        </Box>
+                                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Fees</Typography>
+                                                                            <Typography variant="caption" fontWeight={700} color="text.primary" sx={{ fontSize: '0.7rem' }}>₹{trades[tx.reference.replace('TRADE_', '')].fees.toLocaleString()}</Typography>
+                                                                        </Box>
+                                                                        <Divider sx={{ my: 0.5 }} />
+                                                                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                            <Typography variant="caption" color="primary.main" fontWeight={800} sx={{ fontSize: '0.75rem' }}>Net</Typography>
+                                                                            <Typography variant="caption" fontWeight={800} color="primary.main" sx={{ fontSize: '0.75rem' }}>₹{trades[tx.reference.replace('TRADE_', '')].netValue.toLocaleString()}</Typography>
+                                                                        </Box>
+                                                                    </Stack>
+                                                                </Box>
+                                                            ) : (
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                    <CircularProgress size={10} color="primary" />
+                                                                    <Typography variant="caption" color="text.secondary" fontSize="0.7rem">Loading...</Typography>
+                                                                </Box>
+                                                            )}
+                                                        </Box>
+                                                    }
+                                                    arrow
+                                                    componentsProps={{
+                                                        tooltip: {
+                                                            sx: {
+                                                                bgcolor: 'background.paper',
+                                                                color: 'text.primary',
+                                                                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                                                                border: '1px solid',
+                                                                borderColor: 'divider',
+                                                                '& .MuiTooltip-arrow': {
+                                                                    color: 'background.paper',
+                                                                    '&::before': {
+                                                                        border: '1px solid',
+                                                                        borderColor: 'divider',
+                                                                    },
+                                                                },
+                                                            },
+                                                        },
+                                                    }}
+                                                >
+                                                    <Box sx={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: 0.5,
+                                                        cursor: 'help',
+                                                        bgcolor: alpha(useTheme().palette.primary.main, 0.05),
+                                                        px: 1,
+                                                        py: 0.5,
+                                                        borderRadius: 1,
+                                                        transition: 'all 0.2s',
+                                                        '&:hover': {
+                                                            bgcolor: alpha(useTheme().palette.primary.main, 0.1),
+                                                            transform: 'translateY(-1px)'
+                                                        }
+                                                    }}>
+                                                        <Typography variant="caption" color="primary.main" fontWeight={700} sx={{ fontFamily: 'monospace' }}>
+                                                            {tx.reference}
+                                                        </Typography>
+                                                        <InfoIcon sx={{ fontSize: 14, color: 'primary.main' }} />
+                                                    </Box>
+                                                </Tooltip>
+                                            ) : (
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {tx.reference}
+                                                </Typography>
+                                            )}
                                         </TableCell>
                                         <TableCell align="right">
                                             <Typography
