@@ -17,13 +17,13 @@ interface PortfolioSummaryProps {
 }
 
 export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
-    totalEquity,
-    totalHoldingsValue,
-    cashBalance,
-    totalPL,
-    totalPLPercent,
-    realizedPL,
-    holdingsCount,
+    totalEquity = 0,
+    totalHoldingsValue = 0,
+    cashBalance = 0,
+    totalPL = 0,
+    totalPLPercent = 0,
+    realizedPL = 0,
+    holdingsCount = 0,
 }) => {
     const theme = useTheme();
     const isProfit = totalPL >= 0;

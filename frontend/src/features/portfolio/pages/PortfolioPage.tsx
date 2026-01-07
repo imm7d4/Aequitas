@@ -84,8 +84,8 @@ export const PortfolioPage: React.FC = () => {
         const unrealizedPLPercent = totalInvested > 0 ? (unrealizedPL / totalInvested) * 100 : 0;
 
         // Use backend values for cash and realized PL
-        const cashBalance = summaryData.cashBalance;
-        const realizedPL = summaryData.realizedPL;
+        const cashBalance = summaryData.cashBalance || 0;
+        const realizedPL = summaryData.realizedPL || 0;
 
         // Total Equity = Cash + Current Holdings Value
         const totalEquity = cashBalance + totalHoldingsValue;
