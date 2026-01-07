@@ -37,7 +37,7 @@ export const useInstrumentStore = create<InstrumentState>((set) => ({
     searchResults: [],
     isLoading: false,
     error: null,
-    viewMode: 'grid',
+    viewMode: 'list',
     filters: {
         exchange: 'ALL',
         type: 'ALL',

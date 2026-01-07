@@ -11,9 +11,11 @@ export interface Holding {
     lastUpdated: string;
 }
 
-export interface PortfolioSummary {
+export interface PortfolioSummaryData {
     holdings: Holding[];
-    // Future: totalValue, totalPL, etc.
+    realizedPL: number;
+    totalEquity: number;
+    cashBalance: number;
 }
 
 export const portfolioService = {
@@ -22,7 +24,7 @@ export const portfolioService = {
         return response.data.data;
     },
 
-    getSummary: async (): Promise<PortfolioSummary> => {
+    getSummary: async (): Promise<PortfolioSummaryData> => {
         const response = await api.get('/portfolio/summary');
         return response.data.data;
     },

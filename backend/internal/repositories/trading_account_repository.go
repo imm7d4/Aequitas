@@ -72,3 +72,17 @@ func (r *TradingAccountRepository) UpdateBalance(accountID primitive.ObjectID, n
 	)
 	return err
 }
+
+// Update updates a trading account (generic)
+func (r *TradingAccountRepository) Update(account *models.TradingAccount) (*models.TradingAccount, error) {
+	account.UpdatedAt = time.Now()
+	_, err := r.collection.UpdateOne(
+		context.Background(),
+		bson.M{"_id": account.ID},
+		bson.M{"$set": account},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return account, nil
+}

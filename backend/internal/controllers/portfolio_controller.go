@@ -52,9 +52,17 @@ func (c *PortfolioController) GetSummary(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	account, err := c.portfolioService.GetTradingAccount(r.Context(), userID)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to fetch trading account")
+		return
+	}
+
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"holdings": holdings,
-		// "totalInvested": ..., "realizedPL": ... (can be computed here)
+		"holdings":    holdings,
+		"realizedPL":  account.RealizedPL,
+		"totalEquity": account.Balance, // Sending balance too for completeness
+		"cashBalance": account.Balance,
 	}, "Portfolio summary fetched successfully")
 }
 

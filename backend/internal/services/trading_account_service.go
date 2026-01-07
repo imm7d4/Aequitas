@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -161,4 +162,24 @@ func (s *TradingAccountService) SettleTrade(userID string, netAmount float64, tr
 	_, _ = s.txRepo.Create(tx)
 
 	return nil
+}
+
+// UpdateRealizedPL adds the profit/loss from a closed trade to the total realized P&L
+func (s *TradingAccountService) UpdateRealizedPL(userID string, amount float64) error {
+	account, err := s.repo.FindByUserID(userID)
+	if err != nil {
+		return err
+	}
+	if account == nil {
+		return errors.New("account not found")
+	}
+
+	account.RealizedPL += amount
+	account.UpdatedAt = time.Now()
+
+	// Using UpdateBalance conceptually or need full Update?
+	// Repo has UpdateBalance. Let's check if it has generic Update.
+	// We use repo.Update(account).
+	_, err = s.repo.Update(account)
+	return err
 }

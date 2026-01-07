@@ -39,6 +39,11 @@ func (s *PortfolioService) GetHolding(ctx context.Context, userID, instrumentID 
 	return s.portfolioRepo.GetHolding(ctx, userID, instrumentID)
 }
 
+// GetTradingAccount returns the user's trading account (wrapper)
+func (s *PortfolioService) GetTradingAccount(ctx context.Context, userID string) (*models.TradingAccount, error) {
+	return s.accountService.GetByUserID(userID)
+}
+
 // UpdatePosition processes a trade and updates the user's holding (Average Cost or Realized P&L)
 func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Trade) error {
 	log.Printf("[Portfolio] Updating position for Trade %s: %s %s Qty:%d Price:%f", trade.TradeID, trade.Side, trade.Symbol, trade.Quantity, trade.Price)
@@ -125,6 +130,12 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 		// For now, let's just accumulate sell fees too or leave it?
 		// Let's add Sell fees to TotalFees so we know total money burnt on fees for this symbol.
 		holding.TotalFees += (trade.Commission + trade.Fees)
+
+		// Update Global Realized P&L in Trading Account
+		if err := s.accountService.UpdateRealizedPL(userID, tradeRealizedPL); err != nil {
+			log.Printf("[Portfolio] Failed to update realized P&L for user %s: %v", userID, err)
+			// Non-blocking error, but should be noted
+		}
 	}
 
 	// If quantity becomes 0 (or less, though safeguards exist), we generally keep record for history/RealizedP&L

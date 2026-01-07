@@ -10,8 +10,9 @@ interface PortfolioSummaryProps {
     totalEquity: number;
     totalHoldingsValue: number;
     cashBalance: number;
-    totalPL: number;
-    totalPLPercent: number;
+    totalPL: number; // This is Unrealized P&L
+    totalPLPercent: number; // This is Unrealized %
+    realizedPL: number; // New prop
     holdingsCount: number;
 }
 
@@ -21,14 +22,17 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     cashBalance,
     totalPL,
     totalPLPercent,
+    realizedPL,
     holdingsCount,
 }) => {
     const theme = useTheme();
     const isProfit = totalPL >= 0;
+    const isRealizedProfit = realizedPL >= 0;
 
     return (
         <Grid container spacing={2}>
-            <Grid item xs={12} md={3}>
+            {/* Row 1: Key Balances */}
+            <Grid item xs={12} md={4}>
                 <Card sx={{ height: '100%', border: 1, borderColor: 'divider', boxShadow: 'none' }}>
                     <CardContent>
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
@@ -47,26 +51,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                 </Card>
             </Grid>
 
-            <Grid item xs={12} md={3}>
-                <Card sx={{ height: '100%', border: 1, borderColor: 'divider', boxShadow: 'none' }}>
-                    <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
-                            <Box sx={{ p: 0.5, borderRadius: 1, bgcolor: alpha(theme.palette.info.main, 0.1) }}>
-                                <PieChartIcon sx={{ fontSize: 20, color: 'info.main' }} />
-                            </Box>
-                            <Typography variant="subtitle2" color="text.secondary">Holdings Value</Typography>
-                        </Box>
-                        <Typography variant="h5" fontWeight={800}>
-                            ₹{totalHoldingsValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            {holdingsCount} Active Positions
-                        </Typography>
-                    </CardContent>
-                </Card>
-            </Grid>
-
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={4}>
                 <Card sx={{ height: '100%', border: 1, borderColor: 'divider', boxShadow: 'none' }}>
                     <CardContent>
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
@@ -85,7 +70,27 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                 </Card>
             </Grid>
 
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={4}>
+                <Card sx={{ height: '100%', border: 1, borderColor: 'divider', boxShadow: 'none' }}>
+                    <CardContent>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+                            <Box sx={{ p: 0.5, borderRadius: 1, bgcolor: alpha(theme.palette.info.main, 0.1) }}>
+                                <PieChartIcon sx={{ fontSize: 20, color: 'info.main' }} />
+                            </Box>
+                            <Typography variant="subtitle2" color="text.secondary">Holdings Value</Typography>
+                        </Box>
+                        <Typography variant="h5" fontWeight={800}>
+                            ₹{totalHoldingsValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {holdingsCount} Active Positions
+                        </Typography>
+                    </CardContent>
+                </Card>
+            </Grid>
+
+            {/* Row 2: Performance */}
+            <Grid item xs={12} md={6}>
                 <Card sx={{ height: '100%', border: 1, borderColor: 'divider', boxShadow: 'none' }}>
                     <CardContent>
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
@@ -96,13 +101,36 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                                     <TrendingDownIcon sx={{ fontSize: 20, color: 'error.main' }} />
                                 )}
                             </Box>
-                            <Typography variant="subtitle2" color="text.secondary">Total P&L</Typography>
+                            <Typography variant="subtitle2" color="text.secondary">Unrealized P&L</Typography>
                         </Box>
                         <Typography variant="h5" fontWeight={800} color={isProfit ? 'success.main' : 'error.main'}>
                             {isProfit ? '+' : ''}₹{totalPL.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                         </Typography>
                         <Typography variant="caption" fontWeight={600} color={isProfit ? 'success.main' : 'error.main'}>
-                            {isProfit ? '+' : ''}{totalPLPercent.toFixed(2)}% Overall
+                            {isProfit ? '+' : ''}{totalPLPercent.toFixed(2)}% Return
+                        </Typography>
+                    </CardContent>
+                </Card>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+                <Card sx={{ height: '100%', border: 1, borderColor: 'divider', boxShadow: 'none' }}>
+                    <CardContent>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+                            <Box sx={{ p: 0.5, borderRadius: 1, bgcolor: alpha(isRealizedProfit ? theme.palette.success.main : theme.palette.error.main, 0.1) }}>
+                                {isRealizedProfit ? (
+                                    <TrendingUpIcon sx={{ fontSize: 20, color: 'success.main' }} />
+                                ) : (
+                                    <TrendingDownIcon sx={{ fontSize: 20, color: 'error.main' }} />
+                                )}
+                            </Box>
+                            <Typography variant="subtitle2" color="text.secondary">Realized P&L</Typography>
+                        </Box>
+                        <Typography variant="h5" fontWeight={800} color={isRealizedProfit ? 'success.main' : 'error.main'}>
+                            {isRealizedProfit ? '+' : ''}₹{realizedPL.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            Lifetime Booked Profit
                         </Typography>
                     </CardContent>
                 </Card>

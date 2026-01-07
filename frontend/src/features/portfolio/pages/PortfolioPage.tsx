@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Box, Typography, Container, CircularProgress, Tab, Tabs, Button } from '@mui/material';
-import { portfolioService, Holding } from '../services/portfolioService';
+import { portfolioService, Holding, PortfolioSummaryData } from '../services/portfolioService';
 import { HoldingsTable } from '../components/HoldingsTable';
-import { accountService } from '../../profile/services/accountService';
+// Removed unused accountService
 import { PortfolioSummary } from '../components/PortfolioSummary';
 import { useMarketData } from '../../market/hooks/useMarketData';
 import { EquityCurveChart } from '../components/EquityCurveChart';
@@ -36,42 +36,19 @@ function CustomTabPanel(props: TabPanelProps) {
 export const PortfolioPage: React.FC = () => {
 
 
-    const [holdings, setHoldings] = useState<Holding[]>([]);
-    const [cashBalance, setCashBalance] = useState(0);
+    const [summaryData, setSummaryData] = useState<PortfolioSummaryData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Fetch holdings and balance on mount
+    // Fetch portfolio summary on mount
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const results = await Promise.allSettled([
-                    portfolioService.getHoldings(),
-                    accountService.getBalance()
-                ]);
-
-                const holdingsResult = results[0];
-                const accountResult = results[1];
-
-                let holdingsData: Holding[] = [];
-                let accountData: any = {};
-
-                if (holdingsResult.status === 'fulfilled') {
-                    holdingsData = holdingsResult.value;
-                } else {
-                    console.error('Failed to fetch holdings:', holdingsResult.reason);
-                }
-
-                if (accountResult.status === 'fulfilled') {
-                    accountData = accountResult.value;
-                } else {
-                    console.error('Failed to fetch account balance:', accountResult.reason);
-                }
-
-                console.log('PortfolioPage Fetch:', { holdingsData, accountData });
-                setHoldings(holdingsData || []);
-                setCashBalance(accountData?.balance || 0);
+                const data = await portfolioService.getSummary();
+                console.log('PortfolioPage Summary:', data);
+                setSummaryData(data);
+                // setHoldings(data.holdings); // If we need holdings separately
             } catch (err) {
-                console.error('Failed to fetch portfolio data:', err);
+                console.error('Failed to fetch portfolio summary:', err);
             } finally {
                 setIsLoading(false);
             }
@@ -80,10 +57,14 @@ export const PortfolioPage: React.FC = () => {
     }, []);
 
     // Use Market Data to calculate Real-Time Portfolio Summary
+    // We use holdings from summaryData
+    const holdings = summaryData?.holdings || [];
     const instrumentIds = useMemo(() => holdings.map(h => h.instrumentId), [holdings]);
     const marketData = useMarketData(instrumentIds);
 
-    const summary = useMemo(() => {
+    const calculatedSummary = useMemo(() => {
+        if (!summaryData) return null;
+
         let totalInvested = 0;
         let totalHoldingsValue = 0;
 
@@ -98,19 +79,39 @@ export const PortfolioPage: React.FC = () => {
             totalHoldingsValue += current;
         });
 
-        const totalPL = totalHoldingsValue - totalInvested;
-        const totalPLPercent = totalInvested > 0 ? (totalPL / totalInvested) * 100 : 0;
-        const totalEquity = totalHoldingsValue + cashBalance;
+        // Unrealized P&L
+        const unrealizedPL = totalHoldingsValue - totalInvested;
+        const unrealizedPLPercent = totalInvested > 0 ? (unrealizedPL / totalInvested) * 100 : 0;
+
+        // Use backend values for cash and realized PL
+        const cashBalance = summaryData.cashBalance;
+        const realizedPL = summaryData.realizedPL;
+
+        // Total Equity = Cash + Current Holdings Value
+        const totalEquity = cashBalance + totalHoldingsValue;
 
         return {
             totalHoldingsValue,
             totalInvested,
-            totalPL,
-            totalPLPercent,
+            unrealizedPL,
+            unrealizedPLPercent,
+            realizedPL,
             totalEquity,
+            cashBalance,
             holdingsCount: holdings.length
         };
-    }, [holdings, marketData, cashBalance]);
+    }, [summaryData, marketData, holdings]);
+
+    // Fallback if loading or error
+    const displaySummary = calculatedSummary || {
+        totalEquity: 0,
+        totalHoldingsValue: 0,
+        cashBalance: 0,
+        unrealizedPL: 0,
+        unrealizedPLPercent: 0,
+        realizedPL: 0,
+        holdingsCount: 0
+    };
 
     const [tabValue, setTabValue] = React.useState(0);
 
@@ -159,12 +160,13 @@ export const PortfolioPage: React.FC = () => {
             <CustomTabPanel value={tabValue} index={0}>
                 <Box sx={{ mb: 4 }}>
                     <PortfolioSummary
-                        totalEquity={summary.totalEquity}
-                        totalHoldingsValue={summary.totalHoldingsValue}
-                        cashBalance={cashBalance}
-                        totalPL={summary.totalPL}
-                        totalPLPercent={summary.totalPLPercent}
-                        holdingsCount={summary.holdingsCount}
+                        totalEquity={displaySummary.totalEquity}
+                        totalHoldingsValue={displaySummary.totalHoldingsValue}
+                        cashBalance={displaySummary.cashBalance}
+                        totalPL={displaySummary.unrealizedPL}
+                        totalPLPercent={displaySummary.unrealizedPLPercent}
+                        realizedPL={displaySummary.realizedPL}
+                        holdingsCount={displaySummary.holdingsCount}
                     />
                 </Box>
 
