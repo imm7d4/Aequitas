@@ -15,12 +15,13 @@ import (
 )
 
 type OrderService struct {
-	orderRepo          *repositories.OrderRepository
-	instrumentRepo     *repositories.InstrumentRepository
-	tradingAccountRepo *repositories.TradingAccountRepository
-	marketDataRepo     *repositories.MarketDataRepository
-	matchingService    *MatchingService
-	portfolioService   *PortfolioService
+	orderRepo           *repositories.OrderRepository
+	instrumentRepo      *repositories.InstrumentRepository
+	tradingAccountRepo  *repositories.TradingAccountRepository
+	marketDataRepo      *repositories.MarketDataRepository
+	matchingService     *MatchingService
+	portfolioService    *PortfolioService
+	notificationService *NotificationService
 }
 
 func NewOrderService(
@@ -30,14 +31,16 @@ func NewOrderService(
 	marketDataRepo *repositories.MarketDataRepository,
 	matchingService *MatchingService,
 	portfolioService *PortfolioService,
+	notificationService *NotificationService,
 ) *OrderService {
 	return &OrderService{
-		orderRepo:          orderRepo,
-		instrumentRepo:     instrumentRepo,
-		tradingAccountRepo: tradingAccountRepo,
-		marketDataRepo:     marketDataRepo,
-		matchingService:    matchingService,
-		portfolioService:   portfolioService,
+		orderRepo:           orderRepo,
+		instrumentRepo:      instrumentRepo,
+		tradingAccountRepo:  tradingAccountRepo,
+		marketDataRepo:      marketDataRepo,
+		matchingService:     matchingService,
+		portfolioService:    portfolioService,
+		notificationService: notificationService,
 	}
 }
 
@@ -231,7 +234,25 @@ func (s *OrderService) CancelOrder(userID string, orderID string) (*models.Order
 	}
 
 	order.Status = "CANCELLED"
-	return s.orderRepo.Update(order)
+	updatedOrder, err := s.orderRepo.Update(order)
+	if err != nil {
+		return nil, err
+	}
+
+	// Send Notification
+	go func() {
+		_ = s.notificationService.SendNotification(
+			context.Background(),
+			userID,
+			models.NotificationTypeOrder,
+			"Order Cancelled",
+			fmt.Sprintf("Your %s order for %d %s has been cancelled.", order.Side, order.Quantity, order.Symbol),
+			map[string]interface{}{"orderId": order.ID.Hex(), "symbol": order.Symbol},
+			nil,
+		)
+	}()
+
+	return updatedOrder, nil
 }
 
 func (s *OrderService) ModifyOrder(userID string, orderID string, newQuantity int, newPrice *float64) (*models.Order, error) {

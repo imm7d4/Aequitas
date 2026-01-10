@@ -95,7 +95,7 @@ func main() {
 
 	// Initialize Complex Services (Dependent on NotificationService)
 	matchingService := services.NewMatchingService(cfg, orderRepo, tradeRepo, marketDataRepo, tradingAccountService, portfolioService, notificationService)
-	orderService := services.NewOrderService(orderRepo, instrumentRepo, tradingAccountRepo, marketDataRepo, matchingService, portfolioService)
+	orderService := services.NewOrderService(orderRepo, instrumentRepo, tradingAccountRepo, marketDataRepo, matchingService, portfolioService, notificationService)
 
 	// Configure candle builder to broadcast to WS hub
 	candleBuilder.SetBroadcastFunc(func(instrumentID string, candle *models.Candle) {

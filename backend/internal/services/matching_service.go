@@ -157,10 +157,10 @@ func (s *MatchingService) MatchLimitOrders() {
 		}
 
 		if shouldFill {
-			// Use the limit price for execution in a simple matching engine (no slippage)
-			// or use executionPrice if it's better than limit price?
-			// Standard behavior: limit price or better. For simplicity, use limit price.
-			fillPrice := *order.Price
+			// CRITICAL FIX: Always fill at the best available price (Market Price), not the Limit Price.
+			// A Limit Order guarantees "Limit Price or Better".
+			// If I Buy @ 1058 but Market is 1055, I should pay 1055.
+			fillPrice := executionPrice
 
 			trade, err := s.createTrade(order, fillPrice)
 			if err != nil {
