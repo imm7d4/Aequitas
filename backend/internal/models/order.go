@@ -19,6 +19,8 @@ type Order struct {
 	Quantity  int      `bson:"quantity" json:"quantity"`
 	Price     *float64 `bson:"price,omitempty" json:"price,omitempty"`
 
+	Validity string `bson:"validity,omitempty" json:"validity"` // DAY / IOC / GTC
+
 	// Stop Order Fields
 	StopPrice  *float64 `bson:"stop_price,omitempty" json:"stopPrice,omitempty"`   // Trigger price for STOP and STOP_LIMIT
 	LimitPrice *float64 `bson:"limit_price,omitempty" json:"limitPrice,omitempty"` // Limit price for STOP_LIMIT orders

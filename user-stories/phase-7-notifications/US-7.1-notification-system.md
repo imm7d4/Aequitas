@@ -2,7 +2,7 @@
 
 **Epic:** EPIC 0.7 - Notifications
 **Phase:** Phase 7 - Notifications
-**Status:** In Progress
+**Status:** Completed
 
 ## User Story
 

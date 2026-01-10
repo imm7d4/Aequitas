@@ -49,6 +49,9 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
     const [trailAmount, setTrailAmount] = useState<string>('');
     const [trailType, setTrailType] = useState<'ABSOLUTE' | 'PERCENTAGE'>('PERCENTAGE');
 
+    // Validity state
+    const [validity, setValidity] = useState<'DAY' | 'IOC' | 'GTC'>('DAY');
+
     useEffect(() => {
         if (ltp > 0 && (price === '0' || price === '') && !isPriceTouched) {
             setPrice(ltp.toFixed(2));
@@ -85,6 +88,13 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
         const buffer = orderType === 'MARKET' ? 1.01 : 1.0;
         return qty * p * buffer;
     }, [quantity, price, orderType, ltp]);
+
+    // Calculate Margin (approximate for display)
+    const requiredMargin = useMemo(() => {
+        const value = estValue;
+        const fees = 10 + (value * 0.0005); // Flat 10 + 0.05%
+        return value + fees;
+    }, [estValue]);
 
     // Generate inline validation warnings
     const validationWarnings = useMemo(() => {
@@ -200,6 +210,7 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                 side,
                 orderType,
                 quantity: parseInt(quantity),
+                validity,
                 clientOrderId: crypto.randomUUID(),
             };
 
@@ -408,6 +419,22 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                     )}
                 </Stack>
 
+                {/* Validity Selection */}
+                <FormControl fullWidth size="small">
+                    <InputLabel>Validity</InputLabel>
+                    <Select
+                        value={validity}
+                        label="Validity"
+                        onChange={(e) => setValidity(e.target.value as any)}
+                    >
+                        <MenuItem value="DAY">DAY (Standard)</MenuItem>
+                        <MenuItem value="IOC">IOC (Immediate or Cancel)</MenuItem>
+                        <MenuItem value="GTC" disabled={orderType === 'MARKET'}>
+                            GTC (Good Til Cancelled) {orderType === 'MARKET' && '- N/A for Market'}
+                        </MenuItem>
+                    </Select>
+                </FormControl>
+
                 {/* Compact Input Fields */}
                 <Stack spacing={1.5}>
                     {/* Price input for LIMIT orders */}
@@ -498,6 +525,26 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                         </>
                     )}
                 </Stack>
+
+                {/* Margin Display */}
+                {estValue > 0 && (
+                    <Box sx={{ p: 1.5, bgcolor: 'background.default', borderRadius: 1 }}>
+                        <Stack direction="row" justifyContent="space-between">
+                            <Typography variant="caption" color="text.secondary">Est. Value</Typography>
+                            <Typography variant="body2">₹{estValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</Typography>
+                        </Stack>
+                        <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.5 }}>
+                            <Typography variant="caption" color="text.secondary">Est. Fees</Typography>
+                            <Typography variant="body2">₹{(requiredMargin - estValue).toLocaleString(undefined, { maximumFractionDigits: 2 })}</Typography>
+                        </Stack>
+                        <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.5, pt: 0.5, borderTop: '1px dashed', borderColor: 'divider' }}>
+                            <Typography variant="caption" fontWeight={600}>Required Margin</Typography>
+                            <Typography variant="body2" fontWeight={700} color="primary.main">
+                                ₹{requiredMargin.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                            </Typography>
+                        </Stack>
+                    </Box>
+                )}
 
                 {/* SECTION 3: Inline Validation Warnings */}
                 {validationWarnings.length > 0 && (

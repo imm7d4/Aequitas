@@ -2,7 +2,7 @@
 
 **Epic:** Trading Engine
 **Phase:** Phase 4 - Order Management System
-**Status:** Not Started
+**Status:** Completed
 
 ## User Story
 

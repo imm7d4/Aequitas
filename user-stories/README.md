@@ -239,10 +239,10 @@ Compliance, audit logs, and administrative controls.
 | 1 - Market & Instrument | 2 | 2 | 0 | 0 |
 | 2 - Watchlist & Market Data | 3 | 3 | 0 | 0 |
 | 3 - User Profile | 4 | 4 | 0 | 0 |
-| 4 - Order Management | 8 | 7 | 0 | 1 |
+| 4 - Order Management | 8 | 8 | 0 | 0 |
 | 5 - Portfolio Management | 1 | 0 | 0 | 1 |
-| 6 - Matching Engine | 1 | 0 | 0 | 1 |
-| 7 - Settlement & Positions | 0 | 0 | 0 | 0 |
+| 6 - Matching Engine | 1 | 1 | 0 | 0 |
+| 7 - Notifications | 1 | 1 | 0 | 0 |
 | 8 - Order Book & Market Data | 0 | 0 | 0 | 0 |
 | 9 - Reporting & P&L | 0 | 0 | 0 | 0 |
 | 10 - Audit & Admin | 0 | 0 | 0 | 0 |

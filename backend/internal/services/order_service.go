@@ -78,6 +78,19 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 		return nil, errors.New("quantity must be positive")
 	}
 
+	// Validate Validity
+	if req.Validity == "" {
+		req.Validity = "DAY" // Default
+	}
+	if req.Validity != "DAY" && req.Validity != "IOC" && req.Validity != "GTC" {
+		return nil, errors.New("invalid validity. Must be DAY, IOC, or GTC")
+	}
+
+	// MARKET orders cannot be GTC
+	if req.OrderType == "MARKET" && req.Validity == "GTC" {
+		return nil, errors.New("market orders cannot be GTC")
+	}
+
 	// 2. Get Instrument for Validation (needed for stop order validation)
 	instrument, err := s.instrumentRepo.FindByID(req.InstrumentID.Hex())
 	if err != nil || instrument == nil {

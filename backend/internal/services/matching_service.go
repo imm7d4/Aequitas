@@ -205,6 +205,28 @@ func (s *MatchingService) MatchLimitOrders() {
 			}()
 
 			log.Printf("MATCHED: Limit Order %s FILLED at ₹%.2f (Target: ₹%.2f, Qty: %d)", order.OrderID, fillPrice, *order.Price, order.Quantity)
+		} else {
+			// Order NOT matched in this cycle
+			if order.Validity == "IOC" {
+				// IOC orders must be cancelled immediately if not filled
+				log.Printf("IOC Order %s not filled immediately, CANCELLING", order.OrderID)
+
+				order.Status = "CANCELLED"
+				_, _ = s.orderRepo.Update(order)
+
+				// Send Cancellation Notification
+				go func() {
+					_ = s.notificationService.SendNotification(
+						context.Background(),
+						order.UserID.Hex(),
+						models.NotificationTypeOrder,
+						"IOC Order Cancelled",
+						fmt.Sprintf("Your IOC %s order for %d %s was cancelled because it could not be filled immediately.", order.Side, order.Quantity, order.Symbol),
+						map[string]interface{}{"orderId": order.ID.Hex(), "symbol": order.Symbol},
+						nil,
+					)
+				}()
+			}
 		}
 	}
 }
