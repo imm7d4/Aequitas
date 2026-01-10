@@ -67,8 +67,9 @@ func main() {
 	candleRepo := repositories.NewCandleRepository(db)
 	tradeRepo := repositories.NewTradeRepository(db)
 	portfolioRepo := repositories.NewPortfolioRepository(db)
+	notificationRepo := repositories.NewNotificationRepository(db)
 
-	// Initialize services
+	// Initialize services (Basic)
 	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo, transactionRepo)
 	authService := services.NewAuthService(userRepo, tradingAccountService, cfg)
 	instrumentService := services.NewInstrumentService(instrumentRepo)
@@ -77,16 +78,24 @@ func main() {
 	telemetryService := services.NewTelemetryService(telemetryRepo)
 	userService := services.NewUserService(userRepo)
 	portfolioService := services.NewPortfolioService(portfolioRepo, marketService, tradingAccountService)
-	matchingService := services.NewMatchingService(orderRepo, tradeRepo, marketDataRepo, tradingAccountService, portfolioService)
-	orderService := services.NewOrderService(orderRepo, instrumentRepo, tradingAccountRepo, marketDataRepo, matchingService, portfolioService)
 	candleService := services.NewCandleService(candleRepo)
 	candleBuilder := services.NewCandleBuilder(candleRepo)
 	tradeService := services.NewTradeService(tradeRepo)
 
-	// Initialize WebSocket hub
+	// Initialize WebSocket hub BEFORE NotificationService
 	wsHub := websocket.NewHub()
 	go wsHub.Run()
-	wsHandler := websocket.NewHandler(wsHub)
+	wsHandler := websocket.NewHandler(wsHub, cfg.JWTSecret)
+
+	notificationService := services.NewNotificationService(notificationRepo, wsHub)
+
+	// Create PriceAlertRepository (was missing in original init)
+	priceAlertRepo := repositories.NewPriceAlertRepository(db)
+	priceAlertService := services.NewPriceAlertService(priceAlertRepo, notificationService)
+
+	// Initialize Complex Services (Dependent on NotificationService)
+	matchingService := services.NewMatchingService(cfg, orderRepo, tradeRepo, marketDataRepo, tradingAccountService, portfolioService, notificationService)
+	orderService := services.NewOrderService(orderRepo, instrumentRepo, tradingAccountRepo, marketDataRepo, matchingService, portfolioService)
 
 	// Configure candle builder to broadcast to WS hub
 	candleBuilder.SetBroadcastFunc(func(instrumentID string, candle *models.Candle) {
@@ -94,7 +103,7 @@ func main() {
 	})
 
 	// Initialize pricing engine
-	pricingService := services.NewPricingService(instrumentRepo, marketDataRepo, candleRepo, candleBuilder)
+	pricingService := services.NewPricingService(instrumentRepo, marketDataRepo, candleRepo, candleBuilder, priceAlertService)
 	pricingService.Start()
 	defer pricingService.Stop()
 
@@ -107,6 +116,11 @@ func main() {
 	stopOrderService := services.NewStopOrderService(orderRepo, marketDataRepo, orderService)
 	stopOrderService.Start()
 	defer stopOrderService.Stop()
+
+	// Initialize notification cleanup service (runs every 5 minutes)
+	notificationCleanupService := services.NewNotificationCleanupService(notificationRepo)
+	notificationCleanupService.Start()
+	defer notificationCleanupService.Stop()
 
 	// Initialize matching engine service (runs every 3 seconds)
 	matchingService.Start()
@@ -124,6 +138,8 @@ func main() {
 	candleController := controllers.NewCandleController(candleService)
 	tradeController := controllers.NewTradeController(tradeService)
 	portfolioController := controllers.NewPortfolioController(portfolioService)
+	notificationController := controllers.NewNotificationController(notificationService)
+	priceAlertController := controllers.NewPriceAlertController(priceAlertService)
 
 	// Set up router
 	router := mux.NewRouter()
@@ -196,6 +212,17 @@ func main() {
 	protected.HandleFunc("/portfolio/summary", portfolioController.GetSummary).Methods("GET", "OPTIONS")
 	protected.HandleFunc("/portfolio/snapshot", portfolioController.CaptureSnapshot).Methods("POST", "OPTIONS")
 	protected.HandleFunc("/portfolio/history", portfolioController.GetHistory).Methods("GET", "OPTIONS")
+
+	// Notification routes
+	protected.HandleFunc("/notifications", notificationController.GetHistory).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/notifications", notificationController.ClearAll).Methods("DELETE", "OPTIONS")
+	protected.HandleFunc("/notifications/read-all", notificationController.MarkAllRead).Methods("PUT", "OPTIONS")
+	protected.HandleFunc("/notifications/{id}/read", notificationController.MarkRead).Methods("PUT", "OPTIONS")
+
+	// Price Alert routes
+	protected.HandleFunc("/alerts", priceAlertController.GetAlerts).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/alerts", priceAlertController.CreateAlert).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/alerts/{id}", priceAlertController.CancelAlert).Methods("DELETE", "OPTIONS")
 
 	// Admin routes (require admin role)
 	admin := protected.PathPrefix("/admin").Subrouter()

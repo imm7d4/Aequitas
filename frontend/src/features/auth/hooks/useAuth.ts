@@ -4,6 +4,7 @@ import { authService } from '../services/authService';
 import { tokenStorage } from '@/lib/storage/tokenStorage';
 import { useInstrumentStore } from '@/features/instruments/store/instrumentStore';
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
+import { useNotificationStore } from '@/shared/store/useNotificationStore';
 
 interface AuthState {
     user: User | null;
@@ -105,6 +106,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         // Reset feature stores
         useInstrumentStore.getState().reset();
         useWatchlistStore.getState().reset();
+        useNotificationStore.getState().reset();
         set({ user: null, token: null, isAuthenticated: false });
     },
 }));

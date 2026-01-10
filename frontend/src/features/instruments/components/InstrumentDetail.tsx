@@ -16,7 +16,9 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
+import AddAlarmIcon from '@mui/icons-material/AddAlarm';
 import { instrumentService } from '../services/instrumentService';
+import { SetAlertModal } from '@/features/alerts/components/SetAlertModal';
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
 import { useMarketData } from '@/features/market/hooks/useMarketData';
 import { usePrevious } from '@/shared/hooks/usePrevious';
@@ -34,6 +36,7 @@ export function InstrumentDetail() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [tabValue, setTabValue] = useState(0);
+    const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
 
     const { prices } = useMarketData(id ? [id] : []);
     const marketData = id && prices[id] ? prices[id] : null;
@@ -151,6 +154,17 @@ export function InstrumentDetail() {
         }
     };
 
+    function MetricRow({ label, value }: { label: string, value: string }) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</Typography>
+                <Typography variant="body2" fontWeight={700} sx={{ color: 'text.primary' }}>{value}</Typography>
+            </Box>
+        );
+    }
+
+
+
     return (
         <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pb: 8 }}>
             {/* Sticky Professional Header */}
@@ -185,8 +199,8 @@ export function InstrumentDetail() {
                         />
                     </Box>
 
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Box sx={{ textAlign: 'right' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box sx={{ textAlign: 'right', mr: 2 }}>
                             <Typography variant="h5" fontWeight={800} color={tickColor} sx={{ lineHeight: 1, fontFamily: '"Outfit", sans-serif' }}>
                                 ₹{ltp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </Typography>
@@ -201,6 +215,15 @@ export function InstrumentDetail() {
                                 </Typography>
                             )}
                         </Box>
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<AddAlarmIcon />}
+                            onClick={() => setIsAlertModalOpen(true)}
+                            sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, px: 2 }}
+                        >
+                            Set Alert
+                        </Button>
                         <Button
                             variant="outlined"
                             size="small"
@@ -341,15 +364,17 @@ export function InstrumentDetail() {
                     </Grid>
                 </Grid>
             </Container>
+
+            {isAlertModalOpen && (
+                <SetAlertModal
+                    open={isAlertModalOpen}
+                    onClose={() => setIsAlertModalOpen(false)}
+                    instrumentId={instrument.id}
+                    symbol={instrument.symbol}
+                    currentPrice={ltp}
+                />
+            )}
         </Box>
     );
 
-    function MetricRow({ label, value }: { label: string, value: string }) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</Typography>
-                <Typography variant="body2" fontWeight={700} sx={{ color: 'text.primary' }}>{value}</Typography>
-            </Box>
-        );
-    }
 }

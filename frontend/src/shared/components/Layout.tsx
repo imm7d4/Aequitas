@@ -3,9 +3,12 @@ import { Box, Toolbar, useTheme } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import { ToastContainer } from '@/shared/components/ToastContainer';
+import { useWebSocket } from '@/shared/hooks/useWebSocket';
 
 export const Layout: React.FC = () => {
     const theme = useTheme();
+    useWebSocket(); // Initialize WebSocket connection
 
     return (
         <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -28,6 +31,7 @@ export const Layout: React.FC = () => {
                     <Outlet />
                 </Box>
             </Box>
+            <ToastContainer />
         </Box>
     );
 };

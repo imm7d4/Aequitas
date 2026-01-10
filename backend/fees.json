@@ -1,0 +1,6 @@
+{
+    "commission_rate": 0.0003,
+    "max_commission": 20.0,
+    "flat_fee": 0.0,
+    "comment": "CommissionRate: 0.0003 (0.03%). MaxCommission: Cap in INR. Logic: Min(Value*Rate, Max)"
+}

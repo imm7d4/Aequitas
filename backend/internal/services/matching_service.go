@@ -6,33 +6,40 @@ import (
 	"log"
 	"time"
 
+	"aequitas/internal/config"
 	"aequitas/internal/models"
 	"aequitas/internal/repositories"
 )
 
 type MatchingService struct {
-	orderRepo        *repositories.OrderRepository
-	tradeRepo        *repositories.TradeRepository
-	marketDataRepo   *repositories.MarketDataRepository
-	accountService   *TradingAccountService
-	portfolioService *PortfolioService
-	stopChan         chan struct{}
+	config              *config.Config
+	orderRepo           *repositories.OrderRepository
+	tradeRepo           *repositories.TradeRepository
+	marketDataRepo      *repositories.MarketDataRepository
+	accountService      *TradingAccountService
+	portfolioService    *PortfolioService
+	notificationService *NotificationService
+	stopChan            chan struct{}
 }
 
 func NewMatchingService(
+	cfg *config.Config,
 	orderRepo *repositories.OrderRepository,
 	tradeRepo *repositories.TradeRepository,
 	marketDataRepo *repositories.MarketDataRepository,
 	accountService *TradingAccountService,
 	portfolioService *PortfolioService,
+	notificationService *NotificationService,
 ) *MatchingService {
 	return &MatchingService{
-		orderRepo:        orderRepo,
-		tradeRepo:        tradeRepo,
-		marketDataRepo:   marketDataRepo,
-		accountService:   accountService,
-		portfolioService: portfolioService,
-		stopChan:         make(chan struct{}),
+		config:              cfg,
+		orderRepo:           orderRepo,
+		tradeRepo:           tradeRepo,
+		marketDataRepo:      marketDataRepo,
+		accountService:      accountService,
+		portfolioService:    portfolioService,
+		notificationService: notificationService,
+		stopChan:            make(chan struct{}),
 	}
 }
 
@@ -96,6 +103,20 @@ func (s *MatchingService) ExecuteMarketOrder(order *models.Order) (*models.Trade
 	if err != nil {
 		log.Printf("ERROR: Portfolio update failed for trade %s: %v", trade.TradeID, err)
 	}
+
+	// 6. Send Notification
+	// Run in goroutine to not block response
+	go func() {
+		_ = s.notificationService.SendNotification(
+			context.Background(),
+			order.UserID.Hex(),
+			models.NotificationTypeOrder,
+			"Order Filled",
+			fmt.Sprintf("Your MARKET %s order for %d %s was filled at ₹%.2f", order.Side, order.Quantity, order.Symbol, executionPrice),
+			map[string]interface{}{"orderId": order.ID.Hex(), "symbol": order.Symbol},
+			nil,
+		)
+	}()
 
 	log.Printf("MATCHED: Market Order %s FILLED at ₹%.2f (Qty: %d)", order.OrderID, executionPrice, order.Quantity)
 	return trade, nil
@@ -170,6 +191,19 @@ func (s *MatchingService) MatchLimitOrders() {
 				log.Printf("ERROR: Portfolio update failed for trade %s: %v", trade.TradeID, portfolioErr)
 			}
 
+			// Send Notification
+			go func() {
+				_ = s.notificationService.SendNotification(
+					context.Background(),
+					order.UserID.Hex(),
+					models.NotificationTypeOrder,
+					"Order Filled",
+					fmt.Sprintf("Your LIMIT %s order for %d %s was filled at ₹%.2f", order.Side, order.Quantity, order.Symbol, fillPrice),
+					map[string]interface{}{"orderId": order.ID.Hex(), "symbol": order.Symbol},
+					nil,
+				)
+			}()
+
 			log.Printf("MATCHED: Limit Order %s FILLED at ₹%.2f (Target: ₹%.2f, Qty: %d)", order.OrderID, fillPrice, *order.Price, order.Quantity)
 		}
 	}
@@ -179,9 +213,15 @@ func (s *MatchingService) createTrade(order *models.Order, price float64) (*mode
 	value := float64(order.Quantity) * price
 
 	// Commission: 0.05%
-	commission := value * 0.0005
-	// Flat fee: ₹10
-	flatFee := 10.0
+	// Calculate commission: Min(TradeValue * Rate, MaxCap)
+	rawCommission := value * s.config.CommissionRate
+	commission := rawCommission
+	if s.config.MaxCommission > 0 && commission > s.config.MaxCommission {
+		commission = s.config.MaxCommission
+	}
+
+	// Flat fee from config (if any, default 0)
+	flatFee := s.config.FlatFee
 
 	totalFees := commission + flatFee
 	var netValue float64

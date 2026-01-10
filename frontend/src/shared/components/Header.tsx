@@ -4,22 +4,19 @@ import {
     Toolbar,
     IconButton,
     Box,
-    Badge,
 } from '@mui/material';
 import {
     Menu as MenuIcon,
-    Notifications as NotificationsIcon,
 } from '@mui/icons-material';
 import { useLayoutStore } from '@/shared/store/layoutStore';
+import { NotificationCenter } from '@/shared/components/NotificationCenter';
 import { MarketStatusBadge } from '@/features/market/components/MarketStatusBadge';
-import { useTelemetry } from '@/shared/services/telemetry/TelemetryProvider';
 import { BrandLogo } from './header/BrandLogo';
 import { GlobalSearch } from './header/GlobalSearch';
 import { UserProfile } from './header/UserProfile';
 
 export const Header: React.FC = () => {
-    const { toggleSidebar, notificationCount } = useLayoutStore();
-    const { track } = useTelemetry();
+    const { toggleSidebar } = useLayoutStore();
 
     return (
         <AppBar
@@ -54,22 +51,7 @@ export const Header: React.FC = () => {
                         <MarketStatusBadge />
                     </Box>
 
-                    <IconButton
-                        size="large"
-                        color="inherit"
-                        onClick={() => {
-                            track({
-                                event_name: 'notification.dropdown_opened',
-                                event_version: 'v1',
-                                classification: 'USER_ACTION',
-                                metadata: { count: notificationCount }
-                            });
-                        }}
-                    >
-                        <Badge badgeContent={notificationCount} color="error">
-                            <NotificationsIcon />
-                        </Badge>
-                    </IconButton>
+                    <NotificationCenter />
 
                     <UserProfile />
                 </Box>

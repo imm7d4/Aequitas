@@ -27,6 +27,7 @@ type WSMessage struct {
 // Client represents a WebSocket client connection
 type Client struct {
 	ID            string
+	UserID        string // Authenticated User ID
 	Conn          *websocket.Conn
 	Subscriptions map[string]bool // instrumentID -> subscribed
 	Send          chan []byte
@@ -36,11 +37,12 @@ type Client struct {
 
 // Hub maintains active clients and broadcasts messages
 type Hub struct {
-	clients    map[*Client]bool
-	broadcast  chan BroadcastMessage
-	register   chan *Client
-	unregister chan *Client
-	mu         sync.RWMutex
+	clients     map[*Client]bool
+	userClients map[string]map[*Client]bool // UserID -> Set of Clients
+	broadcast   chan BroadcastMessage
+	register    chan *Client
+	unregister  chan *Client
+	mu          sync.RWMutex
 }
 
 // BroadcastMessage represents a message to broadcast to specific clients
@@ -49,13 +51,20 @@ type BroadcastMessage struct {
 	Data         []byte
 }
 
+// UserMessage represents a message targeted to a specific user
+type UserMessage struct {
+	UserID string
+	Data   []byte
+}
+
 // NewHub creates a new Hub instance
 func NewHub() *Hub {
 	return &Hub{
-		clients:    make(map[*Client]bool),
-		broadcast:  make(chan BroadcastMessage, 256),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
+		clients:     make(map[*Client]bool),
+		userClients: make(map[string]map[*Client]bool),
+		broadcast:   make(chan BroadcastMessage, 256),
+		register:    make(chan *Client),
+		unregister:  make(chan *Client),
 	}
 }
 
@@ -66,15 +75,27 @@ func (h *Hub) Run() {
 		case client := <-h.register:
 			h.mu.Lock()
 			h.clients[client] = true
+			if client.UserID != "" {
+				if h.userClients[client.UserID] == nil {
+					h.userClients[client.UserID] = make(map[*Client]bool)
+				}
+				h.userClients[client.UserID][client] = true
+			}
 			h.mu.Unlock()
-			log.Printf("WebSocket: Client %s registered. Total clients: %d", client.ID, len(h.clients))
+			log.Printf("WebSocket: Client %s (User: %s) registered. Total clients: %d", client.ID, client.UserID, len(h.clients))
 
 		case client := <-h.unregister:
 			h.mu.Lock()
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
+				if client.UserID != "" && h.userClients[client.UserID] != nil {
+					delete(h.userClients[client.UserID], client)
+					if len(h.userClients[client.UserID]) == 0 {
+						delete(h.userClients, client.UserID)
+					}
+				}
 				close(client.Send)
-				log.Printf("WebSocket: Client %s unregistered. Total clients: %d", client.ID, len(h.clients))
+				log.Printf("WebSocket: Client %s (User: %s) unregistered. Total clients: %d", client.ID, client.UserID, len(h.clients))
 			}
 			h.mu.Unlock()
 
@@ -89,9 +110,9 @@ func (h *Hub) Run() {
 					select {
 					case client.Send <- message.Data:
 					default:
-						// Client's send buffer is full, close connection
 						h.mu.RUnlock()
-						h.unregister <- client
+						// Queue unregister to avoid deadlock
+						go func(c *Client) { h.unregister <- c }(client)
 						h.mu.RLock()
 					}
 				}
@@ -117,6 +138,36 @@ func (h *Hub) BroadcastToInstrument(instrumentID string, data interface{}) {
 	h.broadcast <- BroadcastMessage{
 		InstrumentID: instrumentID,
 		Data:         jsonData,
+	}
+}
+
+// SendToUser sends a message to all connected clients for a specific user
+func (h *Hub) SendToUser(userID string, data interface{}) {
+	h.mu.RLock()
+	clients, ok := h.userClients[userID]
+	h.mu.RUnlock()
+
+	if !ok || len(clients) == 0 {
+		return
+	}
+
+	message := WSMessage{
+		Type: "notification",
+		Data: data,
+	}
+
+	jsonData, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("WebSocket: Error marshaling user message: %v", err)
+		return
+	}
+
+	for client := range clients {
+		select {
+		case client.Send <- jsonData:
+		default:
+			go func(c *Client) { h.unregister <- c }(client)
+		}
 	}
 }
 

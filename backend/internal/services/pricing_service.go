@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"log"
 	"math/rand"
 	"time"
@@ -10,12 +11,13 @@ import (
 )
 
 type PricingService struct {
-	instrumentRepo *repositories.InstrumentRepository
-	marketDataRepo *repositories.MarketDataRepository
-	candleRepo     *repositories.CandleRepository
-	candleBuilder  *CandleBuilder
-	stopChan       chan struct{}
-	rng            *rand.Rand
+	instrumentRepo    *repositories.InstrumentRepository
+	marketDataRepo    *repositories.MarketDataRepository
+	candleRepo        *repositories.CandleRepository
+	candleBuilder     *CandleBuilder
+	priceAlertService *PriceAlertService
+	stopChan          chan struct{}
+	rng               *rand.Rand
 }
 
 func NewPricingService(
@@ -23,16 +25,18 @@ func NewPricingService(
 	marketDataRepo *repositories.MarketDataRepository,
 	candleRepo *repositories.CandleRepository,
 	candleBuilder *CandleBuilder,
+	priceAlertService *PriceAlertService,
 ) *PricingService {
 	// Create a new random source with current time seed for varied randomness
 	source := rand.NewSource(time.Now().UnixNano())
 	return &PricingService{
-		instrumentRepo: instrumentRepo,
-		marketDataRepo: marketDataRepo,
-		candleRepo:     candleRepo,
-		candleBuilder:  candleBuilder,
-		stopChan:       make(chan struct{}),
-		rng:            rand.New(source),
+		instrumentRepo:    instrumentRepo,
+		marketDataRepo:    marketDataRepo,
+		candleRepo:        candleRepo,
+		candleBuilder:     candleBuilder,
+		priceAlertService: priceAlertService,
+		stopChan:          make(chan struct{}),
+		rng:               rand.New(source),
 	}
 }
 
@@ -141,6 +145,11 @@ func (s *PricingService) simulatePrices() {
 		// Broadcast tick to candle builder
 		if s.candleBuilder != nil {
 			s.candleBuilder.OnPriceTick(inst.ID, data.LastPrice, volumeIncrease)
+		}
+
+		// Check Price Alerts
+		if s.priceAlertService != nil {
+			go s.priceAlertService.CheckAlerts(context.Background(), inst.ID.Hex(), data.LastPrice)
 		}
 
 		if err := s.marketDataRepo.Upsert(data); err != nil {
