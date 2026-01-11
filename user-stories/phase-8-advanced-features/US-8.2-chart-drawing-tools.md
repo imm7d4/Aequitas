@@ -2,9 +2,12 @@
 
 **Epic:** Advanced Trading Features  
 **Phase:** Phase 8 - Enhanced Trading Experience  
-**Status:** Not Started  
-**Priority:** Medium  
+**Status:** Deferred  
+**Priority:** Low (due to implementation complexity)  
 **Complexity:** High
+
+> [!WARNING]
+> **Implementation Note (2026-01-11)**: Initial implementation attempts encountered significant technical difficulties with `lightweight-charts` event propagation and custom overlay precision. This feature has been deferred to prioritize other core functionalities. Current status is "Research Only".
 
 ## User Story
 
