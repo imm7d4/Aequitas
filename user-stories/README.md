@@ -13,7 +13,8 @@ user-stories/
 │   ├── US-0.1.3-authentication-session.md
 │   ├── US-0.2.1-global-ui-shell.md
 │   ├── US-0.2.2-observability-analytics.md
-│   └── US-0.2.3-logo-branding.md
+│   ├── US-0.2.3-logo-branding.md
+│   └── US-0.3.1-landing-page.md
 ├── phase-1-market-instrument/
 │   ├── US-1.1.1-instrument-master-data.md
 │   └── US-1.1.2-market-hours-trading-sessions.md
@@ -104,17 +105,18 @@ So that [benefit]
 
 ## Phase Overview
 
-### Phase 0 - Foundation ✅
-**Status:** Complete  
+### Phase 0 - Foundation 🚧
+**Status:** In Progress (6/7 complete)  
 Core user and account management, authentication, and global UI shell.
 
 **User Stories:**
-- US-0.1.1: User Registration
-- US-0.1.2: Trading Account Creation
-- US-0.1.3: Authentication & Session Management
-- US-0.2.1: Global UI Shell
-- US-0.2.2: Observability & Analytics
-- US-0.2.3: Logo & Branding
+- ✅ US-0.1.1: User Registration
+- ✅ US-0.1.2: Trading Account Creation
+- ✅ US-0.1.3: Authentication & Session Management
+- ✅ US-0.2.1: Global UI Shell
+- ✅ US-0.2.2: Observability & Analytics
+- ✅ US-0.2.3: Logo & Branding
+- ❌ US-0.3.1: Landing Page (Modern, Animated)
 
 ---
 
@@ -237,7 +239,7 @@ Compliance, audit logs, and administrative controls.
 
 | Phase | Total Stories | Completed | In Progress | Not Started |
 |-------|--------------|-----------|-------------|-------------|
-| 0 - Foundation | 6 | 6 | 0 | 0 |
+| 0 - Foundation | 7 | 6 | 1 | 0 |
 | 1 - Market & Instrument | 2 | 2 | 0 | 0 |
 | 2 - Watchlist & Market Data | 5 | 5 | 0 | 0 |
 | 3 - User Profile | 4 | 4 | 0 | 0 |
@@ -252,6 +254,10 @@ Compliance, audit logs, and administrative controls.
 ---
 
 ## Recent Updates
+
+**2026-01-11:**
+- 📝 Created US-0.3.1: Landing Page (Modern, Animated)
+- 🎯 **Next Priority:** Implement landing page with fancy transitions and effects
 
 **2026-01-06:**
 - ✅ Completed US-4.1.4 Phase 2: Stop Order Trigger Monitoring

@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { LoginForm, RegisterForm } from '@/features/auth';
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute';
+import { PublicRoute } from '@/shared/components/PublicRoute';
 import { Layout } from '@/shared/components/Layout';
 import { Dashboard } from './Dashboard';
 import { OrdersPage } from './OrdersPage';
@@ -18,6 +19,7 @@ import { NotFound } from '@/shared/components/NotFound';
 
 import { PortfolioPage } from '@/features/portfolio/pages/PortfolioPage';
 import { WatchlistPage } from '@/features/watchlist/pages/WatchlistPage';
+import { LandingPage } from '@/features/landing/pages/LandingPage';
 
 export function Router(): JSX.Element {
     return (
@@ -25,7 +27,14 @@ export function Router(): JSX.Element {
             <TelemetryProvider>
                 <Routes>
                     {/* Public Routes */}
-                    <Route path="/" element={<Navigate to="/login" replace />} />
+                    <Route
+                        path="/"
+                        element={
+                            <PublicRoute>
+                                <LandingPage />
+                            </PublicRoute>
+                        }
+                    />
                     <Route path="/login" element={<LoginForm />} />
                     <Route path="/register" element={<RegisterForm />} />
 

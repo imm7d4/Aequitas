@@ -1,0 +1,335 @@
+/* Auth Pages Container */
+.authContainer {
+    min-height: 100vh;
+    display: flex;
+    background: linear-gradient(180deg, #0A1929 0%, #1a2942 50%, #0f1f35 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.authContainer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        radial-gradient(circle at 20% 50%, rgba(0, 102, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+/* Split Layout */
+.authContent {
+    display: flex;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+/* Left Side - Branding */
+.authBranding {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem;
+    color: white;
+}
+
+.brandingContent {
+    max-width: 500px;
+}
+
+.brandingLogo {
+    margin-bottom: 2rem;
+}
+
+.brandingTitle {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+}
+
+.brandingSubtitle {
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.brandingFeatures {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.brandingFeature {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+}
+
+.featureIcon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Right Side - Form */
+.authFormSection {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.authFormCard {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.formHeader {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.formTitle {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.formSubtitle {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Form Elements */
+.authForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.formGroup {
+    position: relative;
+}
+
+.formInput {
+    width: 100%;
+    height: 3.5rem;
+    padding: 0 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: white;
+    font-size: 1rem;
+    line-height: 3.5rem;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.formInput::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.formInput:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #0066FF;
+    box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.1);
+}
+
+.formInput.error {
+    border-color: #ff4444;
+}
+
+.formLabel {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1rem;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    background: transparent;
+    padding: 0 0.25rem;
+}
+
+.formInput:focus+.formLabel,
+.formInput:not(:placeholder-shown)+.formLabel {
+    top: 0;
+    font-size: 0.75rem;
+    color: #0066FF;
+    background: #0f1f35;
+    padding: 0 0.5rem;
+}
+
+.errorMessage {
+    color: #ff6b6b;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.helperText {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+/* Submit Button */
+.submitButton {
+    width: 100%;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 102, 255, 0.4);
+    margin-top: 0.5rem;
+}
+
+.submitButton:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 30px rgba(0, 102, 255, 0.6);
+}
+
+.submitButton:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.submitButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Alert */
+.alert {
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.alertError {
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    color: #ff6b6b;
+}
+
+/* Footer Links */
+.formFooter {
+    margin-top: 2rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.95rem;
+}
+
+.formLink {
+    color: #00D4FF;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.formLink:hover {
+    color: #0066FF;
+    text-decoration: underline;
+}
+
+/* Back to Home Link */
+.backLink {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    transition: color 0.3s ease;
+    z-index: 10;
+}
+
+.backLink:hover {
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+    .authContent {
+        flex-direction: column;
+    }
+
+    .authBranding {
+        padding: 3rem 2rem 2rem;
+    }
+
+    .brandingTitle {
+        font-size: 2rem;
+    }
+
+    .brandingSubtitle {
+        font-size: 1rem;
+    }
+
+    .authFormSection {
+        padding: 2rem 1rem 3rem;
+    }
+
+    .authFormCard {
+        padding: 2rem;
+    }
+
+    .backLink {
+        top: 1rem;
+        left: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .authFormCard {
+        padding: 1.5rem;
+    }
+
+    .formTitle {
+        font-size: 1.5rem;
+    }
+}

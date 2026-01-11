@@ -1,15 +1,8 @@
 import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-    Box,
-    TextField,
-    Button,
-    Typography,
-    Alert,
-    Link,
-    Paper,
-} from '@mui/material';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { BrandLogo } from '../../../shared/components/header/BrandLogo';
+import styles from '../styles/Auth.module.css';
 
 export function RegisterForm(): JSX.Element {
     const [email, setEmail] = useState<string>('');
@@ -44,68 +37,110 @@ export function RegisterForm(): JSX.Element {
     const displayError = localError || error;
 
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '100vh',
-                bgcolor: 'background.default',
-            }}
-        >
-            <Paper elevation={3} sx={{ p: 4, maxWidth: 400, width: '100%' }}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    Register
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    Create your Aequitas trading account
-                </Typography>
+        <div className={styles.authContainer}>
+            <Link to="/" className={styles.backLink}>
+                ← Back to Home
+            </Link>
 
-                {displayError && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                        {displayError}
-                    </Alert>
-                )}
+            <div className={styles.authContent}>
+                {/* Left Side - Branding */}
+                <div className={styles.authBranding}>
+                    <div className={styles.brandingContent}>
+                        <div className={styles.brandingLogo}>
+                            <BrandLogo />
+                        </div>
+                        <h1 className={styles.brandingTitle}>
+                            Start Trading with Aequitas
+                        </h1>
+                        <p className={styles.brandingSubtitle}>
+                            Join thousands of traders who trust Aequitas for fair, transparent, and deterministic trading.
+                        </p>
+                        <div className={styles.brandingFeatures}>
+                            <div className={styles.brandingFeature}>
+                                <div className={styles.featureIcon}>✓</div>
+                                <span>Free account setup</span>
+                            </div>
+                            <div className={styles.brandingFeature}>
+                                <div className={styles.featureIcon}>✓</div>
+                                <span>No hidden fees</span>
+                            </div>
+                            <div className={styles.brandingFeature}>
+                                <div className={styles.featureIcon}>✓</div>
+                                <span>24/7 customer support</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                <form onSubmit={handleSubmit}>
-                    <TextField
-                        fullWidth
-                        label="Email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        margin="normal"
-                        required
-                    />
-                    <TextField
-                        fullWidth
-                        label="Password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        margin="normal"
-                        required
-                        helperText="Minimum 8 characters"
-                    />
-                    <Button
-                        fullWidth
-                        type="submit"
-                        variant="contained"
-                        size="large"
-                        disabled={isLoading}
-                        sx={{ mt: 3, mb: 2 }}
-                    >
-                        {isLoading ? 'Registering...' : 'Register'}
-                    </Button>
-                </form>
+                {/* Right Side - Form */}
+                <div className={styles.authFormSection}>
+                    <div className={styles.authFormCard}>
+                        <div className={styles.formHeader}>
+                            <h2 className={styles.formTitle}>Create Account</h2>
+                            <p className={styles.formSubtitle}>
+                                Get started with your free trading account
+                            </p>
+                        </div>
 
-                <Typography variant="body2" align="center">
-                    Already have an account?{' '}
-                    <Link href="/login" underline="hover">
-                        Login
-                    </Link>
-                </Typography>
-            </Paper>
-        </Box>
+                        {displayError && (
+                            <div className={`${styles.alert} ${styles.alertError}`}>
+                                <span>⚠</span>
+                                <span>{displayError}</span>
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit} className={styles.authForm}>
+                            <div className={styles.formGroup}>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className={styles.formInput}
+                                    placeholder=" "
+                                    required
+                                />
+                                <label htmlFor="email" className={styles.formLabel}>
+                                    Email Address
+                                </label>
+                            </div>
+
+                            <div className={styles.formGroup}>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className={styles.formInput}
+                                    placeholder=" "
+                                    required
+                                />
+                                <label htmlFor="password" className={styles.formLabel}>
+                                    Password
+                                </label>
+                                <p className={styles.helperText}>
+                                    Minimum 8 characters
+                                </p>
+                            </div>
+
+                            <button
+                                type="submit"
+                                className={styles.submitButton}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? 'Creating account...' : 'Create Account'}
+                            </button>
+                        </form>
+
+                        <div className={styles.formFooter}>
+                            Already have an account?{' '}
+                            <Link to="/login" className={styles.formLink}>
+                                Sign in
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
