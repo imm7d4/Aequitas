@@ -25,6 +25,7 @@ import { usePrevious } from '@/shared/hooks/usePrevious';
 import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { TradePanel } from '@/features/trading/components/TradePanel';
 import { StockChart } from '@/features/market/components/StockChart';
+import { IndicatorPanel } from '@/features/market/components/IndicatorPanel';
 import type { Instrument } from '../types/instrument.types';
 
 
@@ -274,11 +275,15 @@ export function InstrumentDetail() {
                                 height: { lg: 'calc(100vh - 190px)' },
                                 minHeight: 480,
                                 bgcolor: 'background.paper',
-                                position: 'relative'
+                                position: 'relative',
+                                overflow: 'visible' // Changed from 'hidden' to allow IndicatorPanel to show
                             }}
                         >
                             <StockChart instrumentId={instrument.id} symbol={instrument.symbol} />
                         </Paper>
+
+                        {/* Indicator Panel - Moved outside Paper to avoid clipping */}
+                        <IndicatorPanel instrumentId={instrument.id} />
 
                         {/* TABS SECTION: Analysis */}
                         <Box sx={{ mt: 3.5 }}>
