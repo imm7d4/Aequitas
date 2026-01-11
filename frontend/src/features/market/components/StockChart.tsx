@@ -20,6 +20,7 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
     const volumeSeriesRef = useRef<any>(null);
     const priceLineSeriesRef = useRef<any>(null);
     const hasFittedRef = useRef(false);
+    const [hoverData, setHoverData] = useState<any>(null);
 
     // Indicator series refs
     const indicatorSeriesRefs = useRef<Record<string, any>>({});
@@ -110,6 +111,37 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
         candleSeriesRef.current = candleSeries;
         volumeSeriesRef.current = volumeSeries;
         priceLineSeriesRef.current = priceLineSeries;
+
+        // Subscribe to crosshair move for legend updates
+        chart.subscribeCrosshairMove((param: any) => {
+            if (!param.time || param.point === undefined || param.point.x < 0) {
+                setHoverData(null);
+                return;
+            }
+
+            const candle = param.seriesData.get(candleSeries);
+            if (!candle) {
+                setHoverData(null);
+                return;
+            }
+
+            // Extract indicator values
+            const indicatorValues: Record<string, any> = {};
+
+            // Note: We access the series values directly via param.seriesData
+            Object.entries(indicatorSeriesRefs.current).forEach(([key, series]) => {
+                const value = param.seriesData.get(series);
+                if (value) {
+                    indicatorValues[key] = value.value !== undefined ? value.value : value;
+                }
+            });
+
+            setHoverData({
+                time: param.time,
+                ohlc: candle,
+                indicators: indicatorValues
+            });
+        });
 
         const handleResize = () => {
             if (chartContainerRef.current) {
@@ -629,6 +661,63 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
                         <CircularProgress />
                     </Box>
                 )}
+
+                {/* Legend Overlay */}
+                {hoverData && (
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: 10,
+                            left: 10,
+                            zIndex: 10,
+                            pointerEvents: 'none',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 0.5,
+                            bgcolor: 'rgba(255, 255, 255, 0.7)',
+                            backdropFilter: 'blur(4px)',
+                            p: 1,
+                            borderRadius: 1,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            maxWidth: '80%',
+                        }}
+                    >
+                        {/* Indicators Legend */}
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Typography variant="caption" fontWeight={700} sx={{ color: 'text.primary', mr: 1 }}>
+                                {new Date(hoverData.time * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </Typography>
+                            {Object.entries(indicatorSeriesRefs.current).map(([key, series]) => {
+                                let value = hoverData.indicators?.[key];
+                                if (value === undefined || value === null) return null;
+
+                                let label = key.toUpperCase();
+                                if (key.startsWith('sma-')) label = `SMA(${key.split('-')[1]})`;
+                                if (key.startsWith('ema-')) label = `EMA(${key.split('-')[1]})`;
+                                if (key === 'bb-upper') label = 'BB Upper';
+                                if (key === 'bb-middle') label = 'BB Middle';
+                                if (key === 'bb-lower') label = 'BB Lower';
+                                if (key === 'rsi') label = 'RSI';
+                                if (key === 'macd-line') label = 'MACD';
+                                if (key === 'macd-signal') label = 'Signal';
+                                if (key === 'macd-hist') label = 'Hist';
+
+                                const color = series.options().color;
+
+                                return (
+                                    <Box key={key} sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                                        <Box sx={{ width: 8, height: 2, bgcolor: color }} />
+                                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                                            {label}: <span style={{ color: color, fontWeight: 700 }}>{typeof value === 'number' ? value.toFixed(2) : value}</span>
+                                        </Typography>
+                                    </Box>
+                                );
+                            })}
+                        </Box>
+                    </Box>
+                )}
+
                 <div ref={chartContainerRef} style={{ width: '100%', height: '100%' }} />
             </Box>
         </Paper>
