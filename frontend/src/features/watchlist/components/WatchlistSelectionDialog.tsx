@@ -64,9 +64,8 @@ export const WatchlistSelectionDialog: React.FC = () => {
                 targetWatchlistIds.push(newId);
             }
 
-            if (targetWatchlistIds.length > 0) {
-                await syncInstrumentInWatchlists(instrument.id, targetWatchlistIds);
-            }
+            // Always sync, even if targetWatchlistIds is empty (to remove from all watchlists)
+            await syncInstrumentInWatchlists(instrument.id, targetWatchlistIds);
             onClose();
         } catch (err) {
             console.error('Failed to sync instrument in watchlists', err);

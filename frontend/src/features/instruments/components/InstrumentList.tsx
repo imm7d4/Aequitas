@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Box,
@@ -65,8 +65,14 @@ export const InstrumentList = () => {
         activeWatchlistId,
         addInstrumentToWatchlist,
         removeInstrumentFromWatchlist,
-        openSelectionDialog
+        openSelectionDialog,
+        fetchWatchlists
     } = useWatchlistStore();
+
+    // Fetch watchlists on mount
+    useEffect(() => {
+        fetchWatchlists();
+    }, [fetchWatchlists]);
 
     const sectors = useMemo(() => {
         const uniqueSectors = new Set(instruments.map((ins: Instrument) => ins.sector).filter(Boolean));
@@ -116,7 +122,13 @@ export const InstrumentList = () => {
     const handleWatchlistToggle = async (e: React.MouseEvent, instrument: Instrument) => {
         e.stopPropagation();
 
-        if (watchlists.length > 1) {
+        // Check if instrument is in any watchlist
+        const isInAnyWatchlist = watchlists.some(w => w.instrumentIds.includes(instrument.id));
+
+        // If instrument is already starred and user has multiple watchlists, open dialog
+        // If user has zero watchlists, open dialog to create one
+        // If user has multiple watchlists but instrument not in any, open dialog to choose
+        if ((isInAnyWatchlist && watchlists.length > 1) || watchlists.length === 0 || (!isInAnyWatchlist && watchlists.length > 1)) {
             openSelectionDialog(instrument);
             return;
         }
