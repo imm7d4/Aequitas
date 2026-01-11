@@ -28,7 +28,7 @@ export const SetAlertModal: React.FC<SetAlertModalProps> = ({
     symbol,
     currentPrice,
 }) => {
-    const [targetPrice, setTargetPrice] = useState<string>(currentPrice.toString());
+    const [targetPrice, setTargetPrice] = useState<string>(currentPrice.toFixed(2));
     const [condition, setCondition] = useState<'ABOVE' | 'BELOW'>('ABOVE');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);

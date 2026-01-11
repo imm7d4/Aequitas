@@ -1,11 +1,21 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Box, Typography, Paper } from '@mui/material';
 import { WatchlistManager } from '../components/WatchlistManager';
 import { WatchlistTable } from '../components/WatchlistTable';
 import { WatchlistToolbar } from '../components/WatchlistToolbar';
+import { ColumnSettings } from '../components/ColumnSettings';
 import { useInstruments } from '@/features/instruments/hooks/useInstruments';
 import { useWatchlistStore } from '../store/watchlistStore';
 import { useMarketData } from '@/features/market/hooks/useMarketData';
+
+const AVAILABLE_COLUMNS = [
+    { id: 'symbol', label: 'Symbol', required: true },
+    { id: 'name', label: 'Company Name', required: true },
+    { id: 'lastPrice', label: 'Last Price & Change', required: true },
+    { id: 'volume', label: 'Volume' },
+];
+
+const DEFAULT_VISIBLE_COLUMNS = ['symbol', 'name', 'lastPrice', 'volume'];
 
 export function WatchlistPage(): JSX.Element {
     // Fetch instruments for real-time updates
@@ -17,6 +27,29 @@ export function WatchlistPage(): JSX.Element {
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState<'symbol' | 'price' | 'change' | 'volume'>('symbol');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+    const [groupBy, setGroupBy] = useState<'sector' | 'exchange' | 'type' | null>(null);
+
+    // Column customization state
+    const [isColumnSettingsOpen, setIsColumnSettingsOpen] = useState(false);
+    const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_VISIBLE_COLUMNS);
+    const [columnOrder, setColumnOrder] = useState<string[]>(DEFAULT_VISIBLE_COLUMNS);
+
+    // Load column preferences from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem('watchlist_column_prefs');
+        if (saved) {
+            const prefs = JSON.parse(saved);
+            setVisibleColumns(prefs.visible || DEFAULT_VISIBLE_COLUMNS);
+            setColumnOrder(prefs.order || DEFAULT_VISIBLE_COLUMNS);
+        }
+    }, []);
+
+    // Save column preferences to localStorage
+    const handleSaveColumnSettings = (visible: string[], order: string[]) => {
+        setVisibleColumns(visible);
+        setColumnOrder(order);
+        localStorage.setItem('watchlist_column_prefs', JSON.stringify({ visible, order }));
+    };
 
     // Get active watchlist
     const activeWatchlist = useMemo(() => {
@@ -113,6 +146,9 @@ export function WatchlistPage(): JSX.Element {
                     onSortChange={setSortBy}
                     sortDirection={sortDirection}
                     onSortDirectionToggle={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+                    groupBy={groupBy}
+                    onGroupByChange={setGroupBy}
+                    onColumnSettings={() => setIsColumnSettingsOpen(true)}
                 />
 
                 {/* Watchlist Table */}
@@ -135,10 +171,22 @@ export function WatchlistPage(): JSX.Element {
                     ) : (
                         <WatchlistTable
                             filteredInstrumentIds={filteredAndSortedInstruments.map(inst => inst.id)}
+                            visibleColumns={visibleColumns}
+                            groupBy={groupBy}
                         />
                     )}
                 </Box>
             </Paper>
+
+            {/* Column Settings Dialog */}
+            <ColumnSettings
+                open={isColumnSettingsOpen}
+                onClose={() => setIsColumnSettingsOpen(false)}
+                availableColumns={AVAILABLE_COLUMNS}
+                visibleColumns={visibleColumns}
+                columnOrder={columnOrder}
+                onSave={handleSaveColumnSettings}
+            />
         </Box>
     );
 }

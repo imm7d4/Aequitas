@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
     Box,
     TextField,
@@ -8,12 +7,14 @@ import {
     InputLabel,
     Button,
     Stack,
-    InputAdornment
+    InputAdornment,
+    IconButton,
 } from '@mui/material';
 import {
     Search as SearchIcon,
     Add as AddIcon,
-    Sort as SortIcon
+    Sort as SortIcon,
+    ViewColumn as ColumnIcon,
 } from '@mui/icons-material';
 
 interface WatchlistToolbarProps {
@@ -23,6 +24,9 @@ interface WatchlistToolbarProps {
     onSortChange: (sortBy: 'symbol' | 'price' | 'change' | 'volume') => void;
     sortDirection: 'asc' | 'desc';
     onSortDirectionToggle: () => void;
+    onColumnSettings?: () => void;
+    groupBy?: 'sector' | 'exchange' | 'type' | null;
+    onGroupByChange?: (groupBy: 'sector' | 'exchange' | 'type' | null) => void;
 }
 
 export const WatchlistToolbar: React.FC<WatchlistToolbarProps> = ({
@@ -31,7 +35,10 @@ export const WatchlistToolbar: React.FC<WatchlistToolbarProps> = ({
     sortBy,
     onSortChange,
     sortDirection,
-    onSortDirectionToggle
+    onSortDirectionToggle,
+    onColumnSettings,
+    groupBy,
+    onGroupByChange,
 }) => {
     return (
         <Box
@@ -63,6 +70,23 @@ export const WatchlistToolbar: React.FC<WatchlistToolbarProps> = ({
                     }}
                 />
 
+                {/* Group By */}
+                {onGroupByChange && (
+                    <FormControl size="small" sx={{ minWidth: 130 }}>
+                        <InputLabel>Group By</InputLabel>
+                        <Select
+                            value={groupBy || ''}
+                            label="Group By"
+                            onChange={(e) => onGroupByChange(e.target.value as any || null)}
+                        >
+                            <MenuItem value="">None</MenuItem>
+                            <MenuItem value="sector">Sector</MenuItem>
+                            <MenuItem value="exchange">Exchange</MenuItem>
+                            <MenuItem value="type">Type</MenuItem>
+                        </Select>
+                    </FormControl>
+                )}
+
                 {/* Sort */}
                 <FormControl size="small" sx={{ minWidth: 150 }}>
                     <InputLabel>Sort By</InputLabel>
@@ -92,6 +116,18 @@ export const WatchlistToolbar: React.FC<WatchlistToolbarProps> = ({
                 >
                     {sortDirection === 'asc' ? '↑ A-Z' : '↓ Z-A'}
                 </Button>
+
+                {/* Column Settings */}
+                {onColumnSettings && (
+                    <IconButton
+                        size="small"
+                        onClick={onColumnSettings}
+                        title="Column Settings"
+                        sx={{ border: '1px solid', borderColor: 'divider' }}
+                    >
+                        <ColumnIcon fontSize="small" />
+                    </IconButton>
+                )}
 
                 {/* Quick Add - Navigate to instruments page */}
                 <Button

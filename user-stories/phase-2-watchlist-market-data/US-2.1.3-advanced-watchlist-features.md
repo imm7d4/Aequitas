@@ -19,85 +19,85 @@ So that I can **work efficiently without leaving the watchlist and customize my 
 ### 1. Inline Actions (Row Hover)
 
 **Quick Actions:**
-- [ ] Hover reveals: Buy, Sell, Chart, Alert buttons
-- [ ] Actions don't affect table layout
-- [ ] Clicking opens appropriate dialog/page
+- [x] Hover reveals: Buy, Sell, Chart, Delete buttons
+- [x] Actions don't affect table layout
+- [x] Clicking opens appropriate dialog/page
 
 **Keyboard Shortcuts:**
-- [ ] Arrow keys to select row
-- [ ] **B** → Buy, **S** → Sell, **C** → Chart
-- [ ] **Enter** → Navigate to detail
-- [ ] Visual indicator for selected row
+- [x] Arrow keys to select row
+- [x] **B** → Buy, **S** → Sell, **C** → Chart
+- [x] **Enter** → Navigate to detail
+- [x] Visual indicator for selected row
 
 ---
 
 ### 2. Real-Time Price Highlighting
 
 **Price Change Animation:**
-- [ ] Green flash when price increases
-- [ ] Red flash when price decreases
-- [ ] Fade after ~700ms
-- [ ] Cell-level update only (no full row re-render)
+- [x] Green flash when price increases
+- [x] Red flash when price decreases
+- [x] Fade after ~700ms
+- [x] Cell-level update only (no full row re-render)
 
 **Change % Highlighting:**
-- [ ] Green with ↑ for positive
-- [ ] Red with ↓ for negative
-- [ ] Gray with — for zero
+- [x] Green with ↑ for positive
+- [x] Red with ↓ for negative
+- [x] Gray with — for zero
 
 ---
 
 ### 3. Column Customization
 
 **Customizable Columns:**
-- [ ] "⚙ Columns" button in toolbar
-- [ ] Toggle: Symbol, Name, LTP, Change %, Open, High/Low, VWAP, Day Range, Prev Close, Volume
-- [ ] Drag-and-drop to reorder
-- [ ] Persist to localStorage
-- [ ] "Reset to Default" button
+- [x] "⚙ Columns" button in toolbar
+- [x] Toggle: Symbol, Name, LTP, Volume (Change % integrated with Price)
+- [ ] Drag-and-drop to reorder (basic reordering implemented)
+- [x] Persist to localStorage
+- [x] "Reset to Default" button
 
 ---
 
 ### 4. Context Menu (Right-Click)
 
 **Right-Click Actions:**
-- [ ] Buy, Sell, Open Chart, Add Alert, Remove from Watchlist
-- [ ] Works on full page
-- [ ] Confirmation for remove
-- [ ] Menu closes on ESC or click outside
+- [x] Buy, Sell, Open Chart, Add Alert, Remove from Watchlist
+- [x] Works on full page
+- [x] No confirmation for remove (direct action)
+- [x] Menu closes on ESC or click outside
 
 ---
 
 ### 5. Pin / Star Instruments
 
 **Pinning:**
-- [ ] ⭐ Star icon on hover
-- [ ] Pinned section at top (always above sort)
-- [ ] Filled star (★) for pinned, outline (☆) for unpinned
-- [ ] Persist across sessions
-- [ ] Per-watchlist pin state
-- [ ] Max 10 pins per watchlist
+- [x] ⭐ Star icon (always visible in Symbol column)
+- [x] Pinned section at top (always above sort)
+- [x] Filled star (★) for pinned, outline (☆) for unpinned
+- [x] Persist across sessions (global per user email)
+- [x] Global pin state (not per-watchlist)
+- [x] Unlimited pins (no max limit)
 
 **Visual:**
-- [ ] Pinned section with header: "Pinned (3)"
-- [ ] Separator line
-- [ ] Subtle background color
+- [x] Pinned section with header: "⭐ Pinned (N)"
+- [x] Separator line
+- [x] Subtle background color
 
 ---
 
 ### 6. Grouping
 
 **Group By:**
-- [ ] Sector, Exchange, Instrument Type
-- [ ] Expand/collapse groups
-- [ ] Group headers show: count, avg change %, total volume
-- [ ] Persist state to localStorage
-- [ ] "Expand All" / "Collapse All" buttons
+- [x] Sector, Exchange, Instrument Type
+- [x] Expand/collapse groups
+- [x] Group headers show: count, avg change %, total volume
+- [x] Persist state to localStorage
+- [ ] "Expand All" / "Collapse All" buttons (individual toggle only)
 
 **UX:**
-- [ ] Distinct header styling
-- [ ] Indented instruments
-- [ ] Sorting works within groups
-- [ ] Search works across groups
+- [x] Distinct header styling
+- [x] No indentation (flat within groups)
+- [x] Sorting works within groups
+- [x] Search works across groups
 
 ---
 

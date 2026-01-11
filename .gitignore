@@ -42,3 +42,4 @@ yarn-error.log*
 
 # Documentation (local only)
 /docs/walkthroughs/
+/docs-local/
