@@ -8,7 +8,6 @@ import {
     TextField,
     Button,
     Stack,
-    Alert,
     CircularProgress,
     InputAdornment,
     Chip,
@@ -17,6 +16,8 @@ import {
     MenuItem,
     FormControl,
     InputLabel,
+    Snackbar,
+    Alert,
 } from '@mui/material';
 import {
     TrendingUp as BuyIcon,
@@ -268,19 +269,7 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
     return (
         <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
             <Stack spacing={2}>
-                {/* Inline Notification Banner */}
-                {(success || error) && (
-                    <Alert
-                        severity={success ? 'success' : 'error'}
-                        onClose={() => {
-                            setSuccess(null);
-                            setError(null);
-                        }}
-                        sx={{ borderRadius: 1 }}
-                    >
-                        {success || error}
-                    </Alert>
-                )}
+
 
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Typography variant="h6" fontWeight={700}>
@@ -327,26 +316,6 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                     </ToggleButton>
                 </ToggleButtonGroup>
 
-                {/* SECTION 1: Quantity (Primary Input) - Always First */}
-                <Box>
-                    <TextField
-                        fullWidth
-                        label="Quantity"
-                        type="number"
-                        size="small"
-                        value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
-                        helperText={`Lot Size: ${instrument.lotSize}`}
-                        InputProps={{
-                            endAdornment: <InputAdornment position="end">Qty</InputAdornment>,
-                        }}
-                    />
-                    {estValue > 0 && (
-                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                            Estimated Value: ₹{estValue.toLocaleString()}
-                        </Typography>
-                    )}
-                </Box>
 
                 {/* SECTION 2: Order Type Selection */}
                 <Stack spacing={1.5}>
@@ -419,6 +388,31 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                     )}
                 </Stack>
 
+                {/* Quantity Input - Moved after order type selection */}
+                <Box>
+                    <TextField
+                        fullWidth
+                        label="Quantity"
+                        type="number"
+                        size="small"
+                        value={quantity}
+                        onChange={(e) => {
+                            // Only allow integers
+                            const value = e.target.value;
+                            if (value === '' || /^\d+$/.test(value)) {
+                                setQuantity(value);
+                            }
+                        }}
+                        inputProps={{
+                            step: 1,
+                            min: 0
+                        }}
+                        InputProps={{
+                            endAdornment: <InputAdornment position="end">Qty</InputAdornment>,
+                        }}
+                    />
+                </Box>
+
                 {/* Validity Selection */}
                 <FormControl fullWidth size="small">
                     <InputLabel>Validity</InputLabel>
@@ -449,7 +443,6 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                                 setPrice(e.target.value);
                                 setIsPriceTouched(true);
                             }}
-                            helperText={`Tick Size: ${instrument.tickSize}`}
                             InputProps={{
                                 startAdornment: <InputAdornment position="start">₹</InputAdornment>,
                             }}
@@ -566,49 +559,68 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                     </Stack>
                 )}
 
-                {/* SECTION 4: Live Interpretation Box - Game Changer */}
-                {liveInterpretation && (
-                    <Box
-                        sx={{
-                            bgcolor: side === 'BUY' ? 'success.50' : 'error.50',
-                            border: '1px solid',
-                            borderColor: side === 'BUY' ? 'success.200' : 'error.200',
-                            borderRadius: 1,
-                            p: 1.5
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                            <Typography sx={{ fontSize: 18 }}>💡</Typography>
-                            <Box sx={{ flex: 1 }}>
+
+
+                <Tooltip
+                    title={
+                        liveInterpretation ? (
+                            <Box>
                                 <Typography variant="caption" fontWeight={600} display="block" sx={{ mb: 0.5 }}>
-                                    What This Order Will Do
+                                    💡 What This Order Will Do
                                 </Typography>
-                                <Typography variant="caption" color="text.secondary">
+                                <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
                                     Current Price: ₹{ltp.toFixed(2)}
                                 </Typography>
-                                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                <Typography variant="caption">
                                     {liveInterpretation}
                                 </Typography>
                             </Box>
-                        </Box>
-                    </Box>
-                )}
-
-                <Button
-                    fullWidth
-                    variant="contained"
-                    size="large"
-                    color={side === 'BUY' ? 'success' : 'error'}
-                    disabled={!isValid || isLoading}
-                    onClick={handlePlaceOrder}
-                    sx={{ py: 1.5, fontWeight: 700 }}
+                        ) : ''
+                    }
+                    arrow
+                    placement="top"
                 >
-                    {isLoading ? (
-                        <CircularProgress size={24} color="inherit" />
-                    ) : (
-                        `PLACE ${side} ${orderType === 'STOP_LIMIT' ? 'STOP-LIMIT' : orderType === 'TRAILING_STOP' ? 'TRAILING STOP' : orderType} ORDER`
-                    )}
-                </Button>
+                    <span style={{ width: '100%' }}>
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            size="large"
+                            color={side === 'BUY' ? 'success' : 'error'}
+                            disabled={!isValid || isLoading}
+                            onClick={handlePlaceOrder}
+                            sx={{ py: 1.5, fontWeight: 700 }}
+                        >
+                            {isLoading ? (
+                                <CircularProgress size={24} color="inherit" />
+                            ) : (
+                                `PLACE ${side} ${orderType === 'STOP_LIMIT' ? 'STOP-LIMIT' : orderType === 'TRAILING_STOP' ? 'TRAILING STOP' : orderType} ORDER`
+                            )}
+                        </Button>
+                    </span>
+                </Tooltip>
+
+                {/* Toast Notifications */}
+                <Snackbar
+                    open={!!success || !!error}
+                    autoHideDuration={success ? 3000 : 5000}
+                    onClose={() => {
+                        setSuccess(null);
+                        setError(null);
+                    }}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                >
+                    <Alert
+                        onClose={() => {
+                            setSuccess(null);
+                            setError(null);
+                        }}
+                        severity={success ? 'success' : 'error'}
+                        variant="filled"
+                        sx={{ width: '100%' }}
+                    >
+                        {success || error}
+                    </Alert>
+                </Snackbar>
             </Stack>
         </Paper>
     );

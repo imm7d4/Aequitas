@@ -25,7 +25,7 @@ class WebSocketService {
         const baseUrl = apiUrl.replace(/^https?:\/\//, '').replace(/\/api$/, '');
 
         this.url = `${wsProtocol}://${baseUrl}/ws`;
-        console.log('WebSocket URL configured:', this.url);
+        //console.log('WebSocket URL configured:', this.url);
     }
 
     connect() {
