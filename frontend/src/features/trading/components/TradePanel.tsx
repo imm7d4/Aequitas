@@ -26,6 +26,7 @@ import {
 } from '@mui/icons-material';
 import { Instrument } from '@/features/instruments/types/instrument.types';
 import { orderService } from '../services/orderService';
+import { usePortfolioStore } from '@/features/portfolio/store/portfolioStore';
 
 interface TradePanelProps {
     instrument: Instrument;
@@ -43,6 +44,8 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
 
     // Advanced mode state
     const [advancedMode, setAdvancedMode] = useState(false);
+
+    const { fetchHoldings } = usePortfolioStore();
 
     // Stop order fields
     const [stopPrice, setStopPrice] = useState<string>('');
@@ -253,6 +256,9 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
             } else {
                 setSuccess(`Order ${res.orderId} placed successfully!`);
             }
+
+            // Refresh holdings
+            fetchHoldings();
 
             // Clear all fields to prevent accidental duplicate orders
             setQuantity('');

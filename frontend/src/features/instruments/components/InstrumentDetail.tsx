@@ -26,6 +26,8 @@ import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { TradePanel } from '@/features/trading/components/TradePanel';
 import { StockChart } from '@/features/market/components/StockChart';
 import { IndicatorPanel } from '@/features/market/components/IndicatorPanel';
+import { PositionBanner } from '@/features/portfolio/components/PositionBanner';
+import { usePortfolioStore } from '@/features/portfolio/store/portfolioStore';
 import type { Instrument } from '../types/instrument.types';
 
 
@@ -60,6 +62,8 @@ export function InstrumentDetail() {
         openSelectionDialog,
         fetchWatchlists
     } = useWatchlistStore();
+
+    const { fetchHoldings } = usePortfolioStore();
 
     const isStarred = instrument ? watchlists.some(w => w.instrumentIds.includes(instrument.id)) : false;
 
@@ -121,7 +125,8 @@ export function InstrumentDetail() {
 
         fetchInstrument();
         fetchWatchlists();
-    }, [id, fetchWatchlists]);
+        fetchHoldings();
+    }, [id, fetchWatchlists, fetchHoldings]);
 
     if (isLoading) {
         return (
@@ -265,11 +270,13 @@ export function InstrumentDetail() {
                 <Grid container spacing={2.5}>
                     {/* LEFT AREA: CHART (70%) */}
                     <Grid item xs={12} lg={8.5}>
+                        {/* Position Banner */}
+                        <PositionBanner instrument={instrument} ltp={ltp} />
+
                         <Paper
                             elevation={0}
                             sx={{
                                 borderRadius: 3,
-                                overflow: 'hidden',
                                 border: '1px solid',
                                 borderColor: 'divider',
                                 height: { lg: 'calc(100vh - 190px)' },
