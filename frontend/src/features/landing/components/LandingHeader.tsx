@@ -14,7 +14,7 @@ export function LandingHeader(): JSX.Element {
     const headerBg = useTransform(
         scrollY,
         [0, 100],
-        ['rgba(15, 31, 53, 0.95)', 'rgba(15, 31, 53, 1)']
+        ['rgba(15, 31, 53, 0.2)', 'rgba(15, 31, 53, 0.75)']
     );
 
     const headerShadow = useTransform(
