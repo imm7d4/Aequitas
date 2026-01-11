@@ -17,6 +17,7 @@ import { ProfilePage } from '@/features/profile/components/ProfilePage';
 import { NotFound } from '@/shared/components/NotFound';
 
 import { PortfolioPage } from '@/features/portfolio/pages/PortfolioPage';
+import { WatchlistPage } from '@/features/watchlist/pages/WatchlistPage';
 
 export function Router(): JSX.Element {
     return (
@@ -38,6 +39,7 @@ export function Router(): JSX.Element {
                     >
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/portfolio" element={<PortfolioPage />} />
+                        <Route path="/watchlists" element={<WatchlistPage />} />
                         <Route path="/orders" element={<OrdersPage />} />
                         <Route path="/instruments" element={<InstrumentsPage />} />
                         <Route path="/instruments/:id" element={<InstrumentDetail />} />

@@ -6,13 +6,10 @@ import {
     Timeline as PortfolioIcon,
     TrendingUp as ProfitIcon,
     Layers as MarginIcon,
-    ArrowForward as ArrowIcon,
     Visibility as VisibleIcon,
     VisibilityOff as HiddenIcon
 } from '@mui/icons-material';
 import { useAuth } from '@/features/auth';
-import { WatchlistManager } from '@/features/watchlist/components/WatchlistManager';
-import { WatchlistTable } from '@/features/watchlist/components/WatchlistTable';
 import { useInstruments } from '@/features/instruments/hooks/useInstruments';
 import { StatCard } from '@/features/dashboard/components/StatCard';
 import { accountService, TradingAccount } from '@/features/profile/services/accountService';
@@ -109,39 +106,8 @@ export function Dashboard(): JSX.Element {
             </Grid>
 
             <Grid container spacing={4}>
-                {/* Main Content - Watchlist */}
-                <Grid item xs={12} lg={8}>
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            borderRadius: 3,
-                            overflow: 'hidden',
-                            border: '1px solid',
-                            borderColor: 'divider'
-                        }}
-                    >
-                        <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
-                            <Typography variant="h6" fontWeight={700}>
-                                My Watchlists
-                            </Typography>
-                            <Button
-                                size="small"
-                                endIcon={<ArrowIcon />}
-                                onClick={() => navigate('/instruments')}
-                                sx={{ textTransform: 'none', fontWeight: 600 }}
-                            >
-                                Explore All
-                            </Button>
-                        </Box>
-                        <WatchlistManager />
-                        <Box sx={{ p: 2 }}>
-                            <WatchlistTable />
-                        </Box>
-                    </Paper>
-                </Grid>
-
-                {/* Sidebar - Quick Actions */}
-                <Grid item xs={12} lg={4}>
+                {/* Quick Actions */}
+                <Grid item xs={12} lg={6}>
                     <Stack spacing={4}>
                         <Paper
                             elevation={0}

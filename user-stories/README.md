@@ -239,7 +239,7 @@ Compliance, audit logs, and administrative controls.
 |-------|--------------|-----------|-------------|-------------|
 | 0 - Foundation | 6 | 6 | 0 | 0 |
 | 1 - Market & Instrument | 2 | 2 | 0 | 0 |
-| 2 - Watchlist & Market Data | 5 | 3 | 0 | 2 |
+| 2 - Watchlist & Market Data | 5 | 5 | 0 | 0 |
 | 3 - User Profile | 4 | 4 | 0 | 0 |
 | 4 - Order Management | 8 | 8 | 0 | 0 |
 | 5 - Portfolio Management | 1 | 0 | 0 | 1 |
