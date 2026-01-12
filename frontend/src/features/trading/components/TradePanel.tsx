@@ -525,8 +525,8 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                     )}
                 </Stack>
 
-                {/* Margin Display */}
-                {estValue > 0 && (
+                {/* Margin Display - Only for BUY orders */}
+                {estValue > 0 && side === 'BUY' && (
                     <Box sx={{ p: 1.5, bgcolor: 'background.default', borderRadius: 1 }}>
                         <Stack direction="row" justifyContent="space-between">
                             <Typography variant="caption" color="text.secondary">Est. Value</Typography>
@@ -540,6 +540,26 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                             <Typography variant="caption" fontWeight={600}>Required Margin</Typography>
                             <Typography variant="body2" fontWeight={700} color="primary.main">
                                 ₹{requiredMargin.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                            </Typography>
+                        </Stack>
+                    </Box>
+                )}
+
+                {/* Value Display - For SELL orders */}
+                {estValue > 0 && side === 'SELL' && (
+                    <Box sx={{ p: 1.5, bgcolor: 'background.default', borderRadius: 1 }}>
+                        <Stack direction="row" justifyContent="space-between">
+                            <Typography variant="caption" color="text.secondary">Est. Value</Typography>
+                            <Typography variant="body2">₹{estValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</Typography>
+                        </Stack>
+                        <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.5 }}>
+                            <Typography variant="caption" color="text.secondary">Est. Fees</Typography>
+                            <Typography variant="body2">₹{(requiredMargin - estValue).toLocaleString(undefined, { maximumFractionDigits: 2 })}</Typography>
+                        </Stack>
+                        <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.5, pt: 0.5, borderTop: '1px dashed', borderColor: 'divider' }}>
+                            <Typography variant="caption" fontWeight={600}>Net Proceeds</Typography>
+                            <Typography variant="body2" fontWeight={700} color="success.main">
+                                ₹{(estValue - (requiredMargin - estValue)).toLocaleString(undefined, { maximumFractionDigits: 2 })}
                             </Typography>
                         </Stack>
                     </Box>

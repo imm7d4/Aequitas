@@ -228,32 +228,50 @@ func (s *DashboardService) calculateTradingAnalysis(
 	var totalWin, totalLoss float64
 	var largestWin, largestLoss float64
 
-	// Group trades by order to calculate P&L
-	orderTrades := make(map[string][]*models.Trade)
-	for _, t := range trades {
-		orderID := t.OrderID.Hex()
-		orderTrades[orderID] = append(orderTrades[orderID], t)
-	}
+	// Track P&L by symbol using a map to accumulate buys and sells
+	symbolCost := make(map[string]float64)
+	symbolQty := make(map[string]int)
 
-	// Calculate P&L for each completed trade pair (BUY-SELL)
-	for _, tradePair := range orderTrades {
-		for _, trade := range tradePair {
-			if trade.Side == "SELL" {
-				// Calculate P&L: (Sell Price - Avg Buy Price) * Qty - Fees
-				pl := trade.NetValue - trade.Value
-				if pl > 0 {
-					winCount++
-					totalWin += pl
-					if pl > largestWin {
-						largestWin = pl
-					}
-				} else {
-					lossCount++
-					totalLoss += math.Abs(pl)
-					if math.Abs(pl) > largestLoss {
-						largestLoss = math.Abs(pl)
-					}
+	// Process trades in chronological order
+	for _, trade := range trades {
+		symbol := trade.Symbol
+
+		if trade.Side == "BUY" {
+			// Accumulate cost
+			symbolCost[symbol] += trade.Value
+			symbolQty[symbol] += trade.Quantity
+		} else if trade.Side == "SELL" {
+			// Calculate average cost per share
+			avgCost := 0.0
+			if symbolQty[symbol] > 0 {
+				avgCost = symbolCost[symbol] / float64(symbolQty[symbol])
+			}
+
+			// Calculate P&L for this sell
+			costOfSold := avgCost * float64(trade.Quantity)
+			pl := trade.NetValue - costOfSold
+
+			// Track individual trade P&L
+			if pl > 0 {
+				winCount++
+				totalWin += pl
+				if pl > largestWin {
+					largestWin = pl
 				}
+			} else if pl < 0 {
+				lossCount++
+				totalLoss += math.Abs(pl)
+				if math.Abs(pl) > largestLoss {
+					largestLoss = math.Abs(pl)
+				}
+			}
+
+			// Update remaining cost and quantity
+			symbolQty[symbol] -= trade.Quantity
+			if symbolQty[symbol] > 0 {
+				symbolCost[symbol] -= costOfSold
+			} else {
+				symbolCost[symbol] = 0
 			}
 		}
 	}
@@ -307,8 +325,18 @@ func (s *DashboardService) calculateBehavioralInsights(
 
 	var winDurations, lossDurations []float64
 
+	// Track cost basis for proper P&L calculation
+	symbolCost := make(map[string]float64)
+	symbolQty := make(map[string]int)
+
 	for _, trade := range trades {
-		if trade.Side == "SELL" {
+		symbol := trade.Symbol
+
+		if trade.Side == "BUY" {
+			// Accumulate cost
+			symbolCost[symbol] += trade.Value
+			symbolQty[symbol] += trade.Quantity
+		} else if trade.Side == "SELL" {
 			hour := trade.ExecutedAt.Hour()
 			dayName := trade.ExecutedAt.Weekday().String()
 
@@ -321,8 +349,13 @@ func (s *DashboardService) calculateBehavioralInsights(
 				}
 			}
 
-			// Calculate P&L
-			pl := trade.NetValue - trade.Value
+			// Calculate P&L properly
+			avgCost := 0.0
+			if symbolQty[symbol] > 0 {
+				avgCost = symbolCost[symbol] / float64(symbolQty[symbol])
+			}
+			costOfSold := avgCost * float64(trade.Quantity)
+			pl := trade.NetValue - costOfSold
 			isWin := pl > 0
 
 			// Update time-based stats
@@ -348,6 +381,14 @@ func (s *DashboardService) calculateBehavioralInsights(
 				winDurations = append(winDurations, duration)
 			} else {
 				lossDurations = append(lossDurations, duration)
+			}
+
+			// Update remaining cost and quantity
+			symbolQty[symbol] -= trade.Quantity
+			if symbolQty[symbol] > 0 {
+				symbolCost[symbol] -= costOfSold
+			} else {
+				symbolCost[symbol] = 0
 			}
 		}
 	}
@@ -388,7 +429,19 @@ func (s *DashboardService) getMarketIntelligence(
 	// Get all market data
 	allData, err := s.marketDataRepo.GetAll(ctx)
 	if err != nil {
-		return nil, err
+		// Return empty data instead of error to prevent dashboard crash
+		return &MarketIntelligence{
+			TopGainers: []SmartStock{},
+			TopLosers:  []SmartStock{},
+		}, nil
+	}
+
+	// Handle empty data
+	if len(allData) == 0 {
+		return &MarketIntelligence{
+			TopGainers: []SmartStock{},
+			TopLosers:  []SmartStock{},
+		}, nil
 	}
 
 	// Sort by change percentage
