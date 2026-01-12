@@ -78,3 +78,18 @@ func (r *MarketDataRepository) FindByInstrumentIDs(instrumentIDs []string) ([]*m
 
 	return results, nil
 }
+
+func (r *MarketDataRepository) GetAll(ctx context.Context) ([]*models.MarketData, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to find all market data: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	results := make([]*models.MarketData, 0)
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, fmt.Errorf("failed to decode market data: %w", err)
+	}
+
+	return results, nil
+}

@@ -86,8 +86,8 @@ func (cb *CandleBuilder) updateCandle(
 	if exists && !active.StartTime.Equal(startTime) {
 		// Store previous close to maintain continuity (Standard Charting Behavior)
 		prevClose := active.Close
-		log.Printf("🔄 Candle transition [%s]: Completing candle with Close=%.2f, Starting new candle with Open=%.2f",
-			interval, prevClose, prevClose)
+		// log.Printf("🔄 Candle transition [%s]: Completing candle with Close=%.2f, Starting new candle with Open=%.2f",
+		// 	interval, prevClose, prevClose)
 		cb.completeCandle(active)
 
 		// Start new candle using prevClose as Open
@@ -112,7 +112,7 @@ func (cb *CandleBuilder) updateCandle(
 		if err == nil && lastCandle != nil {
 			// Use last saved candle's close as open price for continuity
 			openPrice = lastCandle.Close
-			log.Printf("Candle continuity: Starting %s candle for instrument at ₹%.2f (from last saved candle)", interval, openPrice)
+			// log.Printf("Candle continuity: Starting %s candle for instrument at ₹%.2f (from last saved candle)", interval, openPrice)
 		} else {
 			// No previous candle exists, use current price
 			openPrice = price

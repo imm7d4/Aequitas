@@ -1,53 +1,103 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Button, Stack, Paper, Grid, alpha, useTheme } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import {
-    AccountBalanceWallet as WalletIcon,
-    Timeline as PortfolioIcon,
-    TrendingUp as ProfitIcon,
-    Layers as MarginIcon,
+    Box,
+    Typography,
+    Button,
+    Grid,
+    CircularProgress,
+    Alert,
+} from '@mui/material';
+import {
     Visibility as VisibleIcon,
-    VisibilityOff as HiddenIcon
+    VisibilityOff as HiddenIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/features/auth';
-import { useInstruments } from '@/features/instruments/hooks/useInstruments';
 import { StatCard } from '@/features/dashboard/components/StatCard';
-import { accountService, TradingAccount } from '@/features/profile/services/accountService';
+import { MarketPulse } from '@/features/dashboard/components/MarketPulse';
+import { BehavioralInsights } from '@/features/dashboard/components/BehavioralInsights';
+import { TradingAnalysis } from '@/features/dashboard/components/TradingAnalysis';
+import {
+    dashboardService,
+    DashboardSummary,
+} from '@/features/dashboard/services/dashboardService';
 
 export function Dashboard(): JSX.Element {
     const { user } = useAuth();
-    const navigate = useNavigate();
-    const theme = useTheme();
-    const [account, setAccount] = useState<TradingAccount | null>(null);
     const [showBalance, setShowBalance] = useState(false);
-
-    // Initial data fetch
-    useInstruments();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [dashboardData, setDashboardData] = useState<DashboardSummary | null>(
+        null
+    );
 
     useEffect(() => {
-        const fetchBalance = async () => {
+        const fetchDashboardData = async () => {
             try {
-                const acc = await accountService.getBalance();
-                setAccount(acc);
+                setLoading(true);
+                const data = await dashboardService.getSummary();
+                setDashboardData(data);
+                setError(null);
             } catch (err) {
-                console.error('Failed to fetch balance', err);
+                console.error('Failed to fetch dashboard data', err);
+                setError('Failed to load dashboard data. Please try again.');
+            } finally {
+                setLoading(false);
             }
         };
-        fetchBalance();
+
+        fetchDashboardData();
     }, []);
 
-    const userDisplayName = user?.fullName || user?.email?.split('@')[0] || 'Trader';
+    const userDisplayName =
+        user?.fullName || user?.email?.split('@')[0] || 'Trader';
+
+    if (loading) {
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '60vh',
+                }}
+            >
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    if (error || !dashboardData) {
+        return (
+            <Box sx={{ py: 3, px: { xs: 1, md: 3 } }}>
+                <Alert severity="error">{error || 'No data available'}</Alert>
+            </Box>
+        );
+    }
+
+    const { performanceOverview, tradingAnalysis, behavioralInsights,
+        marketIntelligence, portfolioDistribution } = dashboardData;
 
     return (
         <Box sx={{ py: 3, px: { xs: 1, md: 3 } }}>
             {/* Greeter Section */}
-            <Box sx={{ mb: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Box
+                sx={{
+                    mb: 5,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                }}
+            >
                 <Box>
-                    <Typography variant="h4" fontWeight={800} sx={{ letterSpacing: '-0.02em', mb: 1 }}>
+                    <Typography
+                        variant="h4"
+                        fontWeight={800}
+                        sx={{ letterSpacing: '-0.02em', mb: 1 }}
+                    >
                         Welcome back, {userDisplayName}! 📈
                     </Typography>
                     <Typography variant="body1" color="text.secondary" fontWeight={500}>
-                        The market is calling. Let's make some smart trades today.
+                        The market is calling. Let's analyze your performance.
                     </Typography>
                 </Box>
                 <Button
@@ -55,138 +105,82 @@ export function Dashboard(): JSX.Element {
                     size="small"
                     startIcon={showBalance ? <HiddenIcon /> : <VisibleIcon />}
                     onClick={() => setShowBalance(!showBalance)}
-                    sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, mt: 1 }}
+                    sx={{
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        mt: 1,
+                    }}
                 >
                     {showBalance ? 'Hide Values' : 'Show Values'}
                 </Button>
             </Box>
 
-            {/* Stats Overview */}
+            {/* Performance Overview */}
             <Grid container spacing={3} sx={{ mb: 6 }}>
                 <Grid item xs={12} sm={6} md={3}>
                     <StatCard
-                        title="Available Balance"
-                        value={account ? `₹${account.balance.toLocaleString()}` : '₹0'}
-                        subtitle="Cash in account"
-                        icon={<WalletIcon />}
+                        title="Total Equity"
+                        value={`₹${performanceOverview.totalEquity.toLocaleString()}`}
+                        subtitle="Cash + Holdings"
                         isPrivate={!showBalance}
                     />
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                     <StatCard
-                        title="Portfolio Value"
-                        value="₹24,580"
-                        change="+2.4%"
-                        isPositive={true}
+                        title="Realized P&L"
+                        value={`₹${performanceOverview.realizedPL.toLocaleString()}`}
+                        change={
+                            performanceOverview.realizedPL > 0
+                                ? `+${performanceOverview.realizedPL.toFixed(2)}`
+                                : performanceOverview.realizedPL.toFixed(2)
+                        }
+                        isPositive={performanceOverview.realizedPL > 0}
+                        subtitle="Closed trades"
+                        isPrivate={!showBalance}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                    <StatCard
+                        title="Unrealized P&L"
+                        value={`₹${performanceOverview.unrealizedPL.toLocaleString()}`}
+                        change={
+                            performanceOverview.unrealizedPL > 0
+                                ? `+${performanceOverview.unrealizedPL.toFixed(2)}`
+                                : performanceOverview.unrealizedPL.toFixed(2)
+                        }
+                        isPositive={performanceOverview.unrealizedPL > 0}
+                        subtitle="Open positions"
+                        isPrivate={!showBalance}
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                    <StatCard
+                        title="Active Positions"
+                        value={portfolioDistribution.activePositions.toString()}
                         subtitle="Current holdings"
-                        icon={<PortfolioIcon />}
-                        isPrivate={!showBalance}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        title="Day P&L"
-                        value="₹840.50"
-                        change="+0.85%"
-                        isPositive={true}
-                        subtitle="Today's performance"
-                        icon={<ProfitIcon />}
-                        isPrivate={!showBalance}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        title="Utilized Margin"
-                        value="₹12,400"
-                        subtitle="Blocked for trades"
-                        icon={<MarginIcon />}
                         isPrivate={!showBalance}
                     />
                 </Grid>
             </Grid>
 
-            <Grid container spacing={4}>
-                {/* Quick Actions */}
-                <Grid item xs={12} lg={6}>
-                    <Stack spacing={4}>
-                        <Paper
-                            elevation={0}
-                            sx={{
-                                p: 3,
-                                borderRadius: 3,
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                bgcolor: alpha(theme.palette.primary.main, 0.02)
-                            }}
-                        >
-                            <Typography variant="h6" gutterBottom fontWeight={700}>
-                                Quick Actions
-                            </Typography>
-                            <Stack spacing={2}>
-                                <Button
-                                    variant="contained"
-                                    fullWidth
-                                    onClick={() => navigate('/instruments')}
-                                    sx={{ borderRadius: 2, py: 1.2, fontWeight: 600, boxShadow: 'none' }}
-                                >
-                                    Trade New Instruments
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    fullWidth
-                                    onClick={() => navigate('/profile')}
-                                    sx={{ borderRadius: 2, py: 1.2, fontWeight: 600 }}
-                                >
-                                    Account Settings
-                                </Button>
-                                {user?.isAdmin && (
-                                    <Button
-                                        variant="outlined"
-                                        color="secondary"
-                                        fullWidth
-                                        onClick={() => navigate('/admin')}
-                                        sx={{ borderRadius: 2, py: 1.2, fontWeight: 600 }}
-                                    >
-                                        Admin Panel
-                                    </Button>
-                                )}
-                            </Stack>
-                        </Paper>
+            {/* Trading Analysis */}
+            <Box sx={{ mb: 6 }}>
+                <TradingAnalysis analysis={tradingAnalysis} />
+            </Box>
 
-                        <Paper
-                            elevation={0}
-                            sx={{
-                                p: 3,
-                                borderRadius: 3,
-                                bgcolor: 'primary.main',
-                                color: 'primary.contrastText',
-                                position: 'relative',
-                                overflow: 'hidden'
-                            }}
-                        >
-                            <Box sx={{ position: 'relative', zIndex: 1 }}>
-                                <Typography variant="h6" gutterBottom fontWeight={700}>
-                                    Trading Status
-                                </Typography>
-                                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                    Your account is verified and active. Market hours are currently standard. Happy trading!
-                                </Typography>
-                            </Box>
-                            <Box
-                                sx={{
-                                    position: 'absolute',
-                                    right: -20,
-                                    top: -20,
-                                    opacity: 0.1,
-                                    transform: 'rotate(-20deg)'
-                                }}
-                            >
-                                <PortfolioIcon sx={{ fontSize: 120 }} />
-                            </Box>
-                        </Paper>
-                    </Stack>
-                </Grid>
-            </Grid>
+            {/* Behavioral Insights */}
+            <Box sx={{ mb: 6 }}>
+                <BehavioralInsights insights={behavioralInsights} />
+            </Box>
+
+            {/* Market Pulse */}
+            <Box sx={{ mb: 6 }}>
+                <MarketPulse
+                    topGainers={marketIntelligence.topGainers}
+                    topLosers={marketIntelligence.topLosers}
+                />
+            </Box>
         </Box>
     );
 }

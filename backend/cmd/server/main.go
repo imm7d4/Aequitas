@@ -81,6 +81,7 @@ func main() {
 	candleService := services.NewCandleService(candleRepo)
 	candleBuilder := services.NewCandleBuilder(candleRepo)
 	tradeService := services.NewTradeService(tradeRepo)
+	dashboardService := services.NewDashboardService(portfolioRepo, tradeRepo, tradingAccountService, marketService, marketDataRepo)
 
 	// Initialize WebSocket hub BEFORE NotificationService
 	wsHub := websocket.NewHub()
@@ -140,6 +141,7 @@ func main() {
 	portfolioController := controllers.NewPortfolioController(portfolioService)
 	notificationController := controllers.NewNotificationController(notificationService)
 	priceAlertController := controllers.NewPriceAlertController(priceAlertService)
+	dashboardController := controllers.NewDashboardController(dashboardService)
 
 	// Set up router
 	router := mux.NewRouter()
@@ -223,6 +225,9 @@ func main() {
 	protected.HandleFunc("/alerts", priceAlertController.GetAlerts).Methods("GET", "OPTIONS")
 	protected.HandleFunc("/alerts", priceAlertController.CreateAlert).Methods("POST", "OPTIONS")
 	protected.HandleFunc("/alerts/{id}", priceAlertController.CancelAlert).Methods("DELETE", "OPTIONS")
+
+	// Dashboard routes
+	protected.HandleFunc("/dashboard/summary", dashboardController.GetSummary).Methods("GET", "OPTIONS")
 
 	// Admin routes (require admin role)
 	admin := protected.PathPrefix("/admin").Subrouter()
