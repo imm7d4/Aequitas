@@ -8,6 +8,8 @@ interface WSMessage {
     data?: any;
 }
 
+import { useAuthStore } from '../../features/auth/hooks/useAuth';
+
 class WebSocketService {
     private ws: WebSocket | null = null;
     private subscriptions = new Map<string, Set<(candle: any) => void>>();
@@ -22,7 +24,7 @@ class WebSocketService {
 
         // Convert HTTP(S) URL to WS(S) URL
         const wsProtocol = apiUrl.startsWith('https') ? 'wss' : 'ws';
-        const baseUrl = apiUrl.replace(/^https?:\/\//, '').replace(/\/api$/, '');
+        const baseUrl = apiUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '');
 
         this.url = `${wsProtocol}://${baseUrl}/ws`;
         //console.log('WebSocket URL configured:', this.url);
@@ -31,8 +33,14 @@ class WebSocketService {
     connect() {
         if (this.ws?.readyState === WebSocket.OPEN) return;
 
+        const token = useAuthStore.getState().token;
+        if (!token) {
+            console.warn('No auth token found, skipping WebSocket connection');
+            return;
+        }
+
         console.log('Connecting to WebSocket...');
-        this.ws = new WebSocket(this.url);
+        this.ws = new WebSocket(`${this.url}?token=${token}`);
 
         this.ws.onopen = () => {
             console.log('WebSocket Connected');
