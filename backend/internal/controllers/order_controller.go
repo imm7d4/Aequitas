@@ -39,6 +39,7 @@ type OrderRequest struct {
 	LimitPrice  *float64 `json:"limitPrice,omitempty"`
 	TrailAmount *float64 `json:"trailAmount,omitempty"`
 	TrailType   string   `json:"trailType,omitempty"`
+	Intent      string   `json:"intent,omitempty"`
 }
 
 func (c *OrderController) PlaceOrder(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +77,7 @@ func (c *OrderController) PlaceOrder(w http.ResponseWriter, r *http.Request) {
 		LimitPrice:  req.LimitPrice,
 		TrailAmount: req.TrailAmount,
 		TrailType:   req.TrailType,
+		Intent:      req.Intent,
 	}
 
 	res, err := c.orderService.PlaceOrder(userID, order)

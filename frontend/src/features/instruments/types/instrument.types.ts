@@ -8,6 +8,7 @@ export interface Instrument {
     sector: string;
     lotSize: number;
     tickSize: number;
+    isShortable?: boolean;
     status: 'ACTIVE' | 'SUSPENDED' | 'DELISTED';
     listingDate: Date;
     createdAt: Date;

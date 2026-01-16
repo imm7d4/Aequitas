@@ -15,7 +15,8 @@ type Trade struct {
 	InstrumentID primitive.ObjectID `bson:"instrument_id" json:"instrumentId"`
 	Symbol       string             `bson:"symbol" json:"symbol"`
 
-	Side     string  `bson:"side" json:"side"` // BUY / SELL
+	Side     string  `bson:"side" json:"side"`     // BUY / SELL
+	Intent   string  `bson:"intent" json:"intent"` // OPEN_LONG / OPEN_SHORT / CLOSE_LONG / CLOSE_SHORT
 	Quantity int     `bson:"quantity" json:"quantity"`
 	Price    float64 `bson:"price" json:"price"`        // Execution price
 	Value    float64 `bson:"value" json:"value"`        // Qty * Price

@@ -33,13 +33,21 @@ export const PositionBanner: React.FC<PositionBannerProps> = ({ instrument, ltp 
 
     const unrealizedPL = useMemo(() => {
         if (!position || ltp <= 0) return 0;
-        return (ltp - position.avgCost) * position.quantity;
+        let pnl = 0;
+        if (position.positionType === 'SHORT') {
+            pnl = (position.avgEntryPrice - ltp) * position.quantity;
+        } else {
+            pnl = (ltp - position.avgEntryPrice) * position.quantity;
+        }
+        return pnl;
     }, [position, ltp]);
 
     const plPercentage = useMemo(() => {
-        if (!position || position.avgCost === 0) return 0;
-        return ((ltp - position.avgCost) / position.avgCost) * 100;
-    }, [position, ltp]);
+        if (!position || position.avgEntryPrice === 0) return 0;
+        const pnl = unrealizedPL; // Use already calculated P&L
+        const investedAmount = position.avgEntryPrice * position.quantity;
+        return (pnl / investedAmount) * 100;
+    }, [position, unrealizedPL]);
 
     if (!position || position.quantity === 0) return null;
 
@@ -50,7 +58,9 @@ export const PositionBanner: React.FC<PositionBannerProps> = ({ instrument, ltp 
 
         setIsSquaringOff(true);
         try {
-            const side = position.quantity > 0 ? 'SELL' : 'BUY';
+            const isShort = position.positionType === 'SHORT';
+            const side = isShort ? 'BUY' : 'SELL';
+            const intent = isShort ? 'CLOSE_SHORT' : 'CLOSE_LONG';
             const absQty = Math.abs(position.quantity);
 
             await orderService.placeOrder({
@@ -60,6 +70,7 @@ export const PositionBanner: React.FC<PositionBannerProps> = ({ instrument, ltp 
                 orderType: 'MARKET',
                 quantity: absQty,
                 clientOrderId: crypto.randomUUID(),
+                intent
             });
 
             setMessage({ type: 'success', text: `Position closed successfully!` });
@@ -107,9 +118,9 @@ export const PositionBanner: React.FC<PositionBannerProps> = ({ instrument, ltp 
                                     {position.quantity} <Typography component="span" variant="caption" sx={{ verticalAlign: 'middle' }}>Qty</Typography>
                                 </Typography>
                                 <Chip
-                                    label={position.quantity > 0 ? "LONG" : "SHORT"}
+                                    label={position.positionType === 'SHORT' ? "SHORT" : "LONG"}
                                     size="small"
-                                    color={position.quantity > 0 ? "success" : "error"}
+                                    color={position.positionType === 'SHORT' ? "error" : "success"}
                                     variant="outlined"
                                     sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700, borderRadius: 1 }}
                                 />
@@ -124,7 +135,7 @@ export const PositionBanner: React.FC<PositionBannerProps> = ({ instrument, ltp 
                             AVG. COST
                         </Typography>
                         <Typography variant="subtitle1" fontWeight={700}>
-                            ₹{position.avgCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            ₹{position.avgEntryPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </Typography>
                     </Box>
 

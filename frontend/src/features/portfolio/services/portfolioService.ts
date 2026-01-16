@@ -5,10 +5,14 @@ export interface Holding {
     instrumentId: string;
     symbol: string;
     quantity: number;
-    avgCost: number;
+    avgEntryPrice: number;
     totalCost: number;
     realizedPL: number;
     lastUpdated: string;
+    positionType: 'LONG' | 'SHORT';
+    blockedMargin: number;
+    initialMargin: number;
+    marginStatus: 'OK' | 'CALL' | 'CRITICAL' | 'LIQUIDATED';
 }
 
 export interface PortfolioSummaryData {

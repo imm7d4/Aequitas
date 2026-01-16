@@ -44,15 +44,9 @@ func (c *CandleController) GetHistoricalCandles(w http.ResponseWriter, r *http.R
 			return
 		}
 	} else {
-		// For intraday intervals, show only today's data to avoid overnight gaps
-		// For daily intervals, show last 30 days
-		if interval == "1d" {
-			from = time.Now().AddDate(0, 0, -30) // Last 30 days
-		} else {
-			// Start of today (00:00:00)
-			now := time.Now()
-			from = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-		}
+		// Default to last 7 days to ensure we get data even if there are gaps
+		// The limit (100) will ensure we don't fetch too much
+		from = time.Now().AddDate(0, 0, -7)
 	}
 
 	if toStr != "" {

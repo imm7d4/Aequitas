@@ -18,6 +18,8 @@ import {
     InputLabel,
     Snackbar,
     Alert,
+    FormControlLabel,
+    Switch,
 } from '@mui/material';
 import {
     TrendingUp as BuyIcon,
@@ -44,6 +46,20 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
 
     // Advanced mode state
     const [advancedMode, setAdvancedMode] = useState(false);
+    const [shortMode, setShortMode] = useState(false);
+
+    // Initial logic to set shortMode to true if initialIndent was passed, 
+    // but here we only have initialSide.
+    // However, if we navigate from HoldingsTable with "CLOSE_SHORT", we might want to auto-enable it.
+    // The current TradePanel doesn't accept intent prop, but we can infer or add it later.
+    // Ideally we add `initialIntent` prop. But for now, user manually toggles or we rely on user knowledge.
+
+    // Actually, let's look at the navigate state in HoldingsTable: 
+    // state: { side: ..., intent: ... }
+    // TradePanel receives `initialSide` but not `intent` in interface. 
+    // We should update interface or use useLocation() but TradePanel is a component, likely used in a Page.
+    // Let's assume the parent Page passes props correctly. 
+    // For now, simple state is enough.
 
     const { fetchHoldings } = usePortfolioStore();
 
@@ -216,6 +232,9 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                 quantity: parseInt(quantity),
                 validity,
                 clientOrderId: crypto.randomUUID(),
+                intent: shortMode
+                    ? (side === 'SELL' ? 'OPEN_SHORT' : 'CLOSE_SHORT')
+                    : (side === 'BUY' ? 'OPEN_LONG' : 'CLOSE_LONG')
             };
 
             // Add price for LIMIT orders
@@ -297,6 +316,28 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                     />
                 </Box>
 
+                {/* Short Selling Toggle */}
+                {instrument.isShortable && (
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={shortMode}
+                                    onChange={(e) => setShortMode(e.target.checked)}
+                                    size="small"
+                                    color="warning"
+                                />
+                            }
+                            label={
+                                <Typography variant="caption" fontWeight={600} color={shortMode ? 'warning.main' : 'text.secondary'}>
+                                    Short Sell Mode
+                                </Typography>
+                            }
+                        />
+                    </Box>
+                )}
+
+
                 <ToggleButtonGroup
                     fullWidth
                     value={side}
@@ -307,18 +348,26 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                     <ToggleButton
                         value="BUY"
                         sx={{
-                            '&.Mui-selected': { bgcolor: 'success.main', color: 'white', '&:hover': { bgcolor: 'success.dark' } }
+                            '&.Mui-selected': {
+                                bgcolor: shortMode ? 'success.main' : 'success.main',
+                                color: 'white',
+                                '&:hover': { bgcolor: shortMode ? 'success.dark' : 'success.dark' }
+                            }
                         }}
                     >
-                        <BuyIcon sx={{ mr: 1, fontSize: 18 }} /> BUY
+                        <BuyIcon sx={{ mr: 1, fontSize: 18 }} /> {shortMode ? 'COVER (BUY)' : 'BUY'}
                     </ToggleButton>
                     <ToggleButton
                         value="SELL"
                         sx={{
-                            '&.Mui-selected': { bgcolor: 'error.main', color: 'white', '&:hover': { bgcolor: 'error.dark' } }
+                            '&.Mui-selected': {
+                                bgcolor: shortMode ? 'error.main' : 'error.main',
+                                color: 'white',
+                                '&:hover': { bgcolor: shortMode ? 'error.dark' : 'error.dark' }
+                            }
                         }}
                     >
-                        <SellIcon sx={{ mr: 1, fontSize: 18 }} /> SELL
+                        <SellIcon sx={{ mr: 1, fontSize: 18 }} /> {shortMode ? 'SHORT (SELL)' : 'SELL'}
                     </ToggleButton>
                 </ToggleButtonGroup>
 

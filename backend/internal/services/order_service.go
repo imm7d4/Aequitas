@@ -167,34 +167,72 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 	}
 
 	// Risk Check based on side
-	if req.Side == "BUY" {
-		requiredFunds := float64(req.Quantity) * orderPrice
-		if account.Balance < requiredFunds {
-			return nil, fmt.Errorf("insufficient balance. Required: ₹%0.2f, Available: ₹%0.2f (includes 1%% market buffer if applicable)", requiredFunds, account.Balance)
+	// 8. Intent Validation & Specific Checks
+	if req.Intent == "" {
+		// Infer intent if missing (Backward compatibility)
+		if req.Side == "BUY" {
+			req.Intent = string(models.IntentOpenLong)
+		} else {
+			req.Intent = string(models.IntentCloseLong)
 		}
-	} else if req.Side == "SELL" {
-		// Validating SELL orders: Ensure user owns enough shares
-		// Only strictly enforce for MARKET/LIMIT. For stops, we can allow pending but preferably validate too.
-		// Let's validate for all types to prevent cluttering order book with invalid stops.
+	}
 
-		// Use a background context or pass one if available? PlaceOrder signature doesn't have ctx yet.
-		// Using Background for now as OrderService doesn't take context (Phase 7 task to add ctx everywhere)
+	// Validate Side vs Intent
+	if (req.Intent == string(models.IntentOpenLong) || req.Intent == string(models.IntentCloseShort)) && req.Side != "BUY" {
+		return nil, errors.New("invalid intent for BUY order")
+	}
+	if (req.Intent == string(models.IntentCloseLong) || req.Intent == string(models.IntentOpenShort)) && req.Side != "SELL" {
+		return nil, errors.New("invalid intent for SELL order")
+	}
+
+	// Specific Validation Logic
+	if req.Intent == string(models.IntentOpenShort) {
+		// 1. Check if instrument is shortable
+		if !instrument.IsShortable {
+			return nil, errors.New("this instrument is not eligible for short selling")
+		}
+
+		// 2. Check Margin Availability (20% Requirement)
+		// Margin = Price * Qty * 0.20
+		requiredMargin := orderPrice * float64(req.Quantity) * 0.20
+
+		// Check available funds
+		if account.Balance-account.BlockedMargin < requiredMargin {
+			return nil, fmt.Errorf("insufficient margin. Required: ₹%0.2f, Available: ₹%0.2f", requiredMargin, account.Balance-account.BlockedMargin)
+		}
+	} else if req.Intent == string(models.IntentCloseShort) {
+		// Validate that we have a short position to cover
 		holding, err := s.portfolioService.GetHolding(context.Background(), userID, instrument.ID.Hex())
 		if err != nil {
 			return nil, fmt.Errorf("failed to validate holdings: %v", err)
 		}
-
-		ownedQty := 0
-		if holding != nil {
-			ownedQty = holding.Quantity
+		if holding == nil || holding.PositionType != models.PositionShort {
+			return nil, errors.New("no short position found to cover")
 		}
-
-		if ownedQty < req.Quantity {
-			return nil, fmt.Errorf("insufficient holdings to sell. Owned: %d, Requested: %d", ownedQty, req.Quantity)
+		if holding.Quantity < req.Quantity {
+			return nil, fmt.Errorf("insufficient short quantity. Open: %d, Converting: %d", holding.Quantity, req.Quantity)
+		}
+	} else if req.Intent == string(models.IntentCloseLong) {
+		// Standard Sell Check
+		holding, err := s.portfolioService.GetHolding(context.Background(), userID, instrument.ID.Hex())
+		if err != nil {
+			return nil, fmt.Errorf("failed to validate holdings: %v", err)
+		}
+		if holding == nil || holding.PositionType == models.PositionShort {
+			return nil, errors.New("no long position found to sell")
+		}
+		if holding.Quantity < req.Quantity {
+			return nil, fmt.Errorf("insufficient holdings to sell. Owned: %d, Requested: %d", holding.Quantity, req.Quantity)
+		}
+	} else if req.Intent == string(models.IntentOpenLong) {
+		// Standard Buy Check (Full Cash)
+		requiredFunds := float64(req.Quantity) * orderPrice
+		if account.Balance-account.BlockedMargin < requiredFunds {
+			return nil, fmt.Errorf("insufficient funds. Required: ₹%0.2f, Available: ₹%0.2f", requiredFunds, account.Balance-account.BlockedMargin)
 		}
 	}
 
-	// 8. Finalize Order
+	// 9. Finalize Order
 	userUID, _ := primitive.ObjectIDFromHex(userID)
 	req.UserID = userUID
 	req.AccountID = account.ID

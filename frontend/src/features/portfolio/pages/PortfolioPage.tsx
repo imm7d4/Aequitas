@@ -67,20 +67,30 @@ export const PortfolioPage: React.FC = () => {
 
         let totalInvested = 0;
         let totalHoldingsValue = 0;
+        let totalUnrealizedPL = 0;
 
         holdings.forEach(h => {
             // Fallback to cost if no price
-            const ltp = marketData.prices[h.instrumentId]?.lastPrice || h.avgCost;
+            const ltp = marketData.prices[h.instrumentId]?.lastPrice || h.avgEntryPrice;
 
-            const invested = h.avgCost * h.quantity;
+            const invested = h.avgEntryPrice * h.quantity;
             const current = ltp * h.quantity;
 
             totalInvested += invested;
-            totalHoldingsValue += current;
+            totalHoldingsValue += current; // Note: For Shorts, this represents market value of liability
+
+            // Calculate P&L based on position type
+            let pnl = 0;
+            if (h.positionType === 'SHORT') {
+                pnl = (h.avgEntryPrice - ltp) * h.quantity;
+            } else {
+                pnl = (ltp - h.avgEntryPrice) * h.quantity;
+            }
+            totalUnrealizedPL += pnl;
         });
 
         // Unrealized P&L
-        const unrealizedPL = totalHoldingsValue - totalInvested;
+        const unrealizedPL = totalUnrealizedPL;
         const unrealizedPLPercent = totalInvested > 0 ? (unrealizedPL / totalInvested) * 100 : 0;
 
         // Use backend values for cash and realized PL
