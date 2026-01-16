@@ -31,6 +31,7 @@ export const usePortfolioStore = create<PortfolioState>((set, get) => ({
     clearError: () => set({ error: null }),
 
     getPositionByInstrumentId: (instrumentId: string) => {
-        return get().holdings.find(h => h.instrumentId === instrumentId);
+        const holdings = get().holdings || []; // Guard against null/undefined
+        return holdings.find(h => h.instrumentId === instrumentId);
     }
 }));

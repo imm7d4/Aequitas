@@ -30,6 +30,8 @@ class WebSocketService {
         //console.log('WebSocket URL configured:', this.url);
     }
 
+    private messageQueue: WSMessage[] = [];
+
     connect() {
         if (this.ws?.readyState === WebSocket.OPEN) return;
 
@@ -45,6 +47,13 @@ class WebSocketService {
         this.ws.onopen = () => {
             console.log('WebSocket Connected');
             this.reconnectAttempts = 0;
+
+            // Flush message queue
+            while (this.messageQueue.length > 0) {
+                const msg = this.messageQueue.shift();
+                if (msg) this.send(msg);
+            }
+
             // Resubscribe to existing symbols
             this.subscriptions.forEach((_, symbol) => {
                 this.send({ type: 'subscribe', symbol });
