@@ -170,3 +170,57 @@ func (r *OrderRepository) FindNewLimitOrders() ([]*models.Order, error) {
 
 	return orders, nil
 }
+
+// GetPendingQuantity calculates total quantity of active (NEW) orders for specific intent
+func (r *OrderRepository) GetPendingQuantity(userID string, instrumentID string, intent string) (int, error) {
+	userUID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return 0, err
+	}
+	instrID, err := primitive.ObjectIDFromHex(instrumentID)
+	if err != nil {
+		return 0, err
+	}
+
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"user_id":       userUID,
+				"instrument_id": instrID,
+				"status":        "NEW", // Actively on the book
+				"intent":        intent,
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id":   nil,
+				"total": bson.M{"$sum": "$quantity"},
+			},
+		},
+	}
+
+	cursor, err := r.collection.Aggregate(context.Background(), pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(context.Background())
+
+	var result []struct {
+		Total int `bson:"total"`
+	}
+
+	if cursor.Next(context.Background()) {
+		if err := cursor.Decode(&result); err == nil && len(result) > 0 {
+			return result[0].Total, nil
+		}
+	} else {
+		// No documents found, means 0 pending
+		return 0, nil
+	}
+
+	// If decode fails or empty
+	if len(result) > 0 {
+		return result[0].Total, nil
+	}
+	return 0, nil
+}

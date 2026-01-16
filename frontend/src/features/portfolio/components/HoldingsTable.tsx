@@ -54,6 +54,7 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
                         <StyledTableCell align="right">Avg. Cost</StyledTableCell>
                         <StyledTableCell align="right">LTP</StyledTableCell>
                         <StyledTableCell align="right">Current Value</StyledTableCell>
+                        <StyledTableCell align="right">Blocked Margin</StyledTableCell>
                         <StyledTableCell align="right">P&L</StyledTableCell>
                         <StyledTableCell align="right">Action</StyledTableCell>
                     </TableRow>
@@ -125,6 +126,17 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
                                     </Tooltip>
                                 </StyledTableCell>
                                 <StyledTableCell align="right">
+                                    {isShort && holding.blockedMargin ? (
+                                        <Tooltip title="Margin Locked for this position">
+                                            <Typography variant="body2" color="text.secondary">
+                                                🔒 ₹{holding.blockedMargin.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                            </Typography>
+                                        </Tooltip>
+                                    ) : (
+                                        <Typography variant="body2" color="text.secondary">-</Typography>
+                                    )}
+                                </StyledTableCell>
+                                <StyledTableCell align="right">
                                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                                         <Typography variant="body2" sx={{ color: isProfit ? 'success.main' : 'error.main', fontWeight: 700 }}>
                                             {isProfit ? '+' : ''}₹{unrealizedPL.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -132,6 +144,14 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
                                         <Typography variant="caption" sx={{ color: isProfit ? 'success.main' : 'error.main' }}>
                                             ({isProfit ? '+' : ''}{unrealizedPLPercent.toFixed(2)}%)
                                         </Typography>
+                                        {isShort && holding.marginStatus && (
+                                            <Chip
+                                                label={holding.marginStatus}
+                                                size="small"
+                                                color={holding.marginStatus === 'OK' ? 'success' : holding.marginStatus === 'CALL' ? 'warning' : 'error'}
+                                                sx={{ mt: 0.5, height: 16, fontSize: '0.6rem' }}
+                                            />
+                                        )}
                                     </Box>
                                 </StyledTableCell>
 

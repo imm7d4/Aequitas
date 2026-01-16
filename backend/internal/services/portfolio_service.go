@@ -103,6 +103,7 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 			holding.TotalCost = newTotalCost
 			holding.Quantity = newQuantity
 			holding.TotalFees += fees
+			holding.PositionType = models.PositionLong // Ensure type is set
 			holding.LastUpdated = time.Now()
 		}
 	} else if intent == string(models.IntentCloseLong) {
@@ -159,6 +160,7 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 			holding.TotalCost = newTotalCost
 			holding.Quantity = newQuantity
 			holding.TotalFees += fees
+			holding.PositionType = models.PositionShort // CRITICAL FIX: Force Type to Short
 			holding.LastUpdated = time.Now()
 		}
 
@@ -263,7 +265,13 @@ func (s *PortfolioService) CaptureSnapshot(ctx context.Context, userID string) (
 			if !ok {
 				price = h.AvgEntryPrice // Fallback
 			}
-			holdingsValue += float64(h.Quantity) * price
+
+			value := float64(h.Quantity) * price
+			if h.PositionType == models.PositionShort {
+				holdingsValue -= value // Liability subtracts from equity
+			} else {
+				holdingsValue += value // Asset adds to equity
+			}
 		}
 	}
 

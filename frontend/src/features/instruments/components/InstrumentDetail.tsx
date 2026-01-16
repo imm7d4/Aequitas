@@ -371,6 +371,7 @@ export function InstrumentDetail() {
                                 ltp={ltp}
                                 initialSide={(location.state as any)?.side}
                                 initialQuantity={(location.state as any)?.quantity}
+                                initialIntent={(location.state as any)?.intent}
                             />
                         </Box>
                     </Grid>

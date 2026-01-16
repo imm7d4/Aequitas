@@ -86,3 +86,22 @@ func (r *TradingAccountRepository) Update(account *models.TradingAccount) (*mode
 	}
 	return account, nil
 }
+
+// FindAccountsWithPositions returns all accounts with active blocked margin (potential risk)
+func (r *TradingAccountRepository) FindAccountsWithPositions() ([]*models.TradingAccount, error) {
+	// Filter for accounts with Blocked Margin > 0
+	// These are the only ones at risk of margin call
+	query := bson.M{"blocked_margin": bson.M{"$gt": 0}}
+
+	cursor, err := r.collection.Find(context.Background(), query)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	var accounts []*models.TradingAccount
+	if err := cursor.All(context.Background(), &accounts); err != nil {
+		return nil, err
+	}
+	return accounts, nil
+}

@@ -16,10 +16,12 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Button,
     TablePagination,
     IconButton,
+    Button,
     Paper,
+    Chip,
+    Tooltip,
 } from '@mui/material';
 import GridViewIcon from '@mui/icons-material/GridView';
 import ListIcon from '@mui/icons-material/List';
@@ -295,7 +297,16 @@ export const InstrumentList = () => {
                                         sx={{ cursor: 'pointer' }}
                                         onClick={() => navigate(`/instruments/${instrument.id}`)}
                                     >
-                                        <TableCell sx={{ fontWeight: 'bold' }}>{instrument.symbol}</TableCell>
+                                        <TableCell sx={{ fontWeight: 'bold' }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                {instrument.symbol}
+                                                {instrument.isShortable && (
+                                                    <Tooltip title="Short Selling Available">
+                                                        <Chip label="S" size="small" color="warning" variant="outlined" sx={{ height: 16, width: 16, fontSize: '0.6em', '& .MuiChip-label': { px: 0 } }} />
+                                                    </Tooltip>
+                                                )}
+                                            </Box>
+                                        </TableCell>
                                         <TableCell>{instrument.name}</TableCell>
                                         <TableCell align="right" sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
                                             <TickColoredPrice marketData={marketData} />

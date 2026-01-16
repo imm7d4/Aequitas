@@ -221,6 +221,7 @@ func (s *StopOrderService) TriggerStopOrder(order *models.Order, triggerPrice fl
 			Side:          order.Side,
 			OrderType:     "MARKET",
 			Quantity:      order.Quantity,
+			Intent:        order.Intent, // Critical: Preserve Intent (e.g. CLOSE_SHORT, OPEN_SHORT)
 			Source:        "STOP_TRIGGER",
 			ClientOrderID: fmt.Sprintf("STOP-%s", order.OrderID),
 			ParentOrderID: &order.ID,
@@ -236,6 +237,7 @@ func (s *StopOrderService) TriggerStopOrder(order *models.Order, triggerPrice fl
 			OrderType:     "LIMIT",
 			Quantity:      order.Quantity,
 			Price:         order.LimitPrice, // Use the limit price from stop-limit order
+			Intent:        order.Intent,     // Critical: Preserve Intent
 			Source:        "STOP_TRIGGER",
 			ClientOrderID: fmt.Sprintf("STOP-%s", order.OrderID),
 			ParentOrderID: &order.ID,

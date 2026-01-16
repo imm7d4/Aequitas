@@ -178,6 +178,12 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 	}
 
 	// Validate Side vs Intent
+	// CRITICAL FIX: Auto-correct logic if Frontend sends OPEN_LONG for a SELL order (Short Sell bug)
+	if req.Side == "SELL" && req.Intent == string(models.IntentOpenLong) {
+		log.Printf("WARNING: Detected SELL order with OPEN_LONG intent. Auto-correcting to OPEN_SHORT for user %s", userID)
+		req.Intent = string(models.IntentOpenShort)
+	}
+
 	if (req.Intent == string(models.IntentOpenLong) || req.Intent == string(models.IntentCloseShort)) && req.Side != "BUY" {
 		return nil, errors.New("invalid intent for BUY order")
 	}
@@ -209,9 +215,18 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 		if holding == nil || holding.PositionType != models.PositionShort {
 			return nil, errors.New("no short position found to cover")
 		}
-		if holding.Quantity < req.Quantity {
-			return nil, fmt.Errorf("insufficient short quantity. Open: %d, Converting: %d", holding.Quantity, req.Quantity)
+
+		// Check Pending Orders to prevent Over-Covering
+		pendingQty, err := s.orderRepo.GetPendingQuantity(userID, instrument.ID.Hex(), req.Intent)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check pending orders: %v", err)
 		}
+
+		totalCommitted := pendingQty + req.Quantity
+		if holding.Quantity < totalCommitted {
+			return nil, fmt.Errorf("insufficient short quantity. Open: %d, Committed: %d, Converting: %d", holding.Quantity, pendingQty, req.Quantity)
+		}
+
 	} else if req.Intent == string(models.IntentCloseLong) {
 		// Standard Sell Check
 		holding, err := s.portfolioService.GetHolding(context.Background(), userID, instrument.ID.Hex())
@@ -221,8 +236,16 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 		if holding == nil || holding.PositionType == models.PositionShort {
 			return nil, errors.New("no long position found to sell")
 		}
-		if holding.Quantity < req.Quantity {
-			return nil, fmt.Errorf("insufficient holdings to sell. Owned: %d, Requested: %d", holding.Quantity, req.Quantity)
+
+		// Check Pending Orders to prevent Over-Selling
+		pendingQty, err := s.orderRepo.GetPendingQuantity(userID, instrument.ID.Hex(), req.Intent)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check pending orders: %v", err)
+		}
+
+		totalCommitted := pendingQty + req.Quantity
+		if holding.Quantity < totalCommitted {
+			return nil, fmt.Errorf("insufficient holdings to sell. Owned: %d, Committed: %d, Requested: %d", holding.Quantity, pendingQty, req.Quantity)
 		}
 	} else if req.Intent == string(models.IntentOpenLong) {
 		// Standard Buy Check (Full Cash)
