@@ -8,16 +8,31 @@ interface WebSocketMessage {
     symbol?: string;
 }
 
-export const useWebSocket = (url: string = 'ws://localhost:8080/ws') => {
+const getWebSocketUrl = () => {
+    // Check if we are in a browser environment to avoid build errors if SSR is used (though properly not a concern here, good practice)
+    if (typeof window === 'undefined') return '';
+
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+    const protocol = apiUrl.startsWith('https') ? 'wss' : 'ws';
+    // Remove protocol and /api suffix to get the host
+    const host = apiUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '');
+
+    // Ensure we don't end up with double slashes if the host has one, but clean replacement above should handle it.
+    // simpler: if apiUrl is full url "http://localhost:8080/api", host becomes "localhost:8080"
+
+    return `${protocol}://${host}/ws`;
+};
+
+export const useWebSocket = (url: string = getWebSocketUrl()) => {
     const ws = useRef<WebSocket | null>(null);
     const { token, isAuthenticated } = useAuthStore();
     const { addNotification } = useNotificationStore();
 
     // Reconnect logic
-    const reconnectTimeout = useRef<NodeJS.Timeout>();
+    const reconnectTimeout = useRef<ReturnType<typeof setTimeout>>();
 
     const connect = useCallback(() => {
-        if (!isAuthenticated || !token) return;
+        if (!isAuthenticated || !token || !url) return;
         if (ws.current?.readyState === WebSocket.OPEN) return;
 
         const wsUrl = `${url}?token=${token}`;
