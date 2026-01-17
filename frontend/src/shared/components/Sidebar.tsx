@@ -30,7 +30,7 @@ import logoIcon from '@/assets/logo/logo-icon.png';
 const drawerWidth = 240;
 
 export const Sidebar: React.FC = () => {
-    const { isSidebarOpen } = useLayoutStore();
+    const { isSidebarOpen, setSidebarOpen } = useLayoutStore();
     const { user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -52,15 +52,21 @@ export const Sidebar: React.FC = () => {
     return (
         <Drawer
             variant="permanent"
+            onMouseEnter={() => setSidebarOpen(true)}
+            onMouseLeave={() => setSidebarOpen(false)}
             sx={{
                 width: isSidebarOpen ? drawerWidth : theme.spacing(9),
                 flexShrink: 0,
+                transition: theme.transitions.create('width', {
+                    easing: theme.transitions.easing.easeInOut,
+                    duration: theme.transitions.duration.standard,
+                }),
                 [`& .MuiDrawer-paper`]: {
                     width: isSidebarOpen ? drawerWidth : theme.spacing(9),
                     boxSizing: 'border-box',
                     transition: theme.transitions.create('width', {
-                        easing: theme.transitions.easing.sharp,
-                        duration: theme.transitions.duration.enteringScreen,
+                        easing: theme.transitions.easing.easeInOut,
+                        duration: theme.transitions.duration.standard,
                     }),
                     overflowX: 'hidden',
                 },
@@ -101,8 +107,12 @@ export const Sidebar: React.FC = () => {
                                         <ListItemIcon
                                             sx={{
                                                 minWidth: 0,
-                                                mr: isSidebarOpen ? 3 : 'auto',
+                                                mr: isSidebarOpen ? 3 : 0,
                                                 justifyContent: 'center',
+                                                transition: theme.transitions.create('margin', {
+                                                    easing: theme.transitions.easing.easeInOut,
+                                                    duration: theme.transitions.duration.standard,
+                                                }),
                                                 color: isActive ? 'primary.main' : 'inherit',
                                             }}
                                         >
@@ -112,8 +122,12 @@ export const Sidebar: React.FC = () => {
                                             primary={item.text}
                                             sx={{
                                                 opacity: isSidebarOpen ? 1 : 0,
-                                                fontWeight: isActive ? 'bold' : 'normal',
-                                                display: isSidebarOpen ? 'block' : 'none',
+                                                fontWeight: isActive ? 700 : 500,
+                                                whiteSpace: 'nowrap',
+                                                transition: theme.transitions.create(['opacity', 'margin'], {
+                                                    easing: theme.transitions.easing.easeInOut,
+                                                    duration: theme.transitions.duration.standard,
+                                                }),
                                             }}
                                         />
                                     </ListItemButton>
@@ -134,25 +148,40 @@ export const Sidebar: React.FC = () => {
                         alignItems: 'center',
                         minHeight: 64,
                         cursor: 'pointer',
+                        position: 'relative',
                         transition: theme.transitions.create(['padding', 'min-height'], {
-                            easing: theme.transitions.easing.sharp,
-                            duration: theme.transitions.duration.enteringScreen,
+                            easing: theme.transitions.easing.easeInOut,
+                            duration: theme.transitions.duration.standard,
                         }),
                     }}
                 >
-                    {isSidebarOpen ? (
-                        <img
-                            src={logoFull}
-                            alt="Aequitas Logo"
-                            style={{ width: '100%', maxWidth: '160px', height: 'auto', display: 'block' }}
-                        />
-                    ) : (
-                        <img
-                            src={logoIcon}
-                            alt="Aequitas Icon"
-                            style={{ width: '32px', height: '32px', display: 'block' }}
-                        />
-                    )}
+                    <img
+                        src={logoFull}
+                        alt="Aequitas Logo"
+                        style={{
+                            width: '100%',
+                            maxWidth: '160px',
+                            height: 'auto',
+                            position: 'absolute',
+                            opacity: isSidebarOpen ? 1 : 0,
+                            transition: `opacity ${theme.transitions.duration.standard}ms ease-in-out`,
+                            pointerEvents: isSidebarOpen ? 'auto' : 'none',
+                            display: 'block'
+                        }}
+                    />
+                    <img
+                        src={logoIcon}
+                        alt="Aequitas Icon"
+                        style={{
+                            width: '32px',
+                            height: '32px',
+                            position: 'absolute',
+                            opacity: isSidebarOpen ? 0 : 1,
+                            transition: `opacity ${theme.transitions.duration.standard}ms ease-in-out`,
+                            pointerEvents: !isSidebarOpen ? 'auto' : 'none',
+                            display: 'block'
+                        }}
+                    />
                 </Box>
             </Tooltip>
         </Drawer>

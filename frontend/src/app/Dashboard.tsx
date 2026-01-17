@@ -121,7 +121,7 @@ export function Dashboard(): JSX.Element {
                 <Grid item xs={12} sm={6} md={3}>
                     <StatCard
                         title="Total Equity"
-                        value={`₹${performanceOverview.totalEquity.toLocaleString()}`}
+                        value={`₹${performanceOverview.totalEquity.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                         subtitle="Cash + Holdings"
                         isPrivate={!showBalance}
                     />
@@ -129,7 +129,7 @@ export function Dashboard(): JSX.Element {
                 <Grid item xs={12} sm={6} md={3}>
                     <StatCard
                         title="Realized P&L"
-                        value={`₹${performanceOverview.realizedPL.toLocaleString()}`}
+                        value={`₹${performanceOverview.realizedPL.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                         change={
                             performanceOverview.realizedPL > 0
                                 ? `+${performanceOverview.realizedPL.toFixed(2)}`
@@ -143,7 +143,7 @@ export function Dashboard(): JSX.Element {
                 <Grid item xs={12} sm={6} md={3}>
                     <StatCard
                         title="Unrealized P&L"
-                        value={`₹${performanceOverview.unrealizedPL.toLocaleString()}`}
+                        value={`₹${performanceOverview.unrealizedPL.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                         change={
                             performanceOverview.unrealizedPL > 0
                                 ? `+${performanceOverview.unrealizedPL.toFixed(2)}`

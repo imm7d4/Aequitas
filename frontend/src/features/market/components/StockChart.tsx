@@ -10,9 +10,10 @@ import { IndicatorService } from '../services/indicatorService';
 interface StockChartProps {
     instrumentId: string;
     symbol: string;
+    height?: number | string;
 }
 
-export function StockChart({ instrumentId, symbol }: StockChartProps) {
+export function StockChart({ instrumentId, symbol, height = 400 }: StockChartProps) {
     const theme = useTheme();
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<any>(null);
@@ -47,7 +48,7 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
                 horzLines: { color: theme.palette.divider },
             },
             width: chartContainerRef.current.clientWidth,
-            height: 400,
+            height: typeof height === 'number' ? height : 400,
             timeScale: {
                 timeVisible: true,
                 secondsVisible: false,
@@ -145,9 +146,14 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
 
         const handleResize = () => {
             if (chartContainerRef.current) {
-                chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+                chart.applyOptions({
+                    width: chartContainerRef.current.clientWidth,
+                    height: chartContainerRef.current.clientHeight
+                });
             }
         };
+
+        handleResize();
 
         window.addEventListener('resize', handleResize);
 
@@ -635,7 +641,7 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
     }
 
     return (
-        <Paper sx={{ p: 2, borderRadius: 2 }}>
+        <Box sx={{ width: '100%', height: height, display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6" fontWeight={600}>
                     {symbol} Chart
@@ -655,7 +661,7 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
                 </ToggleButtonGroup>
             </Box>
 
-            <Box sx={{ position: 'relative', height: 400 }}>
+            <Box sx={{ position: 'relative', flexGrow: 1, minHeight: 0 }}>
                 {isLoading && (
                     <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, bgcolor: 'rgba(255,255,255,0.7)' }}>
                         <CircularProgress />
@@ -720,6 +726,6 @@ export function StockChart({ instrumentId, symbol }: StockChartProps) {
 
                 <div ref={chartContainerRef} style={{ width: '100%', height: '100%' }} />
             </Box>
-        </Paper>
+        </Box>
     );
 }

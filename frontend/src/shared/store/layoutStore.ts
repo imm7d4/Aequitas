@@ -12,7 +12,7 @@ interface LayoutState {
 }
 
 export const useLayoutStore = create<LayoutState>((set) => ({
-    isSidebarOpen: true,
+    isSidebarOpen: false,
     isSearchOpen: false,
     notificationCount: 0,
 

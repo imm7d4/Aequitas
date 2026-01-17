@@ -366,13 +366,13 @@ export const OrderList: React.FC<OrderListProps> = ({
                                             {order.quantity}
                                         </TableCell>
                                         <TableCell align="right" sx={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-                                            {order.price ? `₹${order.price.toLocaleString()}` : 'MARKET'}
+                                            {order.price ? `₹${order.price.toLocaleString('en-IN')}` : 'MARKET'}
                                         </TableCell>
                                         <TableCell align="right" sx={{ fontVariantNumeric: 'tabular-nums' }}>
                                             {order.stopPrice || order.currentStopPrice ? (
                                                 <Box>
                                                     <Typography variant="body2" fontWeight={600} fontFamily="monospace" color="warning.main" fontSize="inherit">
-                                                        ₹{(order.currentStopPrice || order.stopPrice)!.toLocaleString()}
+                                                        ₹{(order.currentStopPrice || order.stopPrice)!.toLocaleString('en-IN')}
                                                     </Typography>
                                                     {isExpanded && order.orderType === 'TRAILING_STOP' && currentPrice && (
                                                         <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7em' }}>
@@ -453,7 +453,7 @@ export const OrderList: React.FC<OrderListProps> = ({
                                                                 {currentPrice ? (
                                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                                         <Typography variant="h6" fontWeight={700}>
-                                                                            ₹{currentPrice.lastPrice.toLocaleString()}
+                                                                            ₹{currentPrice.lastPrice.toLocaleString('en-IN')}
                                                                         </Typography>
                                                                         <Box sx={{
                                                                             display: 'flex',
@@ -500,7 +500,7 @@ export const OrderList: React.FC<OrderListProps> = ({
                                                                     <Grid container spacing={2} sx={{ mt: 0.5 }}>
                                                                         <Grid item xs={6} sm={3}>
                                                                             <Typography variant="caption" color="text.secondary">Avg. Fill Price</Typography>
-                                                                            <Typography variant="body2" fontWeight={700} color="success.main">₹{order.avgFillPrice?.toLocaleString()}</Typography>
+                                                                            <Typography variant="body2" fontWeight={700} color="success.main">₹{order.avgFillPrice?.toLocaleString('en-IN')}</Typography>
                                                                         </Grid>
                                                                         <Grid item xs={6} sm={3}>
                                                                             <Typography variant="caption" color="text.secondary">Filled Quantity</Typography>
@@ -508,7 +508,7 @@ export const OrderList: React.FC<OrderListProps> = ({
                                                                         </Grid>
                                                                         <Grid item xs={6} sm={3}>
                                                                             <Typography variant="caption" color="text.secondary">Execution Value</Typography>
-                                                                            <Typography variant="body2" fontWeight={700}>₹{((order.avgFillPrice || 0) * (order.filledQuantity || 0)).toLocaleString()}</Typography>
+                                                                            <Typography variant="body2" fontWeight={700}>₹{((order.avgFillPrice || 0) * (order.filledQuantity || 0)).toLocaleString('en-IN')}</Typography>
                                                                         </Grid>
                                                                         <Grid item xs={6} sm={3}>
                                                                             <Typography variant="caption" color="text.secondary">Filled At</Typography>
@@ -524,7 +524,7 @@ export const OrderList: React.FC<OrderListProps> = ({
                                                                             {orderTrades[order.id].map((trade) => (
                                                                                 <Box key={trade.id} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5, borderBottom: '1px dashed', borderColor: alpha(theme.palette.divider, 0.5), '&:last-child': { borderBottom: 0 } }}>
                                                                                     <Typography variant="caption" fontFamily="monospace">{trade.tradeId}</Typography>
-                                                                                    <Typography variant="caption" fontWeight={600}>₹{trade.price.toLocaleString()} x {trade.quantity}</Typography>
+                                                                                    <Typography variant="caption" fontWeight={600}>₹{trade.price.toLocaleString('en-IN')} x {trade.quantity}</Typography>
                                                                                     <Typography variant="caption" color="text.secondary">{trade.executedAt ? formatDate(trade.executedAt) : ''}</Typography>
                                                                                 </Box>
                                                                             ))}
@@ -550,19 +550,19 @@ export const OrderList: React.FC<OrderListProps> = ({
                                                                         {order.stopPrice && (
                                                                             <Grid item xs={6} sm={3}>
                                                                                 <Typography variant="caption" color="text.secondary">Stop Price</Typography>
-                                                                                <Typography variant="body2" fontWeight={700}>₹{order.stopPrice.toLocaleString()}</Typography>
+                                                                                <Typography variant="body2" fontWeight={700}>₹{order.stopPrice.toLocaleString('en-IN')}</Typography>
                                                                             </Grid>
                                                                         )}
                                                                         {order.limitPrice && (
                                                                             <Grid item xs={6} sm={3}>
                                                                                 <Typography variant="caption" color="text.secondary">Limit Price</Typography>
-                                                                                <Typography variant="body2" fontWeight={700}>₹{order.limitPrice.toLocaleString()}</Typography>
+                                                                                <Typography variant="body2" fontWeight={700}>₹{order.limitPrice.toLocaleString('en-IN')}</Typography>
                                                                             </Grid>
                                                                         )}
                                                                         {order.currentStopPrice && (
                                                                             <Grid item xs={6} sm={3}>
                                                                                 <Typography variant="caption" color="text.secondary">Current Stop Price</Typography>
-                                                                                <Typography variant="body2" fontWeight={700} color="warning.main">₹{order.currentStopPrice.toLocaleString()}</Typography>
+                                                                                <Typography variant="body2" fontWeight={700} color="warning.main">₹{order.currentStopPrice.toLocaleString('en-IN')}</Typography>
                                                                             </Grid>
                                                                         )}
                                                                         {order.trailAmount && (
@@ -582,7 +582,7 @@ export const OrderList: React.FC<OrderListProps> = ({
                                                                         {order.triggerPrice && (
                                                                             <Grid item xs={6} sm={3}>
                                                                                 <Typography variant="caption" color="text.secondary">Trigger Price</Typography>
-                                                                                <Typography variant="body2" fontWeight={700}>₹{order.triggerPrice.toLocaleString()}</Typography>
+                                                                                <Typography variant="body2" fontWeight={700}>₹{order.triggerPrice.toLocaleString('en-IN')}</Typography>
                                                                             </Grid>
                                                                         )}
                                                                     </Grid>

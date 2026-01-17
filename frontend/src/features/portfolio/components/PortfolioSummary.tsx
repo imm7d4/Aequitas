@@ -19,13 +19,11 @@ import { Holding } from '../services/portfolioService';
 
 interface PortfolioSummaryProps {
     totalEquity: number;
-    totalHoldingsValue: number;
     cashBalance: number;
     blockedMargin: number;
     totalPL: number;
     totalPLPercent: number;
     realizedPL: number;
-    holdingsCount: number;
     holdings: Holding[];
     marketPrices?: Record<string, number>;
     freeCash: number;
@@ -35,7 +33,6 @@ interface PortfolioSummaryProps {
 
 export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     totalEquity = 0,
-    totalHoldingsValue = 0,
     cashBalance = 0,
     blockedMargin = 0,
     totalPL = 0,

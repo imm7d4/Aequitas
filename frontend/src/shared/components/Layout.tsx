@@ -19,10 +19,10 @@ export const Layout: React.FC = () => {
                 sx={{
                     flexGrow: 1,
                     p: 0,
-                    width: { sm: `calc(100% - 240px)` }, // Dynamic width handling is better in Sidebar component
-                    transition: theme.transitions.create('margin', {
-                        easing: theme.transitions.easing.sharp,
-                        duration: theme.transitions.duration.leavingScreen,
+                    minWidth: 0, // Prevent flex items from overflowing
+                    transition: theme.transitions.create(['margin', 'width'], {
+                        easing: theme.transitions.easing.easeInOut,
+                        duration: theme.transitions.duration.standard,
                     }),
                 }}
             >

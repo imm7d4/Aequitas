@@ -7,7 +7,6 @@ import {
     Button,
     Paper,
     Grid,
-    Chip,
     CircularProgress,
     Alert,
     ToggleButton,
@@ -142,23 +141,16 @@ export function InstrumentDetail() {
                 <Alert severity="error">{error || 'Instrument not found'}</Alert>
                 <Button
                     startIcon={<ArrowBackIcon />}
-                    onClick={() => navigate('/instruments')}
+                    onClick={() => navigate(-1)}
                     sx={{ mt: 2 }}
                 >
-                    Back to Instruments
+                    Go Back
                 </Button>
             </Container>
         );
     }
 
-    const getStatusColor = () => {
-        switch (instrument.status) {
-            case 'ACTIVE': return 'success';
-            case 'SUSPENDED': return 'warning';
-            case 'DELISTED': return 'error';
-            default: return 'default';
-        }
-    };
+
 
     function MetricRow({ label, value }: { label: string, value: string }) {
         return (
@@ -191,18 +183,13 @@ export function InstrumentDetail() {
                             variant="text"
                             size="small"
                             startIcon={<ArrowBackIcon />}
-                            onClick={() => navigate('/instruments')}
+                            onClick={() => navigate(-1)}
                             sx={{ color: 'text.secondary', minWidth: 'auto', p: 0.5, '&:hover': { bgcolor: 'action.hover' } }}
                         />
                         <Typography variant="h6" fontWeight={700} sx={{ letterSpacing: '-0.01em', display: 'flex', alignItems: 'center', gap: 1 }}>
                             {instrument.symbol} <Box component="span" sx={{ color: 'text.secondary', fontWeight: 500 }}>•</Box> {instrument.exchange}
                         </Typography>
-                        <Chip
-                            label={instrument.status}
-                            color={getStatusColor()}
-                            size="small"
-                            sx={{ borderRadius: '4px', height: 20, fontSize: '0.65rem', fontWeight: 800 }}
-                        />
+
                     </Box>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -273,24 +260,30 @@ export function InstrumentDetail() {
                         {/* Position Banner */}
                         <PositionBanner instrument={instrument} ltp={ltp} />
 
+                        {/* Indicator Panel - Now above the chart */}
+                        <Box sx={{ mb: 2 }}>
+                            <IndicatorPanel instrumentId={instrument.id} />
+                        </Box>
+
                         <Paper
                             elevation={0}
                             sx={{
                                 borderRadius: 3,
                                 border: '1px solid',
                                 borderColor: 'divider',
-                                height: { lg: 'calc(100vh - 190px)' },
+                                height: { lg: 'calc(100vh - 240px)' },
                                 minHeight: 480,
                                 bgcolor: 'background.paper',
-                                position: 'relative',
-                                overflow: 'visible' // Changed from 'hidden' to allow IndicatorPanel to show
+                                overflow: 'hidden',
+                                p: 1.5,
+                                display: 'flex',
+                                flexDirection: 'column'
                             }}
                         >
-                            <StockChart instrumentId={instrument.id} symbol={instrument.symbol} />
+                            <StockChart instrumentId={instrument.id} symbol={instrument.symbol} height="100%" />
                         </Paper>
 
-                        {/* Indicator Panel - Moved outside Paper to avoid clipping */}
-                        <IndicatorPanel instrumentId={instrument.id} />
+
 
                         {/* TABS SECTION: Analysis */}
                         <Box sx={{ mt: 3.5 }}>

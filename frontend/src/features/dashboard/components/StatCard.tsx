@@ -27,16 +27,17 @@ export const StatCard: React.FC<StatCardProps> = ({
     return (
         <Paper
             sx={{
-                p: 3,
-                borderRadius: 3,
+                p: 2,
+                borderRadius: 2,
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 transition: 'transform 0.2s',
+                overflow: 'hidden',
                 '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 4,
+                    transform: 'translateY(-2px)',
+                    boxShadow: 2,
                 },
             }}
         >
@@ -45,7 +46,17 @@ export const StatCard: React.FC<StatCardProps> = ({
                     <Typography variant="overline" sx={{ fontWeight: 700, color: 'text.secondary', letterSpacing: 1 }}>
                         {title}
                     </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5 }}>
+                    <Typography
+                        variant="h5"
+                        sx={{
+                            fontWeight: 800,
+                            mt: 0.5,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            fontSize: value.length > 15 ? '1.25rem' : '1.5rem'
+                        }}
+                    >
                         {isPrivate ? '₹ • • • •' : value}
                     </Typography>
                 </Box>
