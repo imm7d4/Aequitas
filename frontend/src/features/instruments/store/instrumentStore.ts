@@ -18,6 +18,10 @@ interface InstrumentState {
         page: number;
         rowsPerPage: number;
     };
+    sorting: {
+        column: 'symbol' | 'name' | 'ltp' | 'change' | 'changePct' | 'volume' | 'high' | 'low' | 'exchange' | 'sector';
+        direction: 'asc' | 'desc';
+    };
     setInstruments: (instruments: Instrument[]) => void;
     setSelectedInstrument: (instrument: Instrument | null) => void;
     setSearchResults: (results: Instrument[]) => void;
@@ -28,6 +32,7 @@ interface InstrumentState {
     setFilters: (filters: { exchange: string; type: string; sector: string }) => void;
     setSearchQuery: (query: string) => void;
     setPagination: (pagination: { page: number; rowsPerPage: number }) => void;
+    setSorting: (sorting: { column: 'symbol' | 'name' | 'ltp' | 'change' | 'changePct' | 'volume' | 'high' | 'low' | 'exchange' | 'sector'; direction: 'asc' | 'desc' }) => void;
     reset: () => void;
 }
 
@@ -48,6 +53,10 @@ export const useInstrumentStore = create<InstrumentState>((set) => ({
         page: 0,
         rowsPerPage: 25,
     },
+    sorting: {
+        column: 'symbol',
+        direction: 'asc',
+    },
     setInstruments: (instruments) => set({ instruments: instruments || [] }),
     setSelectedInstrument: (instrument) => set({ selectedInstrument: instrument }),
     setSearchResults: (results) => set({ searchResults: results || [] }),
@@ -58,6 +67,7 @@ export const useInstrumentStore = create<InstrumentState>((set) => ({
     setFilters: (filters) => set({ filters }),
     setSearchQuery: (searchQuery) => set({ searchQuery }),
     setPagination: (pagination) => set({ pagination }),
+    setSorting: (sorting) => set({ sorting }),
     reset: () => set({
         instruments: [],
         selectedInstrument: null,
@@ -74,6 +84,10 @@ export const useInstrumentStore = create<InstrumentState>((set) => ({
         pagination: {
             page: 0,
             rowsPerPage: 25,
+        },
+        sorting: {
+            column: 'symbol',
+            direction: 'asc',
         },
     }),
 }));

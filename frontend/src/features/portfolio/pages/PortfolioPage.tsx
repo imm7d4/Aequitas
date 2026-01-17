@@ -1,37 +1,13 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Box, Typography, Container, CircularProgress, Tab, Tabs, Button } from '@mui/material';
+import { Box, Typography, Container, CircularProgress, Button } from '@mui/material';
 import { portfolioService, PortfolioSummaryData } from '../services/portfolioService';
 import { HoldingsTable } from '../components/HoldingsTable';
 // Removed unused accountService
 import { PortfolioSummary } from '../components/PortfolioSummary';
 import { useMarketData } from '../../market/hooks/useMarketData';
-import { EquityCurveChart } from '../components/EquityCurveChart';
 
-interface TabPanelProps {
-    children?: React.ReactNode;
-    index: number;
-    value: number;
-}
 
-function CustomTabPanel(props: TabPanelProps) {
-    const { children, value, index, ...other } = props;
 
-    return (
-        <div
-            role="tabpanel"
-            hidden={value !== index}
-            id={`portfolio-tabpanel-${index}`}
-            aria-labelledby={`portfolio-tab-${index}`}
-            {...other}
-        >
-            {value === index && (
-                <Box sx={{ py: 3 }}>
-                    {children}
-                </Box>
-            )}
-        </div>
-    );
-}
 
 export const PortfolioPage: React.FC = () => {
 
@@ -137,23 +113,6 @@ export const PortfolioPage: React.FC = () => {
         return prices;
     }, [marketData]);
 
-
-    const [tabValue, setTabValue] = React.useState(0);
-
-    const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-        setTabValue(newValue);
-    };
-
-    const handleSimulateSnapshot = async () => {
-        try {
-            await portfolioService.captureSnapshot();
-            alert('Snapshot captured! Refresh to see data update.');
-        } catch (err) {
-            console.error(err);
-            alert('Failed to capture snapshot');
-        }
-    };
-
     if (isLoading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
@@ -163,27 +122,20 @@ export const PortfolioPage: React.FC = () => {
     }
 
     return (
-        <Container maxWidth="xl" sx={{ py: 3 }}>
-            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                    <Typography variant="h4" fontWeight={800} gutterBottom>
-                        Portfolio
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        Manage your holdings and track performance.
-                    </Typography>
+        <Container maxWidth="xl" sx={{ height: 'calc(100vh - 64px)', pb: 1, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ flexShrink: 0 }}>
+                <Box sx={{ mb: 2 }}>
+                    <Box>
+                        <Typography variant="h5" fontWeight={700} gutterBottom>
+                            Portfolio
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary">
+                            Manage your holdings and track performance.
+                        </Typography>
+                    </Box>
                 </Box>
-            </Box>
 
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={tabValue} onChange={handleTabChange} aria-label="portfolio tabs">
-                    <Tab label="Overview" />
-                    <Tab label="Analytics" />
-                </Tabs>
-            </Box>
-
-            <CustomTabPanel value={tabValue} index={0}>
-                <Box sx={{ mb: 4 }}>
+                <Box sx={{ mb: 2 }}>
                     <PortfolioSummary
                         totalEquity={displaySummary.totalEquity}
                         totalHoldingsValue={displaySummary.totalHoldingsValue}
@@ -197,27 +149,14 @@ export const PortfolioPage: React.FC = () => {
                         marketPrices={marketPrices}
                     />
                 </Box>
+            </Box>
 
-                <Box>
-                    <Typography variant="h6" fontWeight={700} gutterBottom sx={{ mb: 2 }}>
-                        Your Holdings
-                    </Typography>
-                    <HoldingsTable holdings={holdings} />
-                </Box>
-            </CustomTabPanel>
-
-            <CustomTabPanel value={tabValue} index={1}>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-                    <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={handleSimulateSnapshot}
-                    >
-                        Simulate Daily Snapshot
-                    </Button>
-                </Box>
-                <EquityCurveChart />
-            </CustomTabPanel>
+            <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="h6" fontWeight={700} gutterBottom sx={{ mb: 2 }}>
+                    Your Holdings
+                </Typography>
+                <HoldingsTable holdings={holdings} />
+            </Box>
         </Container>
     );
 };

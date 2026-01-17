@@ -18,7 +18,7 @@ export const Layout: React.FC = () => {
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    p: 3,
+                    p: 0,
                     width: { sm: `calc(100% - 240px)` }, // Dynamic width handling is better in Sidebar component
                     transition: theme.transitions.create('margin', {
                         easing: theme.transitions.easing.sharp,
@@ -27,7 +27,7 @@ export const Layout: React.FC = () => {
                 }}
             >
                 <Toolbar /> {/* Spacer for the fixed AppBar */}
-                <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+                <Box sx={{ width: '100%' }}>
                     <Outlet />
                 </Box>
             </Box>

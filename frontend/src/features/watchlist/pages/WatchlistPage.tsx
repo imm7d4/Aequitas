@@ -114,10 +114,10 @@ export function WatchlistPage(): JSX.Element {
     }, [instrumentIds, instruments, prices, searchQuery, sortBy, sortDirection]);
 
     return (
-        <Box sx={{ py: 3, px: { xs: 1, md: 3 } }}>
+        <Box sx={{ pb: 3, px: { xs: 1, md: 3 } }}>
             {/* Page Header */}
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight={800} sx={{ letterSpacing: '-0.02em', mb: 1 }}>
+            <Box sx={{ mb: 2 }}>
+                <Typography variant="h5" fontWeight={700} sx={{ letterSpacing: '-0.01em', mb: 0.5 }}>
                     My Watchlists
                 </Typography>
                 <Typography variant="body1" color="text.secondary" fontWeight={500}>

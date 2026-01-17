@@ -1,22 +1,22 @@
 import React, { useMemo } from 'react';
 import {
     Box,
-    Card,
-    Grid,
+    Paper,
     Typography,
     useTheme,
+    alpha,
+    Stack,
+    Divider,
+    Tooltip,
     Accordion,
     AccordionSummary,
     AccordionDetails,
-    Divider,
-    Tooltip,
-    alpha,
 } from '@mui/material';
 import {
-    ExpandMore as ExpandMoreIcon,
     InfoOutlined as InfoIcon,
     TrendingUp as TrendingUpIcon,
     TrendingDown as TrendingDownIcon,
+    ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { Holding } from '../services/portfolioService';
 
@@ -29,9 +29,11 @@ interface PortfolioSummaryProps {
     totalPLPercent: number;
     realizedPL: number;
     holdingsCount: number;
-    holdings: Holding[]; // NEW: To calculate short liability
-    marketPrices?: Record<string, number>; // NEW: Current market prices
+    holdings: Holding[];
+    marketPrices?: Record<string, number>;
 }
+
+// --- Helper Components for Balance Sheet ---
 
 interface LineItemProps {
     label: string;
@@ -50,52 +52,24 @@ const BalanceSheetLineItem: React.FC<LineItemProps> = ({
     highlight = false,
     bold = false,
 }) => {
-    const theme = useTheme();
     const displayValue = negative ? -Math.abs(value) : value;
-    const color = negative
-        ? 'error.main'
-        : highlight
-            ? 'primary.main'
-            : 'text.primary';
+    // Highlight available to trade with primary color
+    const color = negative ? 'error.main' : (highlight ? 'primary.main' : 'text.primary');
 
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                py: 1,
-            }}
-        >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.75 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Typography
-                    variant="body2"
-                    fontWeight={bold || highlight ? 700 : 500}
-                    color="text.primary"
-                >
+                <Typography variant="body2" fontWeight={bold || highlight ? 700 : 500} color="text.primary">
                     {label}
                 </Typography>
                 {tooltip && (
                     <Tooltip title={tooltip} arrow placement="top">
-                        <InfoIcon
-                            sx={{
-                                fontSize: 16,
-                                color: 'text.secondary',
-                                cursor: 'help',
-                            }}
-                        />
+                        <InfoIcon sx={{ fontSize: 16, color: 'text.secondary', cursor: 'help' }} />
                     </Tooltip>
                 )}
             </Box>
-            <Typography
-                variant="body2"
-                fontWeight={bold || highlight ? 700 : 600}
-                color={color}
-            >
-                {displayValue < 0 ? '-' : ''}₹
-                {Math.abs(displayValue).toLocaleString('en-IN', {
-                    maximumFractionDigits: 2,
-                })}
+            <Typography variant="body2" fontWeight={bold || highlight ? 700 : 600} color={color}>
+                {displayValue < 0 ? '-' : ''}₹{Math.abs(displayValue).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
             </Typography>
         </Box>
     );
@@ -106,23 +80,53 @@ interface SectionProps {
     children: React.ReactNode;
 }
 
-const BalanceSheetSection: React.FC<SectionProps> = ({ title, children }) => {
-    const theme = useTheme();
-    return (
-        <Box sx={{ mb: 2 }}>
-            <Typography
-                variant="overline"
-                color="text.secondary"
-                fontWeight={700}
-                sx={{ letterSpacing: 1 }}
-            >
-                {title}
+const BalanceSheetSection: React.FC<SectionProps> = ({ title, children }) => (
+    <Box sx={{ mb: 1.5 }}>
+        <Typography variant="overline" color="text.secondary" fontWeight={700} sx={{ letterSpacing: 1, fontSize: '0.7rem' }}>
+            {title}
+        </Typography>
+        <Divider sx={{ mb: 0.5, mt: 0.25 }} />
+        {children}
+    </Box>
+);
+
+// --- Helper Component for P&L Metrics ---
+
+interface MetricProps {
+    label: string;
+    value: number;
+    subValue?: string;
+    color?: string;
+    tooltip?: string;
+    isCurrency?: boolean;
+}
+
+const CompactMetric: React.FC<MetricProps> = ({ label, value, subValue, color = 'text.primary', tooltip, isCurrency = true }) => (
+    <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase' }}>
+                {label}
             </Typography>
-            <Divider sx={{ mb: 1, mt: 0.5 }} />
-            {children}
+            {tooltip && (
+                <Tooltip title={tooltip} arrow placement="top">
+                    <InfoIcon sx={{ fontSize: 14, color: 'text.disabled', cursor: 'help' }} />
+                </Tooltip>
+            )}
         </Box>
-    );
-};
+        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+            <Typography variant="h6" fontWeight={700} color={color} sx={{ lineHeight: 1.2 }}>
+                {isCurrency && (value < 0 ? '-' : '')}
+                {isCurrency ? '₹' : ''}
+                {Math.abs(value).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+            </Typography>
+            {subValue && (
+                <Typography variant="caption" fontWeight={700} color={color}>
+                    {subValue}
+                </Typography>
+            )}
+        </Box>
+    </Box>
+);
 
 export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     totalEquity = 0,
@@ -137,7 +141,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     marketPrices = {},
 }) => {
     const theme = useTheme();
-    const isProfit = totalPL >= 0;
+    const isUnrealizedProfit = totalPL >= 0;
     const isRealizedProfit = realizedPL >= 0;
 
     // Calculate Short Stock Liability
@@ -152,264 +156,139 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
         return liability;
     }, [holdings, marketPrices]);
 
-    // Calculate Available to Trade
     const availableToTrade = cashBalance - blockedMargin;
-
     const hasShortPositions = shortLiability < 0;
 
     return (
         <Box>
-            {/* Balance Sheet - Collapsible */}
+            {/* 1. Balance Sheet Accordion (Restored) */}
             <Accordion
                 defaultExpanded={false}
                 sx={{
                     border: '1px solid',
                     borderColor: 'divider',
-                    borderRadius: 2,
-                    mb: 3,
-                    '&:before': { display: 'none' },
+                    borderRadius: '8px !important', // Force rounded corners
+                    mb: 2,
+                    '&:before': { display: 'none' }, // Check if this removes the separator line
                     boxShadow: 'none',
+                    overflow: 'hidden'
                 }}
             >
                 <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     sx={{
                         bgcolor: alpha(theme.palette.primary.main, 0.03),
-                        '&:hover': {
-                            bgcolor: alpha(theme.palette.primary.main, 0.06),
-                        },
+                        minHeight: 48,
+                        '& .MuiAccordionSummary-content': { my: 1 },
+                        '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.06) },
                     }}
                 >
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            width: '100%',
-                            pr: 2,
-                        }}
-                    >
-                        <Typography variant="h6" fontWeight={700}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', pr: 2 }}>
+                        <Typography variant="subtitle1" fontWeight={700}>
                             Balance Sheet
                         </Typography>
-                        <Typography
-                            variant="h5"
-                            fontWeight={800}
-                            color="primary.main"
-                        >
-                            Total Equity: ₹
-                            {totalEquity.toLocaleString('en-IN', {
-                                maximumFractionDigits: 2,
-                            })}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Typography variant="body2" color="text.secondary">
+                                Total Equity
+                            </Typography>
+                            <Typography variant="h6" fontWeight={800} color="primary.main">
+                                ₹{totalEquity.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                            </Typography>
+                        </Box>
                     </Box>
                 </AccordionSummary>
-
-                <AccordionDetails sx={{ pt: 2 }}>
-                    {/* Assets Section */}
-                    <BalanceSheetSection title="Assets">
-                        <BalanceSheetLineItem
-                            label="Cash Balance"
-                            value={cashBalance}
-                            tooltip="Total money in your account, including proceeds from short sales"
-                        />
-                    </BalanceSheetSection>
-
-                    {/* Liabilities Section - Only show if short positions exist */}
-                    {hasShortPositions && (
-                        <BalanceSheetSection title="Liabilities">
+                <AccordionDetails sx={{ pt: 2, pb: 2, bgcolor: 'background.paper' }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
+                        <Box>
+                            <BalanceSheetSection title="Assets">
+                                <BalanceSheetLineItem
+                                    label="Cash Balance"
+                                    value={cashBalance}
+                                    tooltip="Total money including realized profits"
+                                />
+                            </BalanceSheetSection>
+                            {hasShortPositions && (
+                                <BalanceSheetSection title="Liabilities">
+                                    <BalanceSheetLineItem
+                                        label="Short Stock Liability"
+                                        value={shortLiability}
+                                        tooltip="Market value of borrowed shares"
+                                        negative
+                                    />
+                                </BalanceSheetSection>
+                            )}
+                        </Box>
+                        <Box>
+                            {blockedMargin > 0 && (
+                                <BalanceSheetSection title="Risk Controls">
+                                    <BalanceSheetLineItem
+                                        label="Blocked Margin"
+                                        value={blockedMargin}
+                                        tooltip="Locked cash for open positions"
+                                    />
+                                </BalanceSheetSection>
+                            )}
+                            <Divider sx={{ my: 1.5, borderStyle: 'dashed' }} />
                             <BalanceSheetLineItem
-                                label="Short Stock Liability"
-                                value={shortLiability}
-                                tooltip="Market value of borrowed shares you must buy back"
-                                negative
+                                label="Available to Trade"
+                                value={availableToTrade}
+                                tooltip="Unencumbered cash available for new positions"
+                                highlight
+                                bold
                             />
-                        </BalanceSheetSection>
-                    )}
-
-                    {/* Risk Controls Section */}
-                    {blockedMargin > 0 && (
-                        <BalanceSheetSection title="Risk Controls">
-                            <BalanceSheetLineItem
-                                label="Blocked Margin"
-                                value={blockedMargin}
-                                tooltip="Cash locked to cover potential losses. Cannot be used for new trades or withdrawal"
-                            />
-                        </BalanceSheetSection>
-                    )}
-
-                    {/* Available to Trade */}
-                    <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
-                    <BalanceSheetLineItem
-                        label="Available to Trade"
-                        value={availableToTrade}
-                        tooltip="Maximum amount you can use to open new positions"
-                        highlight
-                        bold
-                    />
+                        </Box>
+                    </Box>
                 </AccordionDetails>
             </Accordion>
 
-            {/* Performance Metrics - Always Visible */}
-            <Grid container spacing={2}>
-                {/* Unrealized P&L */}
-                <Grid item xs={12} md={6}>
-                    <Card
-                        sx={{
-                            height: '100%',
-                            border: 1,
-                            borderColor: 'divider',
-                            boxShadow: 'none',
-                        }}
-                    >
-                        <Box sx={{ p: 2 }}>
+            {/* 2. Compact P&L Cards Row (New Style) */}
+            <Paper elevation={0} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                <Stack
+                    direction={{ xs: 'column', md: 'row' }}
+                    spacing={{ xs: 2, md: 4 }}
+                    divider={<Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' } }} />}
+                >
+                    {/* Unrealized P&L */}
+                    <Box sx={{ flex: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase' }}>
+                                Unrealized P&L
+                            </Typography>
                             <Box
                                 sx={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    mb: 1,
-                                    gap: 1,
+                                    px: 0.5,
+                                    py: 0.25,
+                                    borderRadius: 0.5,
+                                    bgcolor: alpha(isUnrealizedProfit ? theme.palette.success.main : theme.palette.error.main, 0.1)
                                 }}
                             >
-                                <Box
-                                    sx={{
-                                        p: 0.5,
-                                        borderRadius: 1,
-                                        bgcolor: alpha(
-                                            isProfit
-                                                ? theme.palette.success.main
-                                                : theme.palette.error.main,
-                                            0.1
-                                        ),
-                                    }}
-                                >
-                                    {isProfit ? (
-                                        <TrendingUpIcon
-                                            sx={{
-                                                fontSize: 20,
-                                                color: 'success.main',
-                                            }}
-                                        />
-                                    ) : (
-                                        <TrendingDownIcon
-                                            sx={{
-                                                fontSize: 20,
-                                                color: 'error.main',
-                                            }}
-                                        />
-                                    )}
-                                </Box>
-                                <Typography
-                                    variant="subtitle2"
-                                    color="text.secondary"
-                                >
-                                    Unrealized P&L
+                                {isUnrealizedProfit ?
+                                    <TrendingUpIcon sx={{ fontSize: 14, color: 'success.main', mr: 0.5 }} /> :
+                                    <TrendingDownIcon sx={{ fontSize: 14, color: 'error.main', mr: 0.5 }} />
+                                }
+                                <Typography variant="caption" fontWeight={700} color={isUnrealizedProfit ? 'success.main' : 'error.main'}>
+                                    {totalPLPercent.toFixed(2)}%
                                 </Typography>
                             </Box>
-                            <Typography
-                                variant="h5"
-                                fontWeight={800}
-                                color={
-                                    isProfit ? 'success.main' : 'error.main'
-                                }
-                            >
-                                {isProfit ? '+' : ''}₹
-                                {totalPL.toLocaleString('en-IN', {
-                                    maximumFractionDigits: 2,
-                                })}
-                            </Typography>
-                            <Typography
-                                variant="caption"
-                                fontWeight={600}
-                                color={
-                                    isProfit ? 'success.main' : 'error.main'
-                                }
-                            >
-                                {isProfit ? '+' : ''}
-                                {totalPLPercent.toFixed(2)}% Return
-                            </Typography>
                         </Box>
-                    </Card>
-                </Grid>
+                        <Typography variant="h6" fontWeight={700} color={isUnrealizedProfit ? 'success.main' : 'error.main'}>
+                            {isUnrealizedProfit ? '+' : ''}₹{Math.abs(totalPL).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                        </Typography>
+                    </Box>
 
-                {/* Realized P&L */}
-                <Grid item xs={12} md={6}>
-                    <Card
-                        sx={{
-                            height: '100%',
-                            border: 1,
-                            borderColor: 'divider',
-                            boxShadow: 'none',
-                        }}
-                    >
-                        <Box sx={{ p: 2 }}>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    mb: 1,
-                                    gap: 1,
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        p: 0.5,
-                                        borderRadius: 1,
-                                        bgcolor: alpha(
-                                            isRealizedProfit
-                                                ? theme.palette.success.main
-                                                : theme.palette.error.main,
-                                            0.1
-                                        ),
-                                    }}
-                                >
-                                    {isRealizedProfit ? (
-                                        <TrendingUpIcon
-                                            sx={{
-                                                fontSize: 20,
-                                                color: 'success.main',
-                                            }}
-                                        />
-                                    ) : (
-                                        <TrendingDownIcon
-                                            sx={{
-                                                fontSize: 20,
-                                                color: 'error.main',
-                                            }}
-                                        />
-                                    )}
-                                </Box>
-                                <Typography
-                                    variant="subtitle2"
-                                    color="text.secondary"
-                                >
-                                    Realized P&L
-                                </Typography>
-                            </Box>
-                            <Typography
-                                variant="h5"
-                                fontWeight={800}
-                                color={
-                                    isRealizedProfit
-                                        ? 'success.main'
-                                        : 'error.main'
-                                }
-                            >
-                                {isRealizedProfit ? '+' : ''}₹
-                                {realizedPL.toLocaleString('en-IN', {
-                                    maximumFractionDigits: 2,
-                                })}
-                            </Typography>
-                            <Typography
-                                variant="caption"
-                                color="text.secondary"
-                            >
-                                Lifetime Booked Profit
-                            </Typography>
-                        </Box>
-                    </Card>
-                </Grid>
-            </Grid>
+                    {/* Realized P&L */}
+                    <Box sx={{ flex: 1 }}>
+                        <CompactMetric
+                            label="Realized P&L"
+                            value={realizedPL}
+                            color={isRealizedProfit ? 'success.main' : 'error.main'}
+                            subValue={realizedPL !== 0 ? (isRealizedProfit ? "PROFIT" : "LOSS") : undefined}
+                        />
+                    </Box>
+                </Stack>
+            </Paper>
         </Box>
     );
 };

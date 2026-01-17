@@ -82,7 +82,7 @@ export function Dashboard(): JSX.Element {
             {/* Greeter Section */}
             <Box
                 sx={{
-                    mb: 5,
+                    mb: 3,
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'flex-start',
@@ -90,9 +90,9 @@ export function Dashboard(): JSX.Element {
             >
                 <Box>
                     <Typography
-                        variant="h4"
-                        fontWeight={800}
-                        sx={{ letterSpacing: '-0.02em', mb: 1 }}
+                        variant="h5"
+                        fontWeight={700}
+                        sx={{ letterSpacing: '-0.01em', mb: 0.5 }}
                     >
                         Welcome back, {userDisplayName}! 📈
                     </Typography>

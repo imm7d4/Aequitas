@@ -6,8 +6,6 @@ import {
     Paper,
     IconButton,
     Tooltip,
-    Pagination,
-    Stack,
     Tabs,
     Tab,
 } from '@mui/material';
@@ -21,20 +19,22 @@ import { orderService, OrderResponse, OrderFilters } from '@/features/trading/se
 export function OrdersPage(): JSX.Element {
     const [orders, setOrders] = useState<OrderResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [page, setPage] = useState(0); // TablePagination is 0-indexed
+    const [totalCount, setTotalCount] = useState(0);
     const [statusFilter, setStatusFilter] = useState<string>('');
 
     // For "pending" and "executed" tabs, we need client-side filtering
     const filters: OrderFilters = {
-        limit: statusFilter === 'pending' || statusFilter === 'executed' ? 100 : 10,
+        limit: rowsPerPage,
         status: (statusFilter === 'pending' || statusFilter === 'executed') ? undefined : (statusFilter || undefined),
     };
 
     const fetchOrders = async () => {
         setIsLoading(true);
         try {
-            const data = await orderService.getOrders({ ...filters, page });
+            // Backend expects 1-indexed page
+            const data = await orderService.getOrders({ ...filters, page: page + 1 });
             let filteredOrders = data.orders || [];
 
             // Client-side filter for pending tab (NEW + PENDING)
@@ -52,8 +52,10 @@ export function OrdersPage(): JSX.Element {
             }
 
             setOrders(filteredOrders);
-            // For pending/executed tabs with client-side filtering, hide pagination
-            setTotalPages((statusFilter === 'pending' || statusFilter === 'executed') ? 1 : data.pagination.totalPages);
+            // Update total count for pagination
+            // If using client-side filtering, we might need a different approach for total count
+            // For now assuming backend returns correct count for the query
+            setTotalCount(data.pagination.total);
         } catch (error) {
             console.error('Failed to fetch orders:', error);
             setOrders([]);
@@ -80,114 +82,115 @@ export function OrdersPage(): JSX.Element {
         }
     };
 
+    const handleChangePage = (_: unknown, newPage: number) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
     useEffect(() => {
         fetchOrders();
-    }, [page, statusFilter]);
+    }, [page, rowsPerPage, statusFilter]);
 
     return (
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-            <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Box
-                            sx={{
-                                p: 1.5,
-                                borderRadius: 2,
-                                bgcolor: 'primary.main',
-                                color: 'primary.contrastText',
-                                display: 'flex',
-                            }}
-                        >
-                            <OrdersIcon />
-                        </Box>
-                        <Box>
-                            <Typography variant="h4" fontWeight={800} sx={{ letterSpacing: '-0.02em' }}>
-                                Order Book
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary">
-                                View and manage your trade executions
-                            </Typography>
-                        </Box>
-                    </Box>
-                    <Tooltip title="Refresh Orders">
-                        <IconButton
-                            onClick={fetchOrders}
-                            disabled={isLoading}
-                            sx={{
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                borderRadius: 2,
-                                '&:hover': { bgcolor: 'action.hover' },
-                            }}
-                        >
-                            <RefreshIcon />
-                        </IconButton>
-                    </Tooltip>
-                </Box>
 
-                {/* Status Tabs */}
-                <Paper
-                    elevation={0}
-                    sx={{
-                        mb: 3,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 2,
-                        overflow: 'hidden',
-                    }}
-                >
-                    <Tabs
-                        value={statusFilter || 'all'}
-                        onChange={(_, value) => {
-                            setStatusFilter(value === 'all' ? '' : value);
-                            setPage(1);
-                        }}
+        <Container maxWidth="xl" sx={{ height: 'calc(100vh - 64px)', pb: 1, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ flexShrink: 0 }}>
+                <Box sx={{ mb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Box
+                                sx={{
+                                    p: 1.5,
+                                    borderRadius: 2,
+                                    bgcolor: 'primary.main',
+                                    color: 'primary.contrastText',
+                                    display: 'flex',
+                                }}
+                            >
+                                <OrdersIcon />
+                            </Box>
+                            <Box>
+                                <Typography variant="h5" fontWeight={700} sx={{ letterSpacing: '-0.01em' }}>
+                                    Order Book
+                                </Typography>
+                                <Typography variant="body1" color="text.secondary">
+                                    View and manage your trade executions
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Tooltip title="Refresh Orders">
+                            <IconButton
+                                onClick={fetchOrders}
+                                disabled={isLoading}
+                                sx={{
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    borderRadius: 2,
+                                    '&:hover': { bgcolor: 'action.hover' },
+                                }}
+                            >
+                                <RefreshIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+
+                    {/* Status Tabs */}
+                    <Paper
+                        elevation={0}
                         sx={{
-                            borderBottom: '1px solid',
+                            mb: 3,
+                            border: '1px solid',
                             borderColor: 'divider',
-                            '& .MuiTab-root': {
-                                fontWeight: 600,
-                                textTransform: 'none',
-                                fontSize: '0.9375rem',
-                                minHeight: 56,
-                            },
+                            borderRadius: 2,
+                            overflow: 'hidden',
                         }}
                     >
-                        <Tab label="All Orders" value="all" />
-                        <Tab label="Pending" value="pending" />
-                        <Tab label="Executed" value="executed" />
-                        <Tab label="Cancelled" value="CANCELLED" />
-                        <Tab label="Rejected" value="REJECTED" />
-                    </Tabs>
-                </Paper>
+                        <Tabs
+                            value={statusFilter || 'all'}
+                            onChange={(_, value) => {
+                                setStatusFilter(value === 'all' ? '' : value);
+                                setPage(0);
+                            }}
+                            sx={{
+                                borderBottom: '1px solid',
+                                borderColor: 'divider',
+                                '& .MuiTab-root': {
+                                    fontWeight: 600,
+                                    textTransform: 'none',
+                                    fontSize: '0.9375rem',
+                                    minHeight: 56,
+                                },
+                            }}
+                        >
+                            <Tab label="All Orders" value="all" />
+                            <Tab label="Pending" value="pending" />
+                            <Tab label="Executed" value="executed" />
+                            <Tab label="Cancelled" value="CANCELLED" />
+                            <Tab label="Rejected" value="REJECTED" />
+                        </Tabs>
+                    </Paper>
+                </Box>
             </Box>
 
-            <Paper elevation={0} sx={{ p: 0, borderRadius: 3 }}>
+            <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                 <OrderList
                     orders={orders}
                     onCancel={handleCancel}
                     onModify={handleModify}
                     isLoading={isLoading}
+                    count={totalCount}
+                    page={page}
+                    rowsPerPage={rowsPerPage}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
                 />
-            </Paper>
-
-            {totalPages > 1 && (
-                <Stack direction="row" justifyContent="center" sx={{ mt: 4 }}>
-                    <Pagination
-                        count={totalPages}
-                        page={page}
-                        onChange={(_, value) => setPage(value)}
-                        color="primary"
-                        size="large"
-                        sx={{
-                            '& .MuiPaginationItem-root': {
-                                fontWeight: 600,
-                                borderRadius: 2,
-                            },
-                        }}
-                    />
-                </Stack>
-            )}
+            </Box>
         </Container>
     );
+
+
 }

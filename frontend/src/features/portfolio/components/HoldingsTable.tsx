@@ -9,7 +9,6 @@ import {
     Paper,
     Typography,
     Box,
-    styled,
     Button,
     Chip,
     Tooltip
@@ -18,12 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { Holding } from '../services/portfolioService';
 import { useMarketData } from '../../market/hooks/useMarketData';
 
-// Styled components
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
-    fontSize: '0.85rem',
-    padding: '12px 16px',
-    borderColor: theme.palette.divider,
-}));
+
 
 interface HoldingsTableProps {
     holdings: Holding[];
@@ -45,18 +39,46 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
     }
 
     return (
-        <TableContainer component={Paper} elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-            <Table>
+        <TableContainer component={Paper} elevation={0} sx={{ height: '100%', overflow: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 0 }}>
+            <Table
+                stickyHeader
+                size="small"
+                sx={{
+                    minWidth: 650,
+                    '& .MuiTableCell-root': {
+                        py: 0.75,
+                        px: 2,
+                        fontSize: '0.8125rem',
+                        fontFamily: 'Inter, Roboto, sans-serif',
+                    },
+                    '& .MuiTableCell-head': {
+                        fontWeight: 600,
+                        backgroundColor: 'background.paper',
+                        color: 'text.secondary',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        fontSize: '0.75rem',
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                    },
+                    '& .MuiTableRow-root': {
+                        transition: 'background-color 0.2s ease',
+                        '&:hover': {
+                            backgroundColor: 'action.hover',
+                        },
+                    }
+                }}
+            >
                 <TableHead sx={{ bgcolor: 'background.default' }}>
                     <TableRow>
-                        <StyledTableCell>Instrument</StyledTableCell>
-                        <StyledTableCell align="right">Qty</StyledTableCell>
-                        <StyledTableCell align="right">Avg. Cost</StyledTableCell>
-                        <StyledTableCell align="right">LTP</StyledTableCell>
-                        <StyledTableCell align="right">Current Value</StyledTableCell>
-                        <StyledTableCell align="right">Blocked Margin</StyledTableCell>
-                        <StyledTableCell align="right">P&L</StyledTableCell>
-                        <StyledTableCell align="right">Action</StyledTableCell>
+                        <TableCell>Instrument</TableCell>
+                        <TableCell align="right">Qty</TableCell>
+                        <TableCell align="right">Avg. Cost</TableCell>
+                        <TableCell align="right">LTP</TableCell>
+                        <TableCell align="right">Current Value</TableCell>
+                        <TableCell align="right">Blocked Margin</TableCell>
+                        <TableCell align="right">P&L</TableCell>
+                        <TableCell align="right">Action</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -79,7 +101,7 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
 
                         return (
                             <TableRow key={holding.id} hover>
-                                <StyledTableCell>
+                                <TableCell>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <Box>
                                             <Typography variant="subtitle2" fontWeight={700}>
@@ -96,20 +118,20 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
                                             />
                                         )}
                                     </Box>
-                                </StyledTableCell>
-                                <StyledTableCell align="right">
+                                </TableCell>
+                                <TableCell align="right">
                                     <Typography variant="body2" fontWeight={600}>
                                         {holding.quantity}
                                     </Typography>
-                                </StyledTableCell>
-                                <StyledTableCell align="right">
+                                </TableCell>
+                                <TableCell align="right">
                                     <Tooltip title={isShort ? "Avg. Sell Price" : "Avg. Buy Price"}>
                                         <Typography variant="body2">
                                             ₹{(holding.avgEntryPrice || 0).toFixed(2)}
                                         </Typography>
                                     </Tooltip>
-                                </StyledTableCell>
-                                <StyledTableCell align="right">
+                                </TableCell>
+                                <TableCell align="right">
                                     {ltp > 0 ? (
                                         <Typography variant="body2" fontWeight={700} color={data?.change >= 0 ? 'success.main' : 'error.main'}>
                                             ₹{ltp.toFixed(2)}
@@ -117,15 +139,15 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
                                     ) : (
                                         '-'
                                     )}
-                                </StyledTableCell>
-                                <StyledTableCell align="right">
+                                </TableCell>
+                                <TableCell align="right">
                                     <Tooltip title={isShort ? "Liability to Cover" : "Current Asset Value"}>
                                         <Typography variant="body2">
                                             ₹{currentValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </Typography>
                                     </Tooltip>
-                                </StyledTableCell>
-                                <StyledTableCell align="right">
+                                </TableCell>
+                                <TableCell align="right">
                                     {isShort && holding.blockedMargin ? (
                                         <Tooltip title="Margin Locked for this position">
                                             <Typography variant="body2" color="text.secondary">
@@ -135,8 +157,8 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
                                     ) : (
                                         <Typography variant="body2" color="text.secondary">-</Typography>
                                     )}
-                                </StyledTableCell>
-                                <StyledTableCell align="right">
+                                </TableCell>
+                                <TableCell align="right">
                                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                                         <Typography variant="body2" sx={{ color: isProfit ? 'success.main' : 'error.main', fontWeight: 700 }}>
                                             {isProfit ? '+' : ''}₹{unrealizedPL.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -153,9 +175,9 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
                                             />
                                         )}
                                     </Box>
-                                </StyledTableCell>
+                                </TableCell>
 
-                                <StyledTableCell align="right">
+                                <TableCell align="right">
                                     <Button
                                         variant="outlined"
                                         size="small"
@@ -171,7 +193,7 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
                                     >
                                         {isShort ? "Cover" : "Sell"}
                                     </Button>
-                                </StyledTableCell>
+                                </TableCell>
                             </TableRow>
                         );
                     })}

@@ -6,8 +6,6 @@ import {
     CircularProgress,
     Alert,
     Grid,
-    ToggleButton,
-    ToggleButtonGroup,
     TextField,
     MenuItem,
     Table,
@@ -17,21 +15,19 @@ import {
     TableHead,
     TableRow,
     TablePagination,
+    TableSortLabel,
     IconButton,
     Button,
     Paper,
     Chip,
     Tooltip,
 } from '@mui/material';
-import GridViewIcon from '@mui/icons-material/GridView';
-import ListIcon from '@mui/icons-material/List';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import { useInstruments } from '../hooks/useInstruments';
 import { useInstrumentStore } from '../store/instrumentStore';
 import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
 import { useMarketData } from '@/features/market/hooks/useMarketData';
-import { InstrumentCard } from './InstrumentCard';
 import { InstrumentSearch } from './InstrumentSearch';
 import { TickColoredPrice } from '@/shared/components/TickColoredPrice';
 import type { Instrument } from '../types/instrument.types';
@@ -46,18 +42,29 @@ export const InstrumentList = () => {
         searchResults,
         isLoading,
         error,
-        viewMode,
         filters,
         searchQuery,
         pagination,
-        setViewMode,
+        sorting,
         setFilters,
         setSearchQuery,
         setSearchResults,
         setPagination,
+        setSorting,
     } = useInstrumentStore();
 
     const navigate = useNavigate();
+
+    // Sorting handlers
+    type SortColumn = 'symbol' | 'name' | 'ltp' | 'change' | 'changePct' | 'volume' | 'high' | 'low' | 'exchange' | 'sector';
+
+    const handleSort = (column: SortColumn) => {
+        if (sorting.column === column) {
+            setSorting({ column, direction: sorting.direction === 'asc' ? 'desc' : 'asc' });
+        } else {
+            setSorting({ column, direction: 'asc' });
+        }
+    };
 
     // Fetch market data for all instruments
     const instrumentIds = useMemo(() => instruments.map(i => i.id), [instruments]);
@@ -92,10 +99,53 @@ export const InstrumentList = () => {
         });
     }, [instruments, searchResults, filters, searchQuery]);
 
+    const sortedInstruments = useMemo(() => {
+        const sorted = [...filteredInstruments].sort((a, b) => {
+            const aMarket = prices[a.id];
+            const bMarket = prices[b.id];
+
+            let comparison = 0;
+            switch (sorting.column) {
+                case 'symbol':
+                    comparison = a.symbol.localeCompare(b.symbol);
+                    break;
+                case 'name':
+                    comparison = a.name.localeCompare(b.name);
+                    break;
+                case 'ltp':
+                    comparison = (aMarket?.lastPrice || 0) - (bMarket?.lastPrice || 0);
+                    break;
+                case 'change':
+                    comparison = (aMarket?.change || 0) - (bMarket?.change || 0);
+                    break;
+                case 'changePct':
+                    comparison = (aMarket?.changePct || 0) - (bMarket?.changePct || 0);
+                    break;
+                case 'volume':
+                    comparison = (aMarket?.volume || 0) - (bMarket?.volume || 0);
+                    break;
+                case 'high':
+                    comparison = (aMarket?.high || 0) - (bMarket?.high || 0);
+                    break;
+                case 'low':
+                    comparison = (aMarket?.low || 0) - (bMarket?.low || 0);
+                    break;
+                case 'exchange':
+                    comparison = a.exchange.localeCompare(b.exchange);
+                    break;
+                case 'sector':
+                    comparison = (a.sector || '').localeCompare(b.sector || '');
+                    break;
+            }
+            return sorting.direction === 'asc' ? comparison : -comparison;
+        });
+        return sorted;
+    }, [filteredInstruments, sorting, prices]);
+
     const displayInstruments = useMemo(() => {
         const { page, rowsPerPage } = pagination;
-        return filteredInstruments.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-    }, [filteredInstruments, pagination]);
+        return sortedInstruments.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+    }, [sortedInstruments, pagination]);
 
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -168,26 +218,12 @@ export const InstrumentList = () => {
     }
 
     return (
-        <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                <Typography variant="h4">Instruments</Typography>
-                <ToggleButtonGroup
-                    value={viewMode}
-                    exclusive
-                    onChange={(_, mode) => mode && setViewMode(mode)}
-                    size="small"
-                    aria-label="view mode"
-                >
-                    <ToggleButton value="grid" aria-label="grid view">
-                        <GridViewIcon sx={{ mr: 1 }} /> Grid
-                    </ToggleButton>
-                    <ToggleButton value="list" aria-label="list view">
-                        <ListIcon sx={{ mr: 1 }} /> List
-                    </ToggleButton>
-                </ToggleButtonGroup>
+        <Box sx={{ height: 'calc(100vh - 64px)', pt: 1, px: 2, pb: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                <Typography variant="h5" fontWeight={700}>Instruments</Typography>
             </Box>
 
-            <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid container spacing={1} sx={{ mb: 1 }}>
                 <Grid item xs={12} md={6}>
                     <InstrumentSearch />
                 </Grid>
@@ -200,6 +236,8 @@ export const InstrumentList = () => {
                         value={filters.exchange}
                         onChange={handleFilterChange}
                         size="small"
+                        sx={{ '& .MuiInputBase-root': { fontSize: '0.875rem' } }}
+                        InputLabelProps={{ sx: { fontSize: '0.875rem' } }}
                     >
                         <MenuItem value="ALL">All Exchanges</MenuItem>
                         <MenuItem value="NSE">NSE</MenuItem>
@@ -215,6 +253,8 @@ export const InstrumentList = () => {
                         value={filters.type}
                         onChange={handleFilterChange}
                         size="small"
+                        sx={{ '& .MuiInputBase-root': { fontSize: '0.875rem' } }}
+                        InputLabelProps={{ sx: { fontSize: '0.875rem' } }}
                     >
                         <MenuItem value="ALL">All Types</MenuItem>
                         <MenuItem value="STOCK">STOCK</MenuItem>
@@ -230,6 +270,8 @@ export const InstrumentList = () => {
                         value={filters.sector}
                         onChange={handleFilterChange}
                         size="small"
+                        sx={{ '& .MuiInputBase-root': { fontSize: '0.875rem' } }}
+                        InputLabelProps={{ sx: { fontSize: '0.875rem' } }}
                     >
                         <MenuItem value="ALL">All Sectors</MenuItem>
                         {sectors.map((sector: string) => (
@@ -253,125 +295,268 @@ export const InstrumentList = () => {
                         Try adjusting your filters or search query
                     </Typography>
                 </Box>
-            ) : viewMode === 'grid' ? (
-                <Grid container spacing={2}>
-                    {displayInstruments.map((instrument: Instrument) => (
-                        <Grid item xs={12} sm={6} lg={4} xl={3} key={instrument.id}>
-                            <InstrumentCard
-                                instrument={instrument}
-                                onClick={() => navigate(`/instruments/${instrument.id}`)}
-                                marketData={prices[instrument.id]}
-                            />
-                        </Grid>
-                    ))}
-                </Grid>
             ) : (
-                <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Symbol</TableCell>
-                                <TableCell>Name</TableCell>
-                                <TableCell align="right">LTP</TableCell>
-                                <TableCell align="right">Change</TableCell>
-                                <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>Change %</TableCell>
-                                <TableCell align="right">Volume</TableCell>
-                                <TableCell align="right">High</TableCell>
-                                <TableCell align="right">Low</TableCell>
-                                <TableCell>Exchange</TableCell>
-                                <TableCell>Sector</TableCell>
-                                <TableCell align="center">Watchlist</TableCell>
-                                <TableCell align="right">Action</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {displayInstruments.map((instrument: Instrument) => {
-                                const isStarred = watchlists.some(w => w.instrumentIds.includes(instrument.id));
-                                const marketData = prices[instrument.id];
-                                const isPositive = marketData ? marketData.change >= 0 : true;
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                    <TableContainer component={Paper} elevation={0} sx={{ flex: 1, overflow: 'auto', border: '1px solid', borderColor: 'divider' }}>
+                        <Table
+                            sx={{
+                                minWidth: 650,
+                                '& .MuiTableCell-root': {
+                                    py: 0.75, // Slightly more breathing room than 0.5
+                                    px: 2,
+                                    fontSize: '0.8125rem', // 13px
+                                    fontFamily: 'Inter, Roboto, sans-serif',
+                                },
+                                '& .MuiTableCell-head': {
+                                    fontWeight: 600,
+                                    backgroundColor: 'background.paper', // Solid background to prevent scroll overlap
+                                    color: 'text.secondary',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em',
+                                    fontSize: '0.75rem', // 12px for headers
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider',
+                                },
+                                '& .MuiTableRow-root': {
+                                    transition: 'background-color 0.2s ease',
+                                    '&:hover': {
+                                        backgroundColor: 'action.hover',
+                                    },
+                                }
+                            }}
+                            stickyHeader
+                            size="small"
+                        >
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sorting.column === 'symbol'}
+                                            direction={sorting.column === 'symbol' ? sorting.direction : 'asc'}
+                                            onClick={() => handleSort('symbol')}
+                                        >
+                                            Symbol
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sorting.column === 'name'}
+                                            direction={sorting.column === 'name' ? sorting.direction : 'asc'}
+                                            onClick={() => handleSort('name')}
+                                        >
+                                            Name
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <TableSortLabel
+                                            active={sorting.column === 'ltp'}
+                                            direction={sorting.column === 'ltp' ? sorting.direction : 'asc'}
+                                            onClick={() => handleSort('ltp')}
+                                        >
+                                            LTP
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <TableSortLabel
+                                            active={sorting.column === 'change'}
+                                            direction={sorting.column === 'change' ? sorting.direction : 'asc'}
+                                            onClick={() => handleSort('change')}
+                                        >
+                                            Change
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                                        <TableSortLabel
+                                            active={sorting.column === 'changePct'}
+                                            direction={sorting.column === 'changePct' ? sorting.direction : 'asc'}
+                                            onClick={() => handleSort('changePct')}
+                                        >
+                                            Change %
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <TableSortLabel
+                                            active={sorting.column === 'volume'}
+                                            direction={sorting.column === 'volume' ? sorting.direction : 'asc'}
+                                            onClick={() => handleSort('volume')}
+                                        >
+                                            Volume
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <TableSortLabel
+                                            active={sorting.column === 'high'}
+                                            direction={sorting.column === 'high' ? sorting.direction : 'asc'}
+                                            onClick={() => handleSort('high')}
+                                        >
+                                            High
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <TableSortLabel
+                                            active={sorting.column === 'low'}
+                                            direction={sorting.column === 'low' ? sorting.direction : 'asc'}
+                                            onClick={() => handleSort('low')}
+                                        >
+                                            Low
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sorting.column === 'exchange'}
+                                            direction={sorting.column === 'exchange' ? sorting.direction : 'asc'}
+                                            onClick={() => handleSort('exchange')}
+                                        >
+                                            Exchange
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sorting.column === 'sector'}
+                                            direction={sorting.column === 'sector' ? sorting.direction : 'asc'}
+                                            onClick={() => handleSort('sector')}
+                                        >
+                                            Sector
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell align="center">Watchlist</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {displayInstruments.map((instrument: Instrument) => {
+                                    const isStarred = watchlists.some(w => w.instrumentIds.includes(instrument.id));
+                                    const marketData = prices[instrument.id];
+                                    const isPositive = marketData ? marketData.change >= 0 : true;
 
-                                return (
-                                    <TableRow
-                                        key={instrument.id}
-                                        hover
-                                        sx={{ cursor: 'pointer' }}
-                                        onClick={() => navigate(`/instruments/${instrument.id}`)}
-                                    >
-                                        <TableCell sx={{ fontWeight: 'bold' }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                {instrument.symbol}
-                                                {instrument.isShortable && (
-                                                    <Tooltip title="Short Selling Available">
-                                                        <Chip label="S" size="small" color="warning" variant="outlined" sx={{ height: 16, width: 16, fontSize: '0.6em', '& .MuiChip-label': { px: 0 } }} />
-                                                    </Tooltip>
-                                                )}
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell>{instrument.name}</TableCell>
-                                        <TableCell align="right" sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                            <TickColoredPrice marketData={marketData} />
-                                        </TableCell>
-                                        <TableCell align="right" sx={{ color: isPositive ? 'success.main' : 'error.main', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                            {marketData ? `${isPositive ? '+' : '-'}₹${Math.abs(marketData.change).toFixed(2)}` : '--'}
-                                        </TableCell>
-                                        <TableCell align="right" sx={{ color: isPositive ? 'success.main' : 'error.main', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                            {marketData ? `${isPositive ? '+' : ''}${marketData.changePct.toFixed(2)}%` : '--'}
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            {marketData ? marketData.volume.toLocaleString() : '--'}
-                                        </TableCell>
-                                        <TableCell align="right" sx={{ color: 'success.main', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                            {marketData ? `₹${marketData.high.toFixed(2)}` : '--'}
-                                        </TableCell>
-                                        <TableCell align="right" sx={{ color: 'error.main', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                            {marketData ? `₹${marketData.low.toFixed(2)}` : '--'}
-                                        </TableCell>
-                                        <TableCell>{instrument.exchange}</TableCell>
-                                        <TableCell>{instrument.sector}</TableCell>
-                                        <TableCell align="center">
-                                            <IconButton
-                                                size="small"
-                                                onClick={(e) => handleWatchlistToggle(e, instrument)}
-                                                color={isStarred ? "primary" : "default"}
-                                            >
-                                                {isStarred ? (
-                                                    <StarIcon fontSize="small" />
-                                                ) : (
-                                                    <StarBorderIcon fontSize="small" />
-                                                )}
-                                            </IconButton>
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            <Button size="small" variant="outlined">View</Button>
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            )}
+                                    return (
+                                        <TableRow
+                                            key={instrument.id}
+                                            sx={{ cursor: 'pointer' }}
+                                            onClick={() => navigate(`/instruments/${instrument.id}`)}
+                                        >
+                                            <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    {instrument.symbol}
+                                                    {instrument.isShortable && (
+                                                        <Tooltip title="Short Selling Available">
+                                                            <Chip
+                                                                label="S"
+                                                                size="small"
+                                                                variant="outlined"
+                                                                sx={{
+                                                                    height: 18,
+                                                                    width: 18,
+                                                                    fontSize: '0.625rem',
+                                                                    color: 'text.secondary',
+                                                                    borderColor: 'divider',
+                                                                    borderRadius: '4px',
+                                                                    '& .MuiChip-label': { px: 0 }
+                                                                }}
+                                                            />
+                                                        </Tooltip>
+                                                    )}
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell sx={{ color: 'text.secondary', maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {instrument.name}
+                                            </TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                                                <TickColoredPrice marketData={marketData} />
+                                            </TableCell>
+                                            <TableCell align="right" sx={{
+                                                color: isPositive ? 'success.main' : 'error.main',
+                                                fontWeight: 500,
+                                                fontVariantNumeric: 'tabular-nums',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {marketData ? `${isPositive ? '+' : ''}${marketData.change.toFixed(2)}` : '--'}
+                                            </TableCell>
+                                            <TableCell align="right" sx={{
+                                                color: isPositive ? 'success.main' : 'error.main',
+                                                fontWeight: 500,
+                                                fontVariantNumeric: 'tabular-nums',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                <Chip
+                                                    label={marketData ? `${isPositive ? '+' : ''}${marketData.changePct.toFixed(2)}%` : '--'}
+                                                    size="small"
+                                                    color={isPositive ? 'success' : 'error'}
+                                                    variant="outlined"
+                                                    sx={{
+                                                        height: 20,
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 600,
+                                                        border: 'none',
+                                                        bgcolor: isPositive ? 'success.lighter' : 'error.lighter'
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell align="right" sx={{ color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}>
+                                                {marketData ? marketData.volume.toLocaleString() : '--'}
+                                            </TableCell>
+                                            <TableCell align="right" sx={{ color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}>
+                                                {marketData ? marketData.high.toFixed(2) : '--'}
+                                            </TableCell>
+                                            <TableCell align="right" sx={{ color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}>
+                                                {marketData ? marketData.low.toFixed(2) : '--'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip label={instrument.exchange} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.7rem', color: 'text.secondary' }} />
+                                            </TableCell>
+                                            <TableCell sx={{ color: 'text.secondary' }}>{instrument.sector}</TableCell>
+                                            <TableCell align="center">
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={(e) => handleWatchlistToggle(e, instrument)}
+                                                    sx={{
+                                                        color: isStarred ? 'warning.main' : 'action.disabled',
+                                                        transition: 'transform 0.2s',
+                                                        '&:hover': { transform: 'scale(1.1)', color: isStarred ? 'warning.dark' : 'warning.light' }
+                                                    }}
+                                                >
+                                                    {isStarred ? (
+                                                        <StarIcon fontSize="small" />
+                                                    ) : (
+                                                        <StarBorderIcon fontSize="small" />
+                                                    )}
+                                                </IconButton>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
 
-            <Box sx={{
-                position: 'sticky',
-                bottom: 0,
-                bgcolor: 'background.paper',
-                borderTop: '1px solid',
-                borderColor: 'divider',
-                zIndex: 1,
-                mx: -2,
-                px: 2
-            }}>
-                <TablePagination
-                    rowsPerPageOptions={[25, 50, 75, 100]}
-                    component="div"
-                    count={filteredInstruments.length}
-                    rowsPerPage={pagination.rowsPerPage}
-                    page={pagination.page}
-                    onPageChange={handleChangePage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                />
-            </Box>
-        </Box>
+
+                    <Box sx={{
+                        borderTop: '1px solid',
+                        borderColor: 'divider',
+                        bgcolor: 'background.paper',
+                        '& .MuiTablePagination-root': {
+                            minHeight: '32px'
+                        },
+                        '& .MuiTablePagination-toolbar': {
+                            minHeight: '32px',
+                            paddingTop: 0.5,
+                            paddingBottom: 0.5,
+                            paddingLeft: 1,
+                            paddingRight: 1
+                        }
+                    }}>
+                        <TablePagination
+                            rowsPerPageOptions={[25, 50, 75, 100]}
+                            component="div"
+                            count={filteredInstruments.length}
+                            rowsPerPage={pagination.rowsPerPage}
+                            page={pagination.page}
+                            onPageChange={handleChangePage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                        />
+                    </Box>
+                </Box>
+            )
+            }
+        </Box >
     );
 };

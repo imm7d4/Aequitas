@@ -410,8 +410,8 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
 
     return (
         <>
-            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
-                <Table size="small">
+            <TableContainer component={Paper} elevation={0} sx={{ maxHeight: 'calc(100vh - 350px)', overflow: 'auto', border: '1px solid', borderColor: 'divider' }}>
+                <Table size="small" stickyHeader>
                     <TableHead>
                         <TableRow sx={{ bgcolor: 'action.hover' }}>
                             {visibleColumns.includes('symbol') && <TableCell>Symbol</TableCell>}
