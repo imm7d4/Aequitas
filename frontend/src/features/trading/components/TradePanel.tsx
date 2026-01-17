@@ -18,6 +18,8 @@ import {
     InputLabel,
     Snackbar,
     Alert,
+    FormControlLabel,
+    Switch,
 } from '@mui/material';
 import {
     TrendingUp as BuyIcon,
@@ -25,6 +27,7 @@ import {
     Settings as AdvancedIcon,
 } from '@mui/icons-material';
 import { Instrument } from '@/features/instruments/types/instrument.types';
+import { ShortSellWarning } from './ShortSellWarning';
 import { orderService } from '../services/orderService';
 import { usePortfolioStore } from '@/features/portfolio/store/portfolioStore';
 
@@ -33,9 +36,10 @@ interface TradePanelProps {
     ltp: number;
     initialSide?: 'BUY' | 'SELL';
     initialQuantity?: number;
+    initialIntent?: 'OPEN_LONG' | 'OPEN_SHORT' | 'CLOSE_LONG' | 'CLOSE_SHORT';
 }
 
-export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initialSide = 'BUY', initialQuantity }) => {
+export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initialSide = 'BUY', initialQuantity, initialIntent }) => {
     const [side, setSide] = useState<'BUY' | 'SELL'>(initialSide);
     const [orderType, setOrderType] = useState<'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT' | 'TRAILING_STOP'>('LIMIT');
     const [quantity, setQuantity] = useState<string>(initialQuantity ? initialQuantity.toString() : '');
@@ -44,6 +48,12 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
 
     // Advanced mode state
     const [advancedMode, setAdvancedMode] = useState(false);
+
+    // Initialize shortMode based on initialIntent
+    const [shortMode, setShortMode] = useState(() => {
+        // If intent is OPEN_SHORT or CLOSE_SHORT, enable short mode
+        return initialIntent === 'OPEN_SHORT' || initialIntent === 'CLOSE_SHORT';
+    });
 
     const { fetchHoldings } = usePortfolioStore();
 
@@ -93,12 +103,51 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
         return qty * p * buffer;
     }, [quantity, price, orderType, ltp]);
 
-    // Calculate Margin (approximate for display)
+    // Risk Warning State
+    const [showRiskWarning, setShowRiskWarning] = useState(false);
+    const [riskAccepted, setRiskAccepted] = useState(() => localStorage.getItem('shortSellRiskAccepted') === 'true');
+
+    // Handle Short Mode Toggle
+    const handleShortModeChange = (enabled: boolean) => {
+        if (enabled && !riskAccepted) {
+            setShowRiskWarning(true);
+        } else {
+            setShortMode(enabled);
+        }
+    };
+
+    const handleRiskAccept = (accepted: boolean) => {
+        setShowRiskWarning(false);
+        if (accepted) {
+            setRiskAccepted(true);
+            localStorage.setItem('shortSellRiskAccepted', 'true');
+            setShortMode(true);
+        }
+    };
+
+    // Calculate Fees
+    const fees = useMemo(() => {
+        // Match backend fees.json: 0.03% (0.0003) capped at ₹20
+        const commissionRate = 0.0003; // 0.03%
+        const maxCommission = 20.0;     // ₹20 cap
+        const flatFee = 0.0;            // No flat fee
+
+        const commission = estValue * commissionRate;
+        return flatFee + Math.min(commission, maxCommission);
+    }, [estValue]);
+
+    // Calculate Required Margin
     const requiredMargin = useMemo(() => {
         const value = estValue;
-        const fees = 10 + (value * 0.0005); // Flat 10 + 0.05%
+
+        if (shortMode && side === 'SELL') {
+            // Short Sell Margin: 20% of Value + Fees
+            return (value * 0.20) + fees;
+        }
+
+        // Regular Buy: Full Value + Fees
         return value + fees;
-    }, [estValue]);
+    }, [estValue, shortMode, side, fees]);
 
     // Generate inline validation warnings
     const validationWarnings = useMemo(() => {
@@ -216,6 +265,9 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                 quantity: parseInt(quantity),
                 validity,
                 clientOrderId: crypto.randomUUID(),
+                intent: shortMode
+                    ? (side === 'SELL' ? 'OPEN_SHORT' : 'CLOSE_SHORT')
+                    : (side === 'BUY' ? 'OPEN_LONG' : 'CLOSE_LONG')
             };
 
             // Add price for LIMIT orders
@@ -297,6 +349,34 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                     />
                 </Box>
 
+
+
+                {/* Short Selling Toggle */}
+                {instrument.isShortable && (
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={shortMode}
+                                    onChange={(e) => handleShortModeChange(e.target.checked)}
+                                    size="small"
+                                    color="warning"
+                                />
+                            }
+                            label={
+                                <Typography variant="caption" fontWeight={600} color={shortMode ? 'warning.main' : 'text.secondary'}>
+                                    Short Sell Mode
+                                </Typography>
+                            }
+                        />
+                    </Box>
+                )}
+
+                <ShortSellWarning
+                    open={showRiskWarning}
+                    onClose={handleRiskAccept}
+                />
+
                 <ToggleButtonGroup
                     fullWidth
                     value={side}
@@ -307,18 +387,26 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                     <ToggleButton
                         value="BUY"
                         sx={{
-                            '&.Mui-selected': { bgcolor: 'success.main', color: 'white', '&:hover': { bgcolor: 'success.dark' } }
+                            '&.Mui-selected': {
+                                bgcolor: shortMode ? 'success.main' : 'success.main',
+                                color: 'white',
+                                '&:hover': { bgcolor: shortMode ? 'success.dark' : 'success.dark' }
+                            }
                         }}
                     >
-                        <BuyIcon sx={{ mr: 1, fontSize: 18 }} /> BUY
+                        <BuyIcon sx={{ mr: 1, fontSize: 18 }} /> {shortMode ? 'COVER (BUY)' : 'BUY'}
                     </ToggleButton>
                     <ToggleButton
                         value="SELL"
                         sx={{
-                            '&.Mui-selected': { bgcolor: 'error.main', color: 'white', '&:hover': { bgcolor: 'error.dark' } }
+                            '&.Mui-selected': {
+                                bgcolor: shortMode ? 'error.main' : 'error.main',
+                                color: 'white',
+                                '&:hover': { bgcolor: shortMode ? 'error.dark' : 'error.dark' }
+                            }
                         }}
                     >
-                        <SellIcon sx={{ mr: 1, fontSize: 18 }} /> SELL
+                        <SellIcon sx={{ mr: 1, fontSize: 18 }} /> {shortMode ? 'SHORT (SELL)' : 'SELL'}
                     </ToggleButton>
                 </ToggleButtonGroup>
 
@@ -525,43 +613,37 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                     )}
                 </Stack>
 
-                {/* Margin Display - Only for BUY orders */}
-                {estValue > 0 && side === 'BUY' && (
+                {/* Margin / Proceeds Display */}
+                {estValue > 0 && (
                     <Box sx={{ p: 1.5, bgcolor: 'background.default', borderRadius: 1 }}>
                         <Stack direction="row" justifyContent="space-between">
                             <Typography variant="caption" color="text.secondary">Est. Value</Typography>
                             <Typography variant="body2">₹{estValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</Typography>
                         </Stack>
-                        <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.5 }}>
-                            <Typography variant="caption" color="text.secondary">Est. Fees</Typography>
-                            <Typography variant="body2">₹{(requiredMargin - estValue).toLocaleString(undefined, { maximumFractionDigits: 2 })}</Typography>
-                        </Stack>
-                        <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.5, pt: 0.5, borderTop: '1px dashed', borderColor: 'divider' }}>
-                            <Typography variant="caption" fontWeight={600}>Required Margin</Typography>
-                            <Typography variant="body2" fontWeight={700} color="primary.main">
-                                ₹{requiredMargin.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                            </Typography>
-                        </Stack>
-                    </Box>
-                )}
 
-                {/* Value Display - For SELL orders */}
-                {estValue > 0 && side === 'SELL' && (
-                    <Box sx={{ p: 1.5, bgcolor: 'background.default', borderRadius: 1 }}>
-                        <Stack direction="row" justifyContent="space-between">
-                            <Typography variant="caption" color="text.secondary">Est. Value</Typography>
-                            <Typography variant="body2">₹{estValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</Typography>
-                        </Stack>
                         <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.5 }}>
                             <Typography variant="caption" color="text.secondary">Est. Fees</Typography>
-                            <Typography variant="body2">₹{(requiredMargin - estValue).toLocaleString(undefined, { maximumFractionDigits: 2 })}</Typography>
+                            <Typography variant="body2">₹{(fees).toLocaleString(undefined, { maximumFractionDigits: 2 })}</Typography>
                         </Stack>
-                        <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.5, pt: 0.5, borderTop: '1px dashed', borderColor: 'divider' }}>
-                            <Typography variant="caption" fontWeight={600}>Net Proceeds</Typography>
-                            <Typography variant="body2" fontWeight={700} color="success.main">
-                                ₹{(estValue - (requiredMargin - estValue)).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                            </Typography>
-                        </Stack>
+
+                        {/* Divider */}
+                        <Box sx={{ my: 0.5, borderTop: '1px dashed', borderColor: 'divider' }} />
+
+                        {side === 'BUY' || (side === 'SELL' && shortMode) ? (
+                            <Stack direction="row" justifyContent="space-between">
+                                <Typography variant="caption" fontWeight={600}>Required Margin</Typography>
+                                <Typography variant="body2" fontWeight={700} color="primary.main">
+                                    ₹{requiredMargin.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                </Typography>
+                            </Stack>
+                        ) : (
+                            <Stack direction="row" justifyContent="space-between">
+                                <Typography variant="caption" fontWeight={600}>Net Proceeds</Typography>
+                                <Typography variant="body2" fontWeight={700} color="success.main">
+                                    ₹{(estValue - fees).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                </Typography>
+                            </Stack>
+                        )}
                     </Box>
                 )}
 

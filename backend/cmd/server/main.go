@@ -123,6 +123,11 @@ func main() {
 	notificationCleanupService.Start()
 	defer notificationCleanupService.Stop()
 
+	// Initialize margin monitor service (runs every 3 minutes)
+	marginMonitorService := services.NewMarginMonitorService(tradingAccountRepo, portfolioService, notificationService)
+	marginMonitorService.Start()
+	defer marginMonitorService.Stop()
+
 	// Initialize matching engine service (runs every 3 seconds)
 	matchingService.Start()
 	defer matchingService.Stop()

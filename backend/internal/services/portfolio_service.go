@@ -46,7 +46,7 @@ func (s *PortfolioService) GetTradingAccount(ctx context.Context, userID string)
 
 // UpdatePosition processes a trade and updates the user's holding (Average Cost or Realized P&L)
 func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Trade) error {
-	log.Printf("[Portfolio] Updating position for Trade %s: %s %s Qty:%d Price:%f", trade.TradeID, trade.Side, trade.Symbol, trade.Quantity, trade.Price)
+	log.Printf("[Portfolio] Updating position for Trade %s: %s %s Qty:%d Price:%f Intent:%s", trade.TradeID, trade.Side, trade.Symbol, trade.Quantity, trade.Price, trade.Intent)
 
 	// Fetch existing holding (if any)
 	userID := trade.UserID.Hex()
@@ -57,99 +57,179 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 		return err
 	}
 
-	// Initialize new holding if none exists
-	if holding == nil {
-		holding = &models.Holding{
-			UserID:       trade.UserID,
-			AccountID:    trade.AccountID,
-			InstrumentID: trade.InstrumentID,
-			Symbol:       trade.Symbol,
-			Quantity:     0,
-			AvgCost:      0,
-			TotalCost:    0,
-			TotalFees:    0,
-			RealizedPL:   0,
+	totalTradeCost := trade.Price * float64(trade.Quantity)
+	fees := trade.Commission + trade.Fees
+
+	// Determine Intent if missing (Backward Compatibility)
+	intent := trade.Intent
+	if intent == "" {
+		if trade.Side == "BUY" {
+			intent = string(models.IntentOpenLong)
+		} else {
+			intent = string(models.IntentCloseLong)
 		}
 	}
 
-	if trade.Side == "BUY" {
-		// --- BUY LOGIC (Weighted Average Price) ---
-		// New Cost Basis = Old Total Cost + (Trade Price * Qty) [Raw Execution Cost]
-		// Fees are tracked separately in TotalFees for accurate P&L/Tax reporting later
-		costOfTrade := trade.Value // Raw value, excluding fees
-		fees := trade.Commission + trade.Fees
-
-		newTotalCost := holding.TotalCost + costOfTrade
-		newQuantity := holding.Quantity + trade.Quantity
-
-		if newQuantity > 0 {
-			holding.AvgCost = newTotalCost / float64(newQuantity)
+	if intent == string(models.IntentOpenLong) {
+		// --- OPEN LONG (Standard Buy) ---
+		if holding == nil {
+			holding = &models.Holding{
+				UserID:        trade.UserID,
+				AccountID:     trade.AccountID,
+				InstrumentID:  trade.InstrumentID,
+				Symbol:        trade.Symbol,
+				Quantity:      trade.Quantity,
+				PositionType:  models.PositionLong,
+				AvgEntryPrice: trade.Price, // Initial price
+				TotalCost:     totalTradeCost,
+				TotalFees:     fees,
+				CreatedAt:     time.Now(),
+				LastUpdated:   time.Now(),
+				MarginStatus:  models.MarginOK,
+			}
 		} else {
-			holding.AvgCost = 0
+			if holding.PositionType == models.PositionShort {
+				return errors.New("cannot open long on existing short position. Use CLOSE_SHORT")
+			}
+			// timeTypedQty removed
+			newTotalCost := holding.TotalCost + totalTradeCost
+			newQuantity := holding.Quantity + trade.Quantity
+
+			// Weighted Average Price
+			if newQuantity > 0 {
+				holding.AvgEntryPrice = newTotalCost / float64(newQuantity)
+			}
+
+			holding.TotalCost = newTotalCost
+			holding.Quantity = newQuantity
+			holding.TotalFees += fees
+			holding.PositionType = models.PositionLong // Ensure type is set
+			holding.LastUpdated = time.Now()
 		}
-
-		holding.TotalCost = newTotalCost
-		holding.Quantity = newQuantity
-		holding.TotalFees += fees
-
-	} else if trade.Side == "SELL" {
-		// --- SELL LOGIC (Realized P&L) ---
-		if holding.Quantity < trade.Quantity {
-			log.Printf("[Portfolio] Error: Selling more than owned. Owned: %d, Sold: %d", holding.Quantity, trade.Quantity)
+	} else if intent == string(models.IntentCloseLong) {
+		// --- CLOSE LONG (Standard Sell) ---
+		if holding == nil || holding.Quantity < trade.Quantity {
 			return errors.New("insufficient holdings to sell")
 		}
+		if holding.PositionType == models.PositionShort {
+			return errors.New("cannot close long on short position")
+		}
 
-		// Calculate Cost of Goods Sold (COGS) based on current AvgCost (Raw)
-		costOfSoldShares := float64(trade.Quantity) * holding.AvgCost
+		// Calculate Realized P&L
+		// Profit = (Sell Price - Buy Price) * Qty
+		pnl := (trade.Price - holding.AvgEntryPrice) * float64(trade.Quantity)
 
-		// Net Proceeds = Trade Value (Raw) - Fees [For P&L calc]
-		// Actually, standard P&L = (Sell Price - Buy Price) * Qty - SellFees - BuyFees(allocated)
-		// But here, we'll accumulate Realized PL as: (Net Proceeds - COGS).
-		// Note: Since COGS does NOT include buy fees anymore, RealizedPL will look higher initially.
-		// To be strictly accurate, we should subtract the pro-rated buy fees.
-		// Pro-rated buy fees = (TotalFees / TotalInitialQty) * SoldQty? No, TotalFees accumulates.
-		// A simple approximation for now: Just subtract Sell Fees from proceeds.
-		// Net Proceeds = trade.NetValue (Value - SellFees)
-
-		netProceeds := trade.NetValue
-
-		// Realized P&L for this specific trade
-		tradeRealizedPL := netProceeds - costOfSoldShares
-
-		// Update Holding Stats
-		holding.RealizedPL += tradeRealizedPL
 		holding.Quantity -= trade.Quantity
+		holding.TotalCost = float64(holding.Quantity) * holding.AvgEntryPrice
+		holding.RealizedPL += pnl
+		holding.TotalFees += fees
+		holding.LastUpdated = time.Now()
 
-		// Update TotalCost to reflect remaining shares
-		holding.TotalCost = float64(holding.Quantity) * holding.AvgCost
+		if err := s.accountService.UpdateRealizedPL(userID, pnl); err != nil {
+			log.Printf("[Portfolio] Failed to update realized P&L: %v", err)
+		}
 
-		// Note: We don't reduce TotalFees here, as it's a historical accumulator?
-		// Or should we reduce it to represent "Remaining Fees"?
-		// Usually TotalFees helps calculate "Break Even".
-		// If we want "Net P&L" for the position, we'd need (RealizedPL - AllocatableFees).
-		// For now, let's just accumulate sell fees too or leave it?
-		// Let's add Sell fees to TotalFees so we know total money burnt on fees for this symbol.
-		holding.TotalFees += (trade.Commission + trade.Fees)
+	} else if intent == string(models.IntentOpenShort) {
+		// --- OPEN SHORT ---
+		if holding == nil {
+			holding = &models.Holding{
+				UserID:        trade.UserID,
+				AccountID:     trade.AccountID,
+				InstrumentID:  trade.InstrumentID,
+				Symbol:        trade.Symbol,
+				Quantity:      trade.Quantity,
+				PositionType:  models.PositionShort,
+				AvgEntryPrice: trade.Price,    // Entry price for short
+				TotalCost:     totalTradeCost, // Tracks total value shorted (Liability)
+				TotalFees:     fees,
+				CreatedAt:     time.Now(),
+				LastUpdated:   time.Now(),
+				MarginStatus:  models.MarginOK,
+			}
+		} else {
+			if holding.PositionType == models.PositionLong {
+				return errors.New("cannot open short on existing long position")
+			}
+			newTotalCost := holding.TotalCost + totalTradeCost
+			newQuantity := holding.Quantity + trade.Quantity
 
-		// Update Global Realized P&L in Trading Account
-		if err := s.accountService.UpdateRealizedPL(userID, tradeRealizedPL); err != nil {
-			log.Printf("[Portfolio] Failed to update realized P&L for user %s: %v", userID, err)
-			// Non-blocking error, but should be noted
+			// Weighted Average Entry Price for Short
+			if newQuantity > 0 {
+				holding.AvgEntryPrice = newTotalCost / float64(newQuantity)
+			}
+			holding.TotalCost = newTotalCost
+			holding.Quantity = newQuantity
+			holding.TotalFees += fees
+			holding.PositionType = models.PositionShort // CRITICAL FIX: Force Type to Short
+			holding.LastUpdated = time.Now()
+		}
+
+		// BLOCK MARGIN LOGIC
+		// Requirement: 20% of Value
+		marginToBlock := totalTradeCost * 0.20
+		if err := s.accountService.BlockMargin(userID, marginToBlock); err != nil {
+			return fmt.Errorf("failed to block margin: %v", err)
+		}
+		holding.BlockedMargin += marginToBlock
+		holding.InitialMargin += marginToBlock
+
+	} else if intent == string(models.IntentCloseShort) {
+		// --- CLOSE SHORT (Buy to Cover) ---
+		if holding == nil || holding.PositionType != models.PositionShort {
+			return errors.New("no short position to cover")
+		}
+		if holding.Quantity < trade.Quantity {
+			return errors.New("insufficient short quantity to cover")
+		}
+
+		// Calculate P&L: (EntryPrice - ExitPrice) * Qty
+		// Short logic: Profit if Price goes DOWN (Entry - Exit > 0)
+		pnl := (holding.AvgEntryPrice - trade.Price) * float64(trade.Quantity)
+
+		// Calculate Margin Release
+		// CRITICAL FIX: If fully closing position, release ALL remaining margin
+		// Otherwise, use proportional release to avoid rounding errors
+		preTradeQty := float64(holding.Quantity)
+		marginRelease := 0.0
+
+		if trade.Quantity >= holding.Quantity {
+			// Full close - release ALL remaining margin to avoid rounding errors
+			marginRelease = holding.BlockedMargin
+			log.Printf("[Portfolio] Full close detected. Releasing all margin: %.2f", marginRelease)
+		} else if preTradeQty > 0 {
+			// Partial close - proportional release
+			marginRelease = holding.BlockedMargin * (float64(trade.Quantity) / preTradeQty)
+			log.Printf("[Portfolio] Partial close. Releasing proportional margin: %.2f (%.2f%%)", marginRelease, (float64(trade.Quantity)/preTradeQty)*100)
+		}
+
+		if err := s.accountService.ReleaseMargin(userID, marginRelease); err != nil {
+			log.Printf("[Portfolio] Failed to release margin: %v", err)
+		} else {
+			holding.BlockedMargin -= marginRelease
+			if holding.BlockedMargin < 0 {
+				holding.BlockedMargin = 0
+			}
+		}
+
+		holding.Quantity -= trade.Quantity
+		holding.TotalCost = float64(holding.Quantity) * holding.AvgEntryPrice
+		holding.RealizedPL += pnl
+		holding.TotalFees += fees
+		holding.LastUpdated = time.Now()
+
+		if err := s.accountService.UpdateRealizedPL(userID, pnl); err != nil {
+			log.Printf("[Portfolio] Failed to update P&L: %v", err)
 		}
 	}
 
-	// If quantity becomes 0 (or less, though safeguards exist), we generally keep record for history/RealizedP&L
-	// But usually 'GetHoldings' filters Qty > 0. We will Upsert.
-	// If the requirement is to delete closed positions, we can do that, but keeping them allows showing realized P&L later.
-	// We'll keep it upserted.
-
+	// Upsert Holding
 	err = s.portfolioRepo.UpsertHolding(ctx, holding)
 	if err != nil {
 		log.Printf("[Portfolio] Failed to upsert holding: %v", err)
 		return err
 	}
 
-	log.Printf("[Portfolio] Position updated successfully. New Qty: %d, Avg: %.2f", holding.Quantity, holding.AvgCost)
+	log.Printf("[Portfolio] Position updated successfully. New Qty: %d, Avg: %.2f", holding.Quantity, holding.AvgEntryPrice)
 	return nil
 }
 
@@ -184,27 +264,70 @@ func (s *PortfolioService) CaptureSnapshot(ctx context.Context, userID string) (
 		}
 
 		priceMap := make(map[string]float64)
+		staleCount := 0
 		for _, p := range prices {
+			// Check if price data is stale (>1 minute old)
+			if time.Since(p.UpdatedAt) > 1*time.Minute {
+				log.Printf("[Portfolio] WARNING: Stale market data for instrument %s (age: %v). Using fallback pricing.",
+					p.InstrumentID.Hex(), time.Since(p.UpdatedAt))
+				staleCount++
+				continue // Skip stale data, will use AvgEntryPrice fallback
+			}
 			priceMap[p.InstrumentID.Hex()] = p.LastPrice
+		}
+
+		if staleCount > 0 {
+			log.Printf("[Portfolio] Skipped %d stale price entries in snapshot calculation", staleCount)
 		}
 
 		for _, h := range holdings {
 			price, ok := priceMap[h.InstrumentID.Hex()]
 			if !ok {
-				price = h.AvgCost // Fallback
+				price = h.AvgEntryPrice // Fallback
 			}
-			holdingsValue += float64(h.Quantity) * price
+
+			value := float64(h.Quantity) * price
+			if h.PositionType == models.PositionShort {
+				holdingsValue -= value // Liability subtracts from equity
+			} else {
+				holdingsValue += value // Asset adds to equity
+			}
 		}
 	}
 
 	// 4. Create Snapshot
+	totalEquity := account.Balance + holdingsValue
+
 	snapshot := &models.PortfolioSnapshot{
 		UserID:        account.UserID,
 		Date:          time.Now(),
-		TotalEquity:   account.Balance + holdingsValue,
+		TotalEquity:   totalEquity,
 		CashBalance:   account.Balance,
 		HoldingsValue: holdingsValue,
 		CreatedAt:     time.Now(),
+	}
+
+	// CRITICAL: Circuit Breaker for Negative Equity
+	// This prevents platform from owing money due to unlimited short losses
+	if totalEquity < 0 {
+		log.Printf("🚨 CRITICAL ALERT: User %s has NEGATIVE EQUITY: %.2f", userID, totalEquity)
+		log.Printf("   Cash Balance: %.2f, Holdings Value: %.2f", account.Balance, holdingsValue)
+
+		// Log all short positions for debugging
+		for _, h := range holdings {
+			if h.PositionType == models.PositionShort {
+				log.Printf("   Short Position: %s Qty:%d AvgEntry:%.2f BlockedMargin:%.2f",
+					h.Symbol, h.Quantity, h.AvgEntryPrice, h.BlockedMargin)
+			}
+		}
+
+		// TODO: Implement auto-liquidation
+		// For now, just log critical alert
+		// In production, this should:
+		// 1. Force liquidate all short positions immediately
+		// 2. Notify admin via PagerDuty/email
+		// 3. Lock account to prevent further trading
+		log.Printf("⚠️  AUTO-LIQUIDATION NOT IMPLEMENTED - Manual intervention required!")
 	}
 
 	if err := s.portfolioRepo.CreateSnapshot(ctx, snapshot); err != nil {

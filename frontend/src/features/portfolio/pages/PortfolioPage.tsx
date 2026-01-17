@@ -67,25 +67,36 @@ export const PortfolioPage: React.FC = () => {
 
         let totalInvested = 0;
         let totalHoldingsValue = 0;
+        let totalUnrealizedPL = 0;
 
         holdings.forEach(h => {
             // Fallback to cost if no price
-            const ltp = marketData.prices[h.instrumentId]?.lastPrice || h.avgCost;
+            const ltp = marketData.prices[h.instrumentId]?.lastPrice || h.avgEntryPrice;
 
-            const invested = h.avgCost * h.quantity;
+            const invested = h.avgEntryPrice * h.quantity;
             const current = ltp * h.quantity;
 
             totalInvested += invested;
-            totalHoldingsValue += current;
+            totalHoldingsValue += current; // Note: For Shorts, this represents market value of liability
+
+            // Calculate P&L based on position type
+            let pnl = 0;
+            if (h.positionType === 'SHORT') {
+                pnl = (h.avgEntryPrice - ltp) * h.quantity;
+            } else {
+                pnl = (ltp - h.avgEntryPrice) * h.quantity;
+            }
+            totalUnrealizedPL += pnl;
         });
 
         // Unrealized P&L
-        const unrealizedPL = totalHoldingsValue - totalInvested;
+        const unrealizedPL = totalUnrealizedPL;
         const unrealizedPLPercent = totalInvested > 0 ? (unrealizedPL / totalInvested) * 100 : 0;
 
         // Use backend values for cash and realized PL
         const cashBalance = summaryData.cashBalance || 0;
         const realizedPL = summaryData.realizedPL || 0;
+        const blockedMargin = summaryData.blockedMargin || 0;
 
         // Total Equity = Cash + Current Holdings Value
         const totalEquity = cashBalance + totalHoldingsValue;
@@ -98,6 +109,7 @@ export const PortfolioPage: React.FC = () => {
             realizedPL,
             totalEquity,
             cashBalance,
+            blockedMargin,
             holdingsCount: holdings.length
         };
     }, [summaryData, marketData, holdings]);
@@ -107,6 +119,7 @@ export const PortfolioPage: React.FC = () => {
         totalEquity: 0,
         totalHoldingsValue: 0,
         cashBalance: 0,
+        blockedMargin: 0,
         unrealizedPL: 0,
         unrealizedPLPercent: 0,
         realizedPL: 0,
@@ -163,6 +176,7 @@ export const PortfolioPage: React.FC = () => {
                         totalEquity={displaySummary.totalEquity}
                         totalHoldingsValue={displaySummary.totalHoldingsValue}
                         cashBalance={displaySummary.cashBalance}
+                        blockedMargin={displaySummary.blockedMargin}
                         totalPL={displaySummary.unrealizedPL}
                         totalPLPercent={displaySummary.unrealizedPLPercent}
                         realizedPL={displaySummary.realizedPL}

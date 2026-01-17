@@ -83,13 +83,19 @@ func (r *PortfolioRepository) UpsertHolding(ctx context.Context, holding *models
 
 	update := bson.M{
 		"$set": bson.M{
-			"quantity":     holding.Quantity,
-			"avg_cost":     holding.AvgCost,
-			"total_cost":   holding.TotalCost,
-			"realized_pl":  holding.RealizedPL,
-			"last_updated": time.Now(),
-			"symbol":       holding.Symbol,
-			"account_id":   holding.AccountID,
+			"quantity":        holding.Quantity,
+			"avg_entry_price": holding.AvgEntryPrice,
+			"total_cost":      holding.TotalCost,
+			"realized_pl":     holding.RealizedPL,
+			"unrealized_pl":   holding.UnrealizedPL,
+			"total_pl":        holding.TotalPL,
+			"position_type":   holding.PositionType,
+			"blocked_margin":  holding.BlockedMargin,
+			"initial_margin":  holding.InitialMargin,
+			"margin_status":   holding.MarginStatus,
+			"last_updated":    time.Now(),
+			"symbol":          holding.Symbol,
+			"account_id":      holding.AccountID,
 		},
 		"$setOnInsert": bson.M{
 			"created_at": time.Now(),

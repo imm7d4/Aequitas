@@ -188,11 +188,16 @@ func (s *DashboardService) calculatePerformanceOverview(
 			if h.Quantity > 0 {
 				currentPrice, ok := priceMap[h.InstrumentID.Hex()]
 				if !ok {
-					currentPrice = h.AvgCost // Fallback
+					currentPrice = h.AvgEntryPrice // Fallback
 				}
 				currentValue := float64(h.Quantity) * currentPrice
 				holdingsValue += currentValue
-				unrealizedPL += currentValue - h.TotalCost
+
+				if h.PositionType == "SHORT" {
+					unrealizedPL += h.TotalCost - currentValue
+				} else {
+					unrealizedPL += currentValue - h.TotalCost
+				}
 			}
 		}
 	}
@@ -531,16 +536,22 @@ func (s *DashboardService) calculatePortfolioDistribution(
 				activePositions++
 				currentPrice, ok := priceMap[h.InstrumentID.Hex()]
 				if !ok {
-					currentPrice = h.AvgCost
+					currentPrice = h.AvgEntryPrice
 				}
 				currentValue := float64(h.Quantity) * currentPrice
 				holdingsValue += currentValue
+
+				// Calculate P&L based on position type
+				unrealizedPL := currentValue - h.TotalCost
+				if h.PositionType == "SHORT" {
+					unrealizedPL = h.TotalCost - currentValue
+				}
 
 				holdingBreakdowns = append(holdingBreakdowns, HoldingBreakdown{
 					Symbol:       h.Symbol,
 					Quantity:     h.Quantity,
 					CurrentValue: currentValue,
-					UnrealizedPL: currentValue - h.TotalCost,
+					UnrealizedPL: unrealizedPL,
 				})
 			}
 		}

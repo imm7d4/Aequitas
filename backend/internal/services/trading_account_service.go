@@ -183,3 +183,50 @@ func (s *TradingAccountService) UpdateRealizedPL(userID string, amount float64) 
 	_, err = s.repo.Update(account)
 	return err
 }
+
+// BlockMargin locks funds for short positions
+func (s *TradingAccountService) BlockMargin(userID string, amount float64) error {
+	account, err := s.repo.FindByUserID(userID)
+	if err != nil {
+		return err
+	}
+	if account == nil {
+		return errors.New("account not found")
+	}
+
+	available := account.Balance - account.BlockedMargin
+	if available < amount {
+		return errors.New("insufficient available funds to block margin")
+	}
+
+	account.BlockedMargin += amount
+	account.UpdatedAt = time.Now()
+
+	_, err = s.repo.Update(account)
+	return err
+}
+
+// ReleaseMargin unlocks funds when short positions are covered
+func (s *TradingAccountService) ReleaseMargin(userID string, amount float64) error {
+	account, err := s.repo.FindByUserID(userID)
+	if err != nil {
+		return err
+	}
+	if account == nil {
+		return errors.New("account not found")
+	}
+
+	// Ensure we don't release more than blocked (with some tolerance for floating point)
+	if account.BlockedMargin < amount-0.01 {
+		return fmt.Errorf("cannot release %.2f, only %.2f blocked", amount, account.BlockedMargin)
+	}
+
+	account.BlockedMargin -= amount
+	if account.BlockedMargin < 0 {
+		account.BlockedMargin = 0
+	}
+	account.UpdatedAt = time.Now()
+
+	_, err = s.repo.Update(account)
+	return err
+}

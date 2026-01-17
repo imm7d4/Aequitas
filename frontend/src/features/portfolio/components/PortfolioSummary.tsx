@@ -5,14 +5,16 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import PieChartIcon from '@mui/icons-material/PieChart';
+import LockIcon from '@mui/icons-material/Lock';
 
 interface PortfolioSummaryProps {
     totalEquity: number;
     totalHoldingsValue: number;
     cashBalance: number;
+    blockedMargin: number;
     totalPL: number; // This is Unrealized P&L
     totalPLPercent: number; // This is Unrealized %
-    realizedPL: number; // New prop
+    realizedPL: number;
     holdingsCount: number;
 }
 
@@ -20,6 +22,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     totalEquity = 0,
     totalHoldingsValue = 0,
     cashBalance = 0,
+    blockedMargin = 0,
     totalPL = 0,
     totalPLPercent = 0,
     realizedPL = 0,
@@ -28,6 +31,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     const theme = useTheme();
     const isProfit = totalPL >= 0;
     const isRealizedProfit = realizedPL >= 0;
+    const availableCash = cashBalance - blockedMargin;
 
     return (
         <Grid container spacing={2}>
@@ -55,16 +59,16 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                 <Card sx={{ height: '100%', border: 1, borderColor: 'divider', boxShadow: 'none' }}>
                     <CardContent>
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
-                            <Box sx={{ p: 0.5, borderRadius: 1, bgcolor: alpha(theme.palette.warning.main, 0.1) }}>
-                                <AccountBalanceWalletIcon sx={{ fontSize: 20, color: 'warning.main' }} />
+                            <Box sx={{ p: 0.5, borderRadius: 1, bgcolor: alpha(theme.palette.success.main, 0.1) }}>
+                                <AccountBalanceWalletIcon sx={{ fontSize: 20, color: 'success.main' }} />
                             </Box>
-                            <Typography variant="subtitle2" color="text.secondary">Cash Balance</Typography>
+                            <Typography variant="subtitle2" color="text.secondary">Available Cash</Typography>
                         </Box>
                         <Typography variant="h5" fontWeight={800}>
-                            ₹{cashBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                            ₹{availableCash.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                            Available to Trade
+                            Free to Trade
                         </Typography>
                     </CardContent>
                 </Card>
@@ -89,8 +93,8 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                 </Card>
             </Grid>
 
-            {/* Row 2: Performance */}
-            <Grid item xs={12} md={6}>
+            {/* Row 2: Performance + Margin */}
+            <Grid item xs={12} md={blockedMargin > 0 ? 4 : 6}>
                 <Card sx={{ height: '100%', border: 1, borderColor: 'divider', boxShadow: 'none' }}>
                     <CardContent>
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
@@ -113,7 +117,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                 </Card>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={blockedMargin > 0 ? 4 : 6}>
                 <Card sx={{ height: '100%', border: 1, borderColor: 'divider', boxShadow: 'none' }}>
                     <CardContent>
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
@@ -135,6 +139,28 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                     </CardContent>
                 </Card>
             </Grid>
+
+            {/* Blocked Margin Card - Only show when > 0 */}
+            {blockedMargin > 0 && (
+                <Grid item xs={12} md={4}>
+                    <Card sx={{ height: '100%', border: 1, borderColor: 'warning.main', boxShadow: 'none', bgcolor: alpha(theme.palette.warning.main, 0.05) }}>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+                                <Box sx={{ p: 0.5, borderRadius: 1, bgcolor: alpha(theme.palette.warning.main, 0.2) }}>
+                                    <LockIcon sx={{ fontSize: 20, color: 'warning.main' }} />
+                                </Box>
+                                <Typography variant="subtitle2" color="text.secondary">Blocked Margin</Typography>
+                            </Box>
+                            <Typography variant="h5" fontWeight={800} color="warning.main">
+                                ₹{blockedMargin.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                Locked for Short Positions
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+            )}
         </Grid>
     );
 };

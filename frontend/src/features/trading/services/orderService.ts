@@ -8,7 +8,9 @@ export interface OrderRequest {
     quantity: number;
     price?: number;
     clientOrderId: string;
+    clientOrderId: string;
     symbol: string;
+    intent?: 'OPEN_LONG' | 'OPEN_SHORT' | 'CLOSE_LONG' | 'CLOSE_SHORT';
 
     // Stop Order Fields
     stopPrice?: number;
@@ -22,6 +24,7 @@ export interface OrderResponse {
     orderId: string;
     instrumentId: string;
     symbol: string;
+    intent?: string;
     side: 'BUY' | 'SELL';
     orderType: 'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT' | 'TRAILING_STOP';
     quantity: number;

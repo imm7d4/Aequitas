@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 
 	"aequitas/internal/middleware"
@@ -58,11 +59,14 @@ func (c *PortfolioController) GetSummary(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	log.Printf("[Portfolio Summary] User %s - Balance: %.2f, BlockedMargin: %.2f", userID, account.Balance, account.BlockedMargin)
+
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"holdings":    holdings,
-		"realizedPL":  account.RealizedPL,
-		"totalEquity": account.Balance, // Sending balance too for completeness
-		"cashBalance": account.Balance,
+		"holdings":      holdings,
+		"realizedPL":    account.RealizedPL,
+		"totalEquity":   account.Balance,
+		"cashBalance":   account.Balance,
+		"blockedMargin": account.BlockedMargin,
 	}, "Portfolio summary fetched successfully")
 }
 

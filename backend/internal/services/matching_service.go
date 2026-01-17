@@ -262,6 +262,7 @@ func (s *MatchingService) createTrade(order *models.Order, price float64) (*mode
 		InstrumentID: order.InstrumentID,
 		Symbol:       order.Symbol,
 		Side:         order.Side,
+		Intent:       order.Intent,
 		Quantity:     order.Quantity,
 		Price:        price,
 		Value:        value,
