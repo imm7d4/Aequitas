@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Box, Typography, Container, CircularProgress, Button } from '@mui/material';
+import { Box, Typography, Container, CircularProgress, Tabs, Tab } from '@mui/material';
 import { portfolioService, PortfolioSummaryData } from '../services/portfolioService';
 import { HoldingsTable } from '../components/HoldingsTable';
 // Removed unused accountService
@@ -14,6 +14,11 @@ export const PortfolioPage: React.FC = () => {
 
     const [summaryData, setSummaryData] = useState<PortfolioSummaryData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [tabValue, setTabValue] = useState(0);
+
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+        setTabValue(newValue);
+    };
 
     // Fetch portfolio summary on mount
     useEffect(() => {
@@ -124,18 +129,23 @@ export const PortfolioPage: React.FC = () => {
     return (
         <Container maxWidth="xl" sx={{ height: 'calc(100vh - 64px)', pb: 1, display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ flexShrink: 0 }}>
-                <Box sx={{ mb: 2 }}>
-                    <Box>
-                        <Typography variant="h5" fontWeight={700} gutterBottom>
-                            Portfolio
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary">
-                            Manage your holdings and track performance.
-                        </Typography>
-                    </Box>
+                <Box sx={{ mb: 1.5 }}>
+                    <Typography variant="h5" fontWeight={700}>
+                        Portfolio
+                    </Typography>
                 </Box>
 
-                <Box sx={{ mb: 2 }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 1.5 }}>
+                    <Tabs value={tabValue} onChange={handleTabChange} aria-label="portfolio tabs">
+                        <Tab label="Overview" />
+                        <Tab label="Holdings" />
+                    </Tabs>
+                </Box>
+            </Box>
+
+            {/* Overview Tab */}
+            {tabValue === 0 && (
+                <Box sx={{ flexShrink: 0, overflow: 'auto', flex: 1, minHeight: 0 }}>
                     <PortfolioSummary
                         totalEquity={displaySummary.totalEquity}
                         totalHoldingsValue={displaySummary.totalHoldingsValue}
@@ -147,16 +157,42 @@ export const PortfolioPage: React.FC = () => {
                         holdingsCount={displaySummary.holdingsCount}
                         holdings={holdings}
                         marketPrices={marketPrices}
+                        freeCash={summaryData?.freeCash || 0}
+                        marginCash={summaryData?.marginCash || 0}
+                        settlementPending={summaryData?.settlementPending || 0}
                     />
                 </Box>
-            </Box>
+            )}
 
-            <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-                <Typography variant="h6" fontWeight={700} gutterBottom sx={{ mb: 2 }}>
-                    Your Holdings
-                </Typography>
-                <HoldingsTable holdings={holdings} />
-            </Box>
+            {/* Holdings Tab */}
+            {tabValue === 1 && (
+                <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6" fontWeight={700}>
+                            Your Holdings
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Box sx={{ textAlign: 'right' }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                                    Unrealized P&L
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    fontWeight={700}
+                                    color={displaySummary.unrealizedPL >= 0 ? 'success.main' : 'error.main'}
+                                    sx={{ fontSize: '0.95rem' }}
+                                >
+                                    {displaySummary.unrealizedPL >= 0 ? '+' : '-'}₹{Math.abs(displaySummary.unrealizedPL).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                    <Typography component="span" variant="caption" sx={{ ml: 0.5, fontSize: '0.7rem' }}>
+                                        ({displaySummary.unrealizedPL >= 0 ? '+' : ''}{displaySummary.unrealizedPLPercent.toFixed(2)}%)
+                                    </Typography>
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Box>
+                    <HoldingsTable holdings={holdings} />
+                </Box>
+            )}
         </Container>
     );
 };

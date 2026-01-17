@@ -15,12 +15,24 @@ export interface Holding {
     marginStatus: 'OK' | 'CALL' | 'CRITICAL' | 'LIQUIDATED';
 }
 
+export interface ShortRiskExposure {
+    currentLiability: number;
+    risk5Percent: number;
+    risk10Percent: number;
+    marginCallTrigger: number;
+    availableBuffer: number;
+}
+
 export interface PortfolioSummaryData {
     holdings: Holding[];
     realizedPL: number;
     totalEquity: number;
     cashBalance: number;
     blockedMargin: number;
+    freeCash: number;
+    marginCash: number;
+    settlementPending: number;
+    shortRiskExposure?: ShortRiskExposure;
 }
 
 export const portfolioService = {

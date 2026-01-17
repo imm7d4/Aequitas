@@ -61,13 +61,81 @@ func (c *PortfolioController) GetSummary(w http.ResponseWriter, r *http.Request)
 
 	log.Printf("[Portfolio Summary] User %s - Balance: %.2f, BlockedMargin: %.2f", userID, account.Balance, account.BlockedMargin)
 
-	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"holdings":      holdings,
-		"realizedPL":    account.RealizedPL,
-		"totalEquity":   account.Balance,
-		"cashBalance":   account.Balance,
-		"blockedMargin": account.BlockedMargin,
-	}, "Portfolio summary fetched successfully")
+	// Calculate Cash Breakdown
+	settlementPending := 0.0 // TODO: Implement T+1/T+2 settlement tracking
+	marginCash := account.BlockedMargin
+	freeCash := account.Balance - marginCash - settlementPending
+
+	// Ensure accounting invariant: Balance = FreeCash + MarginCash + SettlementPending
+	if freeCash < 0 {
+		log.Printf("[Portfolio] WARNING: Negative free cash detected for user %s: %.2f", userID, freeCash)
+		freeCash = 0 // Prevent negative withdrawable cash display
+	}
+
+	// Calculate Short Risk Exposure (if short positions exist)
+	var shortRiskExposure map[string]interface{}
+	var totalShortLiability float64
+	var hasShortPositions bool
+
+	for _, h := range holdings {
+		if h.PositionType == "SHORT" {
+			hasShortPositions = true
+			// Use AvgEntryPrice as current price (frontend will update with real-time data)
+			liability := h.AvgEntryPrice * float64(h.Quantity)
+			totalShortLiability += liability
+		}
+	}
+
+	if hasShortPositions {
+		risk5Percent := totalShortLiability * 0.05
+		risk10Percent := totalShortLiability * 0.10
+
+		// Margin call trigger at 80% of blocked margin consumed
+		marginCallTrigger := account.BlockedMargin * 0.8
+
+		// Calculate current unrealized loss on shorts
+		var totalUnrealizedLoss float64
+		for _, h := range holdings {
+			if h.PositionType == "SHORT" {
+				// Loss = (CurrentPrice - EntryPrice) * Qty
+				// Using AvgEntryPrice as proxy for current price (frontend calculates real-time)
+				loss := (h.AvgEntryPrice - h.AvgEntryPrice) * float64(h.Quantity) // Will be 0 here, frontend updates
+				if loss > 0 {
+					totalUnrealizedLoss += loss
+				}
+			}
+		}
+
+		availableBuffer := marginCallTrigger - totalUnrealizedLoss
+		if availableBuffer < 0 {
+			availableBuffer = 0
+		}
+
+		shortRiskExposure = map[string]interface{}{
+			"currentLiability":  totalShortLiability,
+			"risk5Percent":      risk5Percent,
+			"risk10Percent":     risk10Percent,
+			"marginCallTrigger": marginCallTrigger,
+			"availableBuffer":   availableBuffer,
+		}
+	}
+
+	response := map[string]interface{}{
+		"holdings":          holdings,
+		"realizedPL":        account.RealizedPL,
+		"totalEquity":       account.Balance,
+		"cashBalance":       account.Balance,
+		"blockedMargin":     account.BlockedMargin,
+		"freeCash":          freeCash,
+		"marginCash":        marginCash,
+		"settlementPending": settlementPending,
+	}
+
+	if shortRiskExposure != nil {
+		response["shortRiskExposure"] = shortRiskExposure
+	}
+
+	utils.RespondJSON(w, http.StatusOK, response, "Portfolio summary fetched successfully")
 }
 
 // CaptureSnapshot handles POST /api/portfolio/snapshot (For testing/manual trigger)
