@@ -47,9 +47,11 @@ export const ShortRiskWidget: React.FC<ShortRiskWidgetProps> = ({ exposure }) =>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <WarningIcon sx={{ color: 'warning.main', fontSize: 20 }} />
                     <Box>
-                        <Typography variant="caption" fontWeight={700} color="warning.main" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                            Short Risk
-                        </Typography>
+                        <Tooltip title="Current market value of your short debt (shares borrowed and sold)." arrow>
+                            <Typography variant="caption" fontWeight={700} color="warning.main" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'help' }}>
+                                Short Risk
+                            </Typography>
+                        </Tooltip>
                         <Typography variant="body2" fontWeight={600}>
                             ₹{(exposure.currentLiability / 100000).toFixed(2)}L
                         </Typography>
@@ -118,10 +120,12 @@ export const ShortRiskWidget: React.FC<ShortRiskWidgetProps> = ({ exposure }) =>
                         }}
                     />
 
-                    <Typography variant="caption" color={isCriticalBuffer ? 'error.main' : 'text.secondary'} sx={{ fontSize: '0.65rem' }}>
-                        ₹{(exposure.availableBuffer / 100000).toFixed(2)}L remaining
-                        {isCriticalBuffer && ' ⚠️'}
-                    </Typography>
+                    <Tooltip title="Absolute cash amount remaining before margin call trigger." arrow placement="bottom">
+                        <Typography variant="caption" color={isCriticalBuffer ? 'error.main' : 'text.secondary'} sx={{ fontSize: '0.65rem', cursor: 'help' }}>
+                            ₹{(exposure.availableBuffer / 100000).toFixed(2)}L remaining
+                            {isCriticalBuffer && ' ⚠️'}
+                        </Typography>
+                    </Tooltip>
                 </Box>
             </Stack>
         </Paper>

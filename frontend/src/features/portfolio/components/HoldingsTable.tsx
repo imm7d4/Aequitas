@@ -71,13 +71,41 @@ export const HoldingsTable: React.FC<HoldingsTableProps> = ({ holdings }) => {
             >
                 <TableHead sx={{ bgcolor: 'background.default' }}>
                     <TableRow>
-                        <TableCell>Instrument</TableCell>
-                        <TableCell align="right">Qty</TableCell>
-                        <TableCell align="right">Avg. Cost</TableCell>
-                        <TableCell align="right">LTP</TableCell>
-                        <TableCell align="right">Current Value</TableCell>
-                        <TableCell align="right">Blocked Margin</TableCell>
-                        <TableCell align="right">P&L</TableCell>
+                        <TableCell>
+                            <Tooltip title="Stock Symbol and current position details" arrow placement="top">
+                                <Box sx={{ cursor: 'help' }}>Instrument</Box>
+                            </Tooltip>
+                        </TableCell>
+                        <TableCell align="right">
+                            <Tooltip title="Number of shares held (Positive for Long, Negative for Short)" arrow placement="top">
+                                <Box sx={{ cursor: 'help' }}>Qty</Box>
+                            </Tooltip>
+                        </TableCell>
+                        <TableCell align="right">
+                            <Tooltip title="Average price per share at entry" arrow placement="top">
+                                <Box sx={{ cursor: 'help' }}>Avg. Cost</Box>
+                            </Tooltip>
+                        </TableCell>
+                        <TableCell align="right">
+                            <Tooltip title="Last Traded Price" arrow placement="top">
+                                <Box sx={{ cursor: 'help' }}>LTP</Box>
+                            </Tooltip>
+                        </TableCell>
+                        <TableCell align="right">
+                            <Tooltip title="Current market value. For shorts, this is the liability to cover." arrow placement="top">
+                                <Box sx={{ cursor: 'help' }}>Value</Box>
+                            </Tooltip>
+                        </TableCell>
+                        <TableCell align="right">
+                            <Tooltip title="Cash blocked by the exchange for open positions" arrow placement="top">
+                                <Box sx={{ cursor: 'help' }}>Margin</Box>
+                            </Tooltip>
+                        </TableCell>
+                        <TableCell align="right">
+                            <Tooltip title="Total Unrealized Profit or Loss" arrow placement="top">
+                                <Box sx={{ cursor: 'help' }}>P&L</Box>
+                            </Tooltip>
+                        </TableCell>
                         <TableCell align="right">Action</TableCell>
                     </TableRow>
                 </TableHead>

@@ -222,15 +222,22 @@ Market transparency and data feeds.
 
 ---
 
-### Phase 9 - Reporting & P&L 📅
-**Status:** Not Started  
-Trade history and profit/loss calculations.
+### Phase 9 - Short Positions 🚧
+**Status:** In Progress (1/2 complete)  
+Advanced position management for short selling and risk control.
+
+**User Stories:**
+- ✅ US-9.1: Short Selling Support (Backend/Frontend)
+- 📋 US-9.2: Auto-Liquidation System
 
 ---
 
-### Phase 10 - Audit & Admin 📅
-**Status:** Not Started  
-Compliance, audit logs, and administrative controls.
+### Phase 10 - Reporting & Analytics �
+**Status:** In Progress (0/1 complete)  
+Detailed trade analysis, performance metrics, and historical reporting.
+
+**User Stories:**
+- 📋 US-10.1: Universal Trade Diagnostics
 
 ---
 

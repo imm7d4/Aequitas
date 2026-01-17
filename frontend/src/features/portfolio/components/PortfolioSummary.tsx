@@ -9,6 +9,7 @@ import {
     Grid,
     LinearProgress,
     Chip,
+    Tooltip,
 } from '@mui/material';
 import {
     TrendingUp as TrendingUpIcon,
@@ -86,9 +87,11 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             <Paper elevation={0} sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 1, mb: 1 }}>
                 <Grid container spacing={1.5}>
                     <Grid item xs={3}>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block', mb: 0.25 }}>
-                            Net Worth
-                        </Typography>
+                        <Tooltip title="Net Worth = Total Cash + Long Holdings - Short Liability. Total absolute value of your equity." arrow placement="top">
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block', mb: 0.25, cursor: 'help' }}>
+                                Net Worth
+                            </Typography>
+                        </Tooltip>
                         <Typography variant="body1" fontWeight={700} color="primary.main" sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.95rem' }}>
                             ₹{totalEquity.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                         </Typography>
@@ -97,9 +100,11 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                         </Typography>
                     </Grid>
                     <Grid item xs={3}>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block', mb: 0.25 }}>
-                            Free Cash
-                        </Typography>
+                        <Tooltip title="Cash available for new trades or withdrawals. Total Cash - Margin Used - Pending." arrow placement="top">
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block', mb: 0.25, cursor: 'help' }}>
+                                Free Cash
+                            </Typography>
+                        </Tooltip>
                         <Typography variant="body1" fontWeight={700} color="success.main" sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.95rem' }}>
                             ₹{freeCash.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                         </Typography>
@@ -108,9 +113,11 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                         </Typography>
                     </Grid>
                     <Grid item xs={3}>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block', mb: 0.25 }}>
-                            Margin Used
-                        </Typography>
+                        <Tooltip title="Cash blocked to support your active short positions." arrow placement="top">
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block', mb: 0.25, cursor: 'help' }}>
+                                Margin Used
+                            </Typography>
+                        </Tooltip>
                         <Typography variant="body1" fontWeight={700} sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.95rem' }}>
                             ₹{marginCash.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                         </Typography>
@@ -119,9 +126,11 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                         </Typography>
                     </Grid>
                     <Grid item xs={3}>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block', mb: 0.25 }}>
-                            Short Risk
-                        </Typography>
+                        <Tooltip title="Current market value of borrowed shares. This is a debt that increases if prices rise." arrow placement="top">
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block', mb: 0.25, cursor: 'help' }}>
+                                Short Risk
+                            </Typography>
+                        </Tooltip>
                         <Typography variant="body1" fontWeight={700} color="error.main" sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.95rem' }}>
                             ₹{Math.abs(shortLiability).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                         </Typography>
@@ -140,20 +149,26 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                             Equity Breakdown
                         </Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4 }}>
-                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>Cash</Typography>
+                            <Tooltip title="Total ledger balance including blocked margin and pending settlements." placement="left" arrow>
+                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', cursor: 'help' }}>Cash</Typography>
+                            </Tooltip>
                             <Typography variant="body2" fontWeight={600} sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.8rem' }}>
                                 ₹{cashBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4 }}>
-                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>Long Holdings</Typography>
+                            <Tooltip title="Current market value of stocks you own (buy positions)." placement="left" arrow>
+                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', cursor: 'help' }}>Long Holdings</Typography>
+                            </Tooltip>
                             <Typography variant="body2" fontWeight={600} sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.8rem' }}>
                                 ₹{longValue.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </Typography>
                         </Box>
                         {hasShortPositions && (
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4 }}>
-                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>Short Liability</Typography>
+                                <Tooltip title="Value of stocks you've shorted. This amount is subtracted from your equity." placement="left" arrow>
+                                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', cursor: 'help' }}>Short Liability</Typography>
+                                </Tooltip>
                                 <Typography variant="body2" fontWeight={600} color="error.main" sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.8rem' }}>
                                     -₹{Math.abs(shortLiability).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                                 </Typography>
@@ -161,13 +176,17 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                         )}
                         <Divider sx={{ my: 0.5 }} />
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4 }}>
-                            <Typography variant="body2" fontWeight={600} sx={{ fontSize: '0.8rem' }}>Unrealized P&L</Typography>
+                            <Tooltip title="Total profit or loss on current active positions based on live market prices." placement="left" arrow>
+                                <Typography variant="body2" fontWeight={600} sx={{ fontSize: '0.8rem', cursor: 'help' }}>Unrealized P&L</Typography>
+                            </Tooltip>
                             <Typography variant="body2" fontWeight={700} color={isUnrealizedProfit ? 'success.main' : 'error.main'} sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.8rem' }}>
                                 {isUnrealizedProfit ? '+' : '-'}₹{Math.abs(totalPL).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4 }}>
-                            <Typography variant="body2" fontWeight={600} sx={{ fontSize: '0.8rem' }}>Realized P&L</Typography>
+                            <Tooltip title="Profit or loss from trades that have been closed (squared off)." placement="left" arrow>
+                                <Typography variant="body2" fontWeight={600} sx={{ fontSize: '0.8rem', cursor: 'help' }}>Realized P&L</Typography>
+                            </Tooltip>
                             <Typography variant="body2" fontWeight={700} color={isRealizedProfit ? 'success.main' : 'error.main'} sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.8rem' }}>
                                 {isRealizedProfit ? '+' : '-'}₹{Math.abs(realizedPL).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </Typography>
@@ -180,7 +199,9 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                             Cash & Liquidity
                         </Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4 }}>
-                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>Total Cash</Typography>
+                            <Tooltip title="Absolute ledger balance (Free Cash + Margin + Pending)." placement="left" arrow>
+                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', cursor: 'help' }}>Total Cash</Typography>
+                            </Tooltip>
                             <Typography variant="body2" fontWeight={600} sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.8rem' }}>
                                 ₹{cashBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </Typography>
@@ -205,7 +226,9 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                         </Box>
                         <Divider sx={{ my: 0.5 }} />
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4 }}>
-                            <Typography variant="body2" fontWeight={600} sx={{ fontSize: '0.8rem' }}>Available to Trade</Typography>
+                            <Tooltip title="Buying power for new trades. Matches your Free Cash." placement="left" arrow>
+                                <Typography variant="body2" fontWeight={600} sx={{ fontSize: '0.8rem', cursor: 'help' }}>Available to Trade</Typography>
+                            </Tooltip>
                             <Typography variant="body2" fontWeight={700} color="success.main" sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.8rem' }}>
                                 ₹{freeCash.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </Typography>
@@ -226,19 +249,25 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                     </Box>
                     <Grid container spacing={1.5} sx={{ mb: 0.75 }}>
                         <Grid item xs={4}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>Liability</Typography>
+                            <Tooltip title="Current market value of your short debt." arrow>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', cursor: 'help' }}>Liability</Typography>
+                            </Tooltip>
                             <Typography variant="body2" fontWeight={700} sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.8rem' }}>
                                 ₹{Math.abs(shortLiability).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </Typography>
                         </Grid>
                         <Grid item xs={4}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>+5% Risk</Typography>
+                            <Tooltip title="Estimated additional loss if shorted stocks rise by 5%." arrow>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', cursor: 'help' }}>+5% Risk</Typography>
+                            </Tooltip>
                             <Typography variant="body2" fontWeight={700} color="warning.main" sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.8rem' }}>
                                 ₹{risk5.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </Typography>
                         </Grid>
                         <Grid item xs={4}>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>+10% Risk</Typography>
+                            <Tooltip title="Probability of significant loss if market rallies 10% against your shorts." arrow>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', cursor: 'help' }}>+10% Risk</Typography>
+                            </Tooltip>
                             <Typography variant="body2" fontWeight={700} color="error.main" sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.8rem' }}>
                                 ₹{risk10.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </Typography>

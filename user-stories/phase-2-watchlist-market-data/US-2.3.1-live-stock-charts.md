@@ -215,5 +215,5 @@ MongoDB (completed candles only)
 
 | Date | Author | Change |
 |------|--------|--------|
-| 2026-01-03 | Antigravity | Initial creation |
-| 2026-01-03 | Antigravity | Implementation started |
+| 2026-01-03 | AI Assistant | Initial creation |
+| 2026-01-03 | AI Assistant | Implementation started |
