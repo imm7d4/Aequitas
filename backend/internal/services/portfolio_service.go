@@ -186,12 +186,20 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 		// Short logic: Profit if Price goes DOWN (Entry - Exit > 0)
 		pnl := (holding.AvgEntryPrice - trade.Price) * float64(trade.Quantity)
 
-		// Calculate Margin Release (Proportional)
-		// Release = BlockedMargin * (CoverQty / PreTradeQty)
+		// Calculate Margin Release
+		// CRITICAL FIX: If fully closing position, release ALL remaining margin
+		// Otherwise, use proportional release to avoid rounding errors
 		preTradeQty := float64(holding.Quantity)
 		marginRelease := 0.0
-		if preTradeQty > 0 {
+
+		if trade.Quantity >= holding.Quantity {
+			// Full close - release ALL remaining margin to avoid rounding errors
+			marginRelease = holding.BlockedMargin
+			log.Printf("[Portfolio] Full close detected. Releasing all margin: %.2f", marginRelease)
+		} else if preTradeQty > 0 {
+			// Partial close - proportional release
 			marginRelease = holding.BlockedMargin * (float64(trade.Quantity) / preTradeQty)
+			log.Printf("[Portfolio] Partial close. Releasing proportional margin: %.2f (%.2f%%)", marginRelease, (float64(trade.Quantity)/preTradeQty)*100)
 		}
 
 		if err := s.accountService.ReleaseMargin(userID, marginRelease); err != nil {
@@ -256,8 +264,20 @@ func (s *PortfolioService) CaptureSnapshot(ctx context.Context, userID string) (
 		}
 
 		priceMap := make(map[string]float64)
+		staleCount := 0
 		for _, p := range prices {
+			// Check if price data is stale (>1 minute old)
+			if time.Since(p.UpdatedAt) > 1*time.Minute {
+				log.Printf("[Portfolio] WARNING: Stale market data for instrument %s (age: %v). Using fallback pricing.",
+					p.InstrumentID.Hex(), time.Since(p.UpdatedAt))
+				staleCount++
+				continue // Skip stale data, will use AvgEntryPrice fallback
+			}
 			priceMap[p.InstrumentID.Hex()] = p.LastPrice
+		}
+
+		if staleCount > 0 {
+			log.Printf("[Portfolio] Skipped %d stale price entries in snapshot calculation", staleCount)
 		}
 
 		for _, h := range holdings {
@@ -276,13 +296,38 @@ func (s *PortfolioService) CaptureSnapshot(ctx context.Context, userID string) (
 	}
 
 	// 4. Create Snapshot
+	totalEquity := account.Balance + holdingsValue
+
 	snapshot := &models.PortfolioSnapshot{
 		UserID:        account.UserID,
 		Date:          time.Now(),
-		TotalEquity:   account.Balance + holdingsValue,
+		TotalEquity:   totalEquity,
 		CashBalance:   account.Balance,
 		HoldingsValue: holdingsValue,
 		CreatedAt:     time.Now(),
+	}
+
+	// CRITICAL: Circuit Breaker for Negative Equity
+	// This prevents platform from owing money due to unlimited short losses
+	if totalEquity < 0 {
+		log.Printf("🚨 CRITICAL ALERT: User %s has NEGATIVE EQUITY: %.2f", userID, totalEquity)
+		log.Printf("   Cash Balance: %.2f, Holdings Value: %.2f", account.Balance, holdingsValue)
+
+		// Log all short positions for debugging
+		for _, h := range holdings {
+			if h.PositionType == models.PositionShort {
+				log.Printf("   Short Position: %s Qty:%d AvgEntry:%.2f BlockedMargin:%.2f",
+					h.Symbol, h.Quantity, h.AvgEntryPrice, h.BlockedMargin)
+			}
+		}
+
+		// TODO: Implement auto-liquidation
+		// For now, just log critical alert
+		// In production, this should:
+		// 1. Force liquidate all short positions immediately
+		// 2. Notify admin via PagerDuty/email
+		// 3. Lock account to prevent further trading
+		log.Printf("⚠️  AUTO-LIQUIDATION NOT IMPLEMENTED - Manual intervention required!")
 	}
 
 	if err := s.portfolioRepo.CreateSnapshot(ctx, snapshot); err != nil {

@@ -20,6 +20,7 @@ export interface PortfolioSummaryData {
     realizedPL: number;
     totalEquity: number;
     cashBalance: number;
+    blockedMargin: number;
 }
 
 export const portfolioService = {

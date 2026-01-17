@@ -192,19 +192,57 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 	}
 
 	// Specific Validation Logic
-	if req.Intent == string(models.IntentOpenShort) {
-		// 1. Check if instrument is shortable
+	if req.Intent == string(models.IntentOpenLong) {
+		// Check for conflicting SHORT position
+		existingHolding, err := s.portfolioService.GetHolding(context.Background(), userID, instrument.ID.Hex())
+		if err != nil && err.Error() != "holding not found" {
+			return nil, fmt.Errorf("failed to check existing position: %v", err)
+		}
+
+		if existingHolding != nil && existingHolding.PositionType == models.PositionShort {
+			return nil, fmt.Errorf("cannot open long position: you already have a SHORT position of %d shares in %s. Please close your short position first",
+				existingHolding.Quantity, instrument.Symbol)
+		}
+	} else if req.Intent == string(models.IntentOpenShort) {
+		// 1. Check for conflicting LONG position
+		existingHolding, err := s.portfolioService.GetHolding(context.Background(), userID, instrument.ID.Hex())
+		if err != nil && err.Error() != "holding not found" {
+			return nil, fmt.Errorf("failed to check existing position: %v", err)
+		}
+
+		if existingHolding != nil && existingHolding.PositionType == models.PositionLong {
+			return nil, fmt.Errorf("cannot open short position: you already have a LONG position of %d shares in %s. Please close your long position first",
+				existingHolding.Quantity, instrument.Symbol)
+		}
+
+		// 2. Check if instrument is shortable
 		if !instrument.IsShortable {
 			return nil, errors.New("this instrument is not eligible for short selling")
 		}
 
-		// 2. Check Margin Availability (20% Requirement)
+		// 3. Check Margin Availability (20% Requirement)
 		// Margin = Price * Qty * 0.20
 		requiredMargin := orderPrice * float64(req.Quantity) * 0.20
 
 		// Check available funds
 		if account.Balance-account.BlockedMargin < requiredMargin {
 			return nil, fmt.Errorf("insufficient margin. Required: ₹%0.2f, Available: ₹%0.2f", requiredMargin, account.Balance-account.BlockedMargin)
+		}
+
+		// 4. Position Size Limit (Risk Control)
+		// Maximum position value = 5x account balance (5x leverage)
+		positionValue := orderPrice * float64(req.Quantity)
+		maxPositionValue := account.Balance * 5.0
+
+		if positionValue > maxPositionValue {
+			return nil, fmt.Errorf("position size exceeds maximum allowed (5x leverage). Position value: ₹%.2f, Max allowed: ₹%.2f",
+				positionValue, maxPositionValue)
+		}
+
+		// 5. Quantity Limit (Prevent Integer Overflow)
+		const maxQuantity = 1_000_000 // 1 million shares
+		if req.Quantity > maxQuantity {
+			return nil, fmt.Errorf("quantity exceeds maximum allowed (%d shares)", maxQuantity)
 		}
 	} else if req.Intent == string(models.IntentCloseShort) {
 		// Validate that we have a short position to cover

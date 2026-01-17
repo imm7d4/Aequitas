@@ -127,7 +127,13 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
 
     // Calculate Fees
     const fees = useMemo(() => {
-        return 10 + (estValue * 0.0005); // Flat 10 + 0.05%
+        // Match backend fees.json: 0.03% (0.0003) capped at ₹20
+        const commissionRate = 0.0003; // 0.03%
+        const maxCommission = 20.0;     // ₹20 cap
+        const flatFee = 0.0;            // No flat fee
+
+        const commission = estValue * commissionRate;
+        return flatFee + Math.min(commission, maxCommission);
     }, [estValue]);
 
     // Calculate Required Margin

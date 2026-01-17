@@ -96,6 +96,7 @@ export const PortfolioPage: React.FC = () => {
         // Use backend values for cash and realized PL
         const cashBalance = summaryData.cashBalance || 0;
         const realizedPL = summaryData.realizedPL || 0;
+        const blockedMargin = summaryData.blockedMargin || 0;
 
         // Total Equity = Cash + Current Holdings Value
         const totalEquity = cashBalance + totalHoldingsValue;
@@ -108,6 +109,7 @@ export const PortfolioPage: React.FC = () => {
             realizedPL,
             totalEquity,
             cashBalance,
+            blockedMargin,
             holdingsCount: holdings.length
         };
     }, [summaryData, marketData, holdings]);
@@ -117,6 +119,7 @@ export const PortfolioPage: React.FC = () => {
         totalEquity: 0,
         totalHoldingsValue: 0,
         cashBalance: 0,
+        blockedMargin: 0,
         unrealizedPL: 0,
         unrealizedPLPercent: 0,
         realizedPL: 0,
@@ -173,6 +176,7 @@ export const PortfolioPage: React.FC = () => {
                         totalEquity={displaySummary.totalEquity}
                         totalHoldingsValue={displaySummary.totalHoldingsValue}
                         cashBalance={displaySummary.cashBalance}
+                        blockedMargin={displaySummary.blockedMargin}
                         totalPL={displaySummary.unrealizedPL}
                         totalPLPercent={displaySummary.unrealizedPLPercent}
                         realizedPL={displaySummary.realizedPL}
