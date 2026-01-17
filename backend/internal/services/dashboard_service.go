@@ -4,6 +4,7 @@ import (
 	"context"
 	"math"
 	"sort"
+	"time"
 
 	"aequitas/internal/models"
 	"aequitas/internal/repositories"
@@ -233,50 +234,111 @@ func (s *DashboardService) calculateTradingAnalysis(
 	var totalWin, totalLoss float64
 	var largestWin, largestLoss float64
 
-	// Track P&L by symbol using a map to accumulate buys and sells
-	symbolCost := make(map[string]float64)
-	symbolQty := make(map[string]int)
+	// Track positions by symbol
+	// For LONG positions: track cost basis
+	// For SHORT positions: track short proceeds
+	type Position struct {
+		LongQty       int
+		LongCost      float64
+		ShortQty      int
+		ShortProceeds float64
+	}
+	positions := make(map[string]*Position)
 
 	// Process trades in chronological order
 	for _, trade := range trades {
 		symbol := trade.Symbol
+		intent := trade.Intent
 
-		if trade.Side == "BUY" {
-			// Accumulate cost
-			symbolCost[symbol] += trade.Value
-			symbolQty[symbol] += trade.Quantity
-		} else if trade.Side == "SELL" {
-			// Calculate average cost per share
-			avgCost := 0.0
-			if symbolQty[symbol] > 0 {
-				avgCost = symbolCost[symbol] / float64(symbolQty[symbol])
-			}
+		// Initialize position if needed
+		if positions[symbol] == nil {
+			positions[symbol] = &Position{}
+		}
+		pos := positions[symbol]
 
-			// Calculate P&L for this sell
-			costOfSold := avgCost * float64(trade.Quantity)
-			pl := trade.NetValue - costOfSold
-
-			// Track individual trade P&L
-			if pl > 0 {
-				winCount++
-				totalWin += pl
-				if pl > largestWin {
-					largestWin = pl
-				}
-			} else if pl < 0 {
-				lossCount++
-				totalLoss += math.Abs(pl)
-				if math.Abs(pl) > largestLoss {
-					largestLoss = math.Abs(pl)
-				}
-			}
-
-			// Update remaining cost and quantity
-			symbolQty[symbol] -= trade.Quantity
-			if symbolQty[symbol] > 0 {
-				symbolCost[symbol] -= costOfSold
+		// Determine intent if missing (backward compatibility)
+		if intent == "" {
+			if trade.Side == "BUY" {
+				intent = "OPEN_LONG"
 			} else {
-				symbolCost[symbol] = 0
+				intent = "CLOSE_LONG"
+			}
+		}
+
+		switch intent {
+		case "OPEN_LONG":
+			// Buy to open long position
+			pos.LongCost += trade.Value + trade.Commission + trade.Fees
+			pos.LongQty += trade.Quantity
+
+		case "CLOSE_LONG":
+			// Sell to close long position
+			if pos.LongQty > 0 {
+				avgCost := pos.LongCost / float64(pos.LongQty)
+				costBasis := avgCost * float64(trade.Quantity)
+				sellProceeds := trade.Value - trade.Commission - trade.Fees
+				pl := sellProceeds - costBasis
+
+				// Track P&L
+				if pl > 0 {
+					winCount++
+					totalWin += pl
+					if pl > largestWin {
+						largestWin = pl
+					}
+				} else if pl < 0 {
+					lossCount++
+					totalLoss += math.Abs(pl)
+					if math.Abs(pl) > largestLoss {
+						largestLoss = math.Abs(pl)
+					}
+				}
+
+				// Update position
+				pos.LongQty -= trade.Quantity
+				if pos.LongQty > 0 {
+					pos.LongCost -= costBasis
+				} else {
+					pos.LongCost = 0
+				}
+			}
+
+		case "OPEN_SHORT":
+			// Sell to open short position (short sell)
+			// Track the proceeds we received (this is our liability)
+			pos.ShortProceeds += trade.Value - trade.Commission - trade.Fees
+			pos.ShortQty += trade.Quantity
+
+		case "CLOSE_SHORT":
+			// Buy to close short position (buy to cover)
+			if pos.ShortQty > 0 {
+				avgProceeds := pos.ShortProceeds / float64(pos.ShortQty)
+				proceedsForCovered := avgProceeds * float64(trade.Quantity)
+				buyCost := trade.Value + trade.Commission + trade.Fees
+				pl := proceedsForCovered - buyCost // Profit if we buy back cheaper
+
+				// Track P&L
+				if pl > 0 {
+					winCount++
+					totalWin += pl
+					if pl > largestWin {
+						largestWin = pl
+					}
+				} else if pl < 0 {
+					lossCount++
+					totalLoss += math.Abs(pl)
+					if math.Abs(pl) > largestLoss {
+						largestLoss = math.Abs(pl)
+					}
+				}
+
+				// Update position
+				pos.ShortQty -= trade.Quantity
+				if pos.ShortQty > 0 {
+					pos.ShortProceeds -= proceedsForCovered
+				} else {
+					pos.ShortProceeds = 0
+				}
 			}
 		}
 	}
@@ -330,70 +392,168 @@ func (s *DashboardService) calculateBehavioralInsights(
 
 	var winDurations, lossDurations []float64
 
-	// Track cost basis for proper P&L calculation
-	symbolCost := make(map[string]float64)
-	symbolQty := make(map[string]int)
+	// Track positions with buy times for duration calculation
+	type PositionTracking struct {
+		LongQty       int
+		LongCost      float64
+		LongBuyTime   time.Time
+		ShortQty      int
+		ShortProceeds float64
+		ShortSellTime time.Time
+	}
+	positions := make(map[string]*PositionTracking)
 
+	// Process trades in chronological order
 	for _, trade := range trades {
 		symbol := trade.Symbol
+		intent := trade.Intent
 
-		if trade.Side == "BUY" {
-			// Accumulate cost
-			symbolCost[symbol] += trade.Value
-			symbolQty[symbol] += trade.Quantity
-		} else if trade.Side == "SELL" {
-			hour := trade.ExecutedAt.Hour()
-			dayName := trade.ExecutedAt.Weekday().String()
+		// Initialize position if needed
+		if positions[symbol] == nil {
+			positions[symbol] = &PositionTracking{}
+		}
+		pos := positions[symbol]
 
-			// Determine time slot
-			var slot string
-			for slotName, hours := range timeSlots {
-				if hour >= hours[0] && hour < hours[1] {
-					slot = slotName
-					break
+		// Determine intent if missing (backward compatibility)
+		if intent == "" {
+			if trade.Side == "BUY" {
+				intent = "OPEN_LONG"
+			} else {
+				intent = "CLOSE_LONG"
+			}
+		}
+
+		switch intent {
+		case "OPEN_LONG":
+			// Track buy time for duration calculation
+			if pos.LongQty == 0 {
+				pos.LongBuyTime = trade.ExecutedAt
+			}
+			pos.LongCost += trade.Value + trade.Commission + trade.Fees
+			pos.LongQty += trade.Quantity
+
+		case "CLOSE_LONG":
+			// Calculate P&L and duration
+			if pos.LongQty > 0 {
+				hour := trade.ExecutedAt.Hour()
+				dayName := trade.ExecutedAt.Weekday().String()
+
+				// Determine time slot
+				var slot string
+				for slotName, hours := range timeSlots {
+					if hour >= hours[0] && hour < hours[1] {
+						slot = slotName
+						break
+					}
 				}
-			}
 
-			// Calculate P&L properly
-			avgCost := 0.0
-			if symbolQty[symbol] > 0 {
-				avgCost = symbolCost[symbol] / float64(symbolQty[symbol])
-			}
-			costOfSold := avgCost * float64(trade.Quantity)
-			pl := trade.NetValue - costOfSold
-			isWin := pl > 0
+				// Calculate P&L
+				avgCost := pos.LongCost / float64(pos.LongQty)
+				costBasis := avgCost * float64(trade.Quantity)
+				sellProceeds := trade.Value - trade.Commission - trade.Fees
+				pl := sellProceeds - costBasis
+				isWin := pl > 0
 
-			// Update time-based stats
-			if slot != "" {
+				// Calculate actual holding duration in hours
+				duration := trade.ExecutedAt.Sub(pos.LongBuyTime).Hours()
+
+				// Track duration
 				if isWin {
-					timeWins[slot]++
+					winDurations = append(winDurations, duration)
 				} else {
-					timeLosses[slot]++
+					lossDurations = append(lossDurations, duration)
+				}
+
+				// Update time-based stats
+				if slot != "" {
+					if isWin {
+						timeWins[slot]++
+					} else {
+						timeLosses[slot]++
+					}
+				}
+
+				// Update day-based stats
+				if isWin {
+					dayWins[dayName]++
+				} else {
+					dayLosses[dayName]++
+				}
+
+				// Update position
+				pos.LongQty -= trade.Quantity
+				if pos.LongQty > 0 {
+					pos.LongCost -= costBasis
+				} else {
+					pos.LongCost = 0
+					pos.LongBuyTime = time.Time{} // Reset
 				}
 			}
 
-			// Update day-based stats
-			if isWin {
-				dayWins[dayName]++
-			} else {
-				dayLosses[dayName]++
+		case "OPEN_SHORT":
+			// Track short sell time
+			if pos.ShortQty == 0 {
+				pos.ShortSellTime = trade.ExecutedAt
 			}
+			pos.ShortProceeds += trade.Value - trade.Commission - trade.Fees
+			pos.ShortQty += trade.Quantity
 
-			// Calculate holding duration (simplified - would need buy time)
-			// For now, use a placeholder
-			duration := 24.0 // hours
-			if isWin {
-				winDurations = append(winDurations, duration)
-			} else {
-				lossDurations = append(lossDurations, duration)
-			}
+		case "CLOSE_SHORT":
+			// Calculate P&L and duration for short
+			if pos.ShortQty > 0 {
+				hour := trade.ExecutedAt.Hour()
+				dayName := trade.ExecutedAt.Weekday().String()
 
-			// Update remaining cost and quantity
-			symbolQty[symbol] -= trade.Quantity
-			if symbolQty[symbol] > 0 {
-				symbolCost[symbol] -= costOfSold
-			} else {
-				symbolCost[symbol] = 0
+				// Determine time slot
+				var slot string
+				for slotName, hours := range timeSlots {
+					if hour >= hours[0] && hour < hours[1] {
+						slot = slotName
+						break
+					}
+				}
+
+				// Calculate P&L
+				avgProceeds := pos.ShortProceeds / float64(pos.ShortQty)
+				proceedsForCovered := avgProceeds * float64(trade.Quantity)
+				buyCost := trade.Value + trade.Commission + trade.Fees
+				pl := proceedsForCovered - buyCost
+				isWin := pl > 0
+
+				// Calculate actual holding duration in hours
+				duration := trade.ExecutedAt.Sub(pos.ShortSellTime).Hours()
+
+				// Track duration
+				if isWin {
+					winDurations = append(winDurations, duration)
+				} else {
+					lossDurations = append(lossDurations, duration)
+				}
+
+				// Update time-based stats
+				if slot != "" {
+					if isWin {
+						timeWins[slot]++
+					} else {
+						timeLosses[slot]++
+					}
+				}
+
+				// Update day-based stats
+				if isWin {
+					dayWins[dayName]++
+				} else {
+					dayLosses[dayName]++
+				}
+
+				// Update position
+				pos.ShortQty -= trade.Quantity
+				if pos.ShortQty > 0 {
+					pos.ShortProceeds -= proceedsForCovered
+				} else {
+					pos.ShortProceeds = 0
+					pos.ShortSellTime = time.Time{} // Reset
+				}
 			}
 		}
 	}

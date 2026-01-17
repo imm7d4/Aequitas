@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Box, Typography, Container, CircularProgress, Tab, Tabs, Button } from '@mui/material';
-import { portfolioService, Holding, PortfolioSummaryData } from '../services/portfolioService';
+import { portfolioService, PortfolioSummaryData } from '../services/portfolioService';
 import { HoldingsTable } from '../components/HoldingsTable';
 // Removed unused accountService
 import { PortfolioSummary } from '../components/PortfolioSummary';
@@ -126,6 +126,18 @@ export const PortfolioPage: React.FC = () => {
         holdingsCount: 0
     };
 
+    // Extract market prices for PortfolioSummary
+    const marketPrices = useMemo(() => {
+        const prices: Record<string, number> = {};
+        Object.entries(marketData.prices).forEach(([instrumentId, data]) => {
+            if (data?.lastPrice) {
+                prices[instrumentId] = data.lastPrice;
+            }
+        });
+        return prices;
+    }, [marketData]);
+
+
     const [tabValue, setTabValue] = React.useState(0);
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -181,6 +193,8 @@ export const PortfolioPage: React.FC = () => {
                         totalPLPercent={displaySummary.unrealizedPLPercent}
                         realizedPL={displaySummary.realizedPL}
                         holdingsCount={displaySummary.holdingsCount}
+                        holdings={holdings}
+                        marketPrices={marketPrices}
                     />
                 </Box>
 

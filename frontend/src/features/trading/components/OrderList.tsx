@@ -38,6 +38,7 @@ import { Link } from 'react-router-dom';
 import { EditOrderDialog } from './EditOrderDialog';
 import { useMarketData } from '@/features/market/hooks/useMarketData';
 import { OrderTypeBadge } from './OrderTypeBadge';
+import { IntentBadge } from './IntentBadge';
 import { Trade, tradeService } from '../services/tradeService';
 import { useState, useEffect } from 'react';
 
@@ -242,7 +243,7 @@ export const OrderList: React.FC<OrderListProps> = ({ orders = [], onCancel, onM
                         <TableCell sx={{ fontWeight: 700 }}>ID</TableCell>
                         <TableCell sx={{ fontWeight: 700 }}>Instrument</TableCell>
                         <TableCell sx={{ fontWeight: 700 }}>Type</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Side</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Intent</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 700 }}>Qty</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 700 }}>Price</TableCell>
                         <TableCell align="right" sx={{ fontWeight: 700 }}>Stop Price</TableCell>
@@ -315,15 +316,7 @@ export const OrderList: React.FC<OrderListProps> = ({ orders = [], onCancel, onM
                                         <OrderTypeBadge orderType={order.orderType as any} />
                                     </TableCell>
                                     <TableCell>
-                                        <Box
-                                            sx={{
-                                                color: order.side === 'BUY' ? 'success.main' : 'error.main',
-                                                fontWeight: 800,
-                                                fontSize: '0.75rem',
-                                            }}
-                                        >
-                                            {order.side}
-                                        </Box>
+                                        <IntentBadge intent={order.intent} side={order.side} />
                                     </TableCell>
                                     <TableCell align="right" sx={{ fontWeight: 600 }}>
                                         {order.quantity}
