@@ -68,6 +68,8 @@ func main() {
 	tradeRepo := repositories.NewTradeRepository(db)
 	portfolioRepo := repositories.NewPortfolioRepository(db)
 	notificationRepo := repositories.NewNotificationRepository(db)
+	tradeResultRepo := repositories.NewTradeResultRepository(db)
+	activeUnitRepo := repositories.NewActiveTradeUnitRepository(db)
 
 	// Initialize services (Basic)
 	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo, transactionRepo)
@@ -77,7 +79,8 @@ func main() {
 	watchlistService := services.NewWatchlistService(watchlistRepo, instrumentRepo)
 	telemetryService := services.NewTelemetryService(telemetryRepo)
 	userService := services.NewUserService(userRepo)
-	portfolioService := services.NewPortfolioService(portfolioRepo, marketService, tradingAccountService)
+	analyticsService := services.NewAnalyticsService(tradeResultRepo, activeUnitRepo, candleRepo)
+	portfolioService := services.NewPortfolioService(portfolioRepo, marketService, tradingAccountService, analyticsService)
 	candleService := services.NewCandleService(candleRepo)
 	candleBuilder := services.NewCandleBuilder(candleRepo)
 	tradeService := services.NewTradeService(tradeRepo)
@@ -147,6 +150,7 @@ func main() {
 	notificationController := controllers.NewNotificationController(notificationService)
 	priceAlertController := controllers.NewPriceAlertController(priceAlertService)
 	dashboardController := controllers.NewDashboardController(dashboardService)
+	analyticsController := controllers.NewAnalyticsController(analyticsService)
 
 	// Set up router
 	router := mux.NewRouter()
@@ -219,6 +223,9 @@ func main() {
 	protected.HandleFunc("/portfolio/summary", portfolioController.GetSummary).Methods("GET", "OPTIONS")
 	protected.HandleFunc("/portfolio/snapshot", portfolioController.CaptureSnapshot).Methods("POST", "OPTIONS")
 	protected.HandleFunc("/portfolio/history", portfolioController.GetHistory).Methods("GET", "OPTIONS")
+
+	// Analytics/Diagnostics routes
+	protected.HandleFunc("/diagnostics", analyticsController.GetDiagnostics).Methods("GET", "OPTIONS")
 
 	// Notification routes
 	protected.HandleFunc("/notifications", notificationController.GetHistory).Methods("GET", "OPTIONS")

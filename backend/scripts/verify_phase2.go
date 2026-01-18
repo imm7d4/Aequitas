@@ -39,6 +39,9 @@ func main() {
 	mdRepo := repositories.NewMarketDataRepository(db)
 	txRepo := repositories.NewTransactionRepository(db)
 	notifRepo := repositories.NewNotificationRepository(db)
+	trRepo := repositories.NewTradeResultRepository(db)
+	activeUnitRepo := repositories.NewActiveTradeUnitRepository(db)
+	candleRepo := repositories.NewCandleRepository(db)
 
 	// Services
 	accountService := services.NewTradingAccountService(accountRepo, txRepo)
@@ -50,7 +53,8 @@ func main() {
 	marketRepo := repositories.NewMarketRepository(db)
 	marketService := services.NewMarketService(marketRepo, mdRepo)
 
-	portfolioService := services.NewPortfolioService(portfolioRepo, marketService, accountService)
+	analyticsService := services.NewAnalyticsService(trRepo, activeUnitRepo, candleRepo)
+	portfolioService := services.NewPortfolioService(portfolioRepo, marketService, accountService, analyticsService)
 
 	wsHub := websocket.NewHub()
 	go wsHub.Run()

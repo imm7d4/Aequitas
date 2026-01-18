@@ -18,6 +18,7 @@ import {
     History as OrdersIcon,
     Star as WatchlistIcon,
     AdminPanelSettings as AdminIcon,
+    Assessment as DiagnosticsIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -41,6 +42,7 @@ export const Sidebar: React.FC = () => {
         { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
         { text: 'Instruments', icon: <InstrumentsIcon />, path: '/instruments' },
         { text: 'Watchlists', icon: <WatchlistIcon />, path: '/watchlists' },
+        { text: 'Diagnostics', icon: <DiagnosticsIcon />, path: '/diagnostics' },
         { text: 'Portfolio', icon: <PortfolioIcon />, path: '/portfolio' },
         { text: 'Orders', icon: <OrdersIcon />, path: '/orders' },
     ];

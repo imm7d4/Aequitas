@@ -12,20 +12,23 @@ import (
 )
 
 type PortfolioService struct {
-	portfolioRepo  *repositories.PortfolioRepository
-	marketService  *MarketService
-	accountService *TradingAccountService
+	portfolioRepo    *repositories.PortfolioRepository
+	marketService    *MarketService
+	accountService   *TradingAccountService
+	analyticsService *AnalyticsService
 }
 
 func NewPortfolioService(
 	portfolioRepo *repositories.PortfolioRepository,
 	marketService *MarketService,
 	accountService *TradingAccountService,
+	analyticsService *AnalyticsService,
 ) *PortfolioService {
 	return &PortfolioService{
-		portfolioRepo:  portfolioRepo,
-		marketService:  marketService,
-		accountService: accountService,
+		portfolioRepo:    portfolioRepo,
+		marketService:    marketService,
+		accountService:   accountService,
+		analyticsService: analyticsService,
 	}
 }
 
@@ -230,6 +233,14 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 	}
 
 	log.Printf("[Portfolio] Position updated successfully. New Qty: %d, Avg: %.2f", holding.Quantity, holding.AvgEntryPrice)
+
+	// Trigger Analytics Engine (Diagnostics)
+	go func() {
+		if err := s.analyticsService.ProcessTrade(context.Background(), trade); err != nil {
+			log.Printf("[Portfolio] Analytics processing error: %v", err)
+		}
+	}()
+
 	return nil
 }
 

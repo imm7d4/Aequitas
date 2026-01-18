@@ -20,6 +20,7 @@ import { NotFound } from '@/shared/components/NotFound';
 import { PortfolioPage } from '@/features/portfolio/pages/PortfolioPage';
 import { WatchlistPage } from '@/features/watchlist/pages/WatchlistPage';
 import { LandingPage } from '@/features/landing/pages/LandingPage';
+import { TradeDiagnosticsPage } from '@/features/analytics/pages/TradeDiagnosticsPage';
 
 export function Router(): JSX.Element {
     return (
@@ -48,6 +49,7 @@ export function Router(): JSX.Element {
                     >
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/portfolio" element={<PortfolioPage />} />
+                        <Route path="/diagnostics" element={<TradeDiagnosticsPage />} />
                         <Route path="/watchlists" element={<WatchlistPage />} />
                         <Route path="/orders" element={<OrdersPage />} />
                         <Route path="/instruments" element={<InstrumentsPage />} />

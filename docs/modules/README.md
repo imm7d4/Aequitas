@@ -10,9 +10,10 @@ Explore each module in depth:
 2.  **[Order Management System (OMS)](OMS.md)**: Synchronous order lifecycle, Stop-Loss triggers, and Trailing Stops.
 3.  **[Matching Engine](MATCHING_ENGINE.md)**: Price-Time matching, fee calculations, and trade execution.
 4.  **[Portfolio & Accounting](PORTFOLIO.md)**: WAP (Weighted Average Price) math, Realized P&L tracking, and holdings management.
-5.  **[Market Data & Pricing](MARKET_DATA.md)**: Real-time price simulation, candle building, and market session logic.
-6.  **[Notification System](NOTIFICATIONS.md)**: Persistent and real-time alerts.
-7.  **[Frontend Architecture](FRONTEND_ARCHITECTURE.md)**: Feature-driven React design, state management, and WebSockets.
+5.  **[Universal Trade Diagnostics](trade_diagnostics.md)**: FIFO Matching Engine, MAE/MFE analysis, and economic audits.
+6.  **[Market Data & Pricing](MARKET_DATA.md)**: Real-time price simulation, candle building, and market session logic.
+7.  **[Notification System](NOTIFICATIONS.md)**: Persistent and real-time alerts.
+8.  **[Frontend Architecture](FRONTEND_ARCHITECTURE.md)**: Feature-driven React design, state management, and WebSockets.
 
 ---
 
