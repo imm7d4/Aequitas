@@ -21,6 +21,8 @@ import { PortfolioPage } from '@/features/portfolio/pages/PortfolioPage';
 import { WatchlistPage } from '@/features/watchlist/pages/WatchlistPage';
 import { LandingPage } from '@/features/landing/pages/LandingPage';
 import { TradeDiagnosticsPage } from '@/features/analytics/pages/TradeDiagnosticsPage';
+import EducationHub from '@/features/education/pages/EducationHub';
+import ModulePage from '@/features/education/pages/ModulePage';
 
 export function Router(): JSX.Element {
     return (
@@ -61,6 +63,12 @@ export function Router(): JSX.Element {
                         <Route path="/admin/market-hours" element={<AdminMarketHoursForm />} />
                         <Route path="/admin/manage-hours" element={<AdminManageHours />} />
                         <Route path="/admin/market-holidays" element={<AdminMarketHolidayForm />} />
+
+                        {/* Education Routes */}
+                        <Route path="/education" element={<EducationHub />} />
+                        <Route path="/education/:moduleId" element={<ModulePage />} />
+
+
                     </Route>
 
                     {/* 404 Route */}

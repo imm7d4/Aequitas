@@ -199,7 +199,8 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 			return nil, fmt.Errorf("failed to check existing position: %v", err)
 		}
 
-		if existingHolding != nil && existingHolding.PositionType == models.PositionShort {
+		// Only block if there's an ACTIVE short position (quantity > 0)
+		if existingHolding != nil && existingHolding.PositionType == models.PositionShort && existingHolding.Quantity > 0 {
 			return nil, fmt.Errorf("cannot open long position: you already have a SHORT position of %d shares in %s. Please close your short position first",
 				existingHolding.Quantity, instrument.Symbol)
 		}
@@ -210,7 +211,8 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 			return nil, fmt.Errorf("failed to check existing position: %v", err)
 		}
 
-		if existingHolding != nil && existingHolding.PositionType == models.PositionLong {
+		// Only block if there's an ACTIVE long position (quantity > 0)
+		if existingHolding != nil && existingHolding.PositionType == models.PositionLong && existingHolding.Quantity > 0 {
 			return nil, fmt.Errorf("cannot open short position: you already have a LONG position of %d shares in %s. Please close your long position first",
 				existingHolding.Quantity, instrument.Symbol)
 		}

@@ -241,6 +241,8 @@ func main() {
 	// Dashboard routes
 	protected.HandleFunc("/dashboard/summary", dashboardController.GetSummary).Methods("GET", "OPTIONS")
 
+	// Documentation routes (public - no auth required)
+
 	// Admin routes (require admin role)
 	admin := protected.PathPrefix("/admin").Subrouter()
 	admin.Use(middleware.AdminMiddleware)

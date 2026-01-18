@@ -19,6 +19,7 @@ import {
     Star as WatchlistIcon,
     AdminPanelSettings as AdminIcon,
     Assessment as DiagnosticsIcon,
+    School as EducationIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -45,6 +46,7 @@ export const Sidebar: React.FC = () => {
         { text: 'Diagnostics', icon: <DiagnosticsIcon />, path: '/diagnostics' },
         { text: 'Portfolio', icon: <PortfolioIcon />, path: '/portfolio' },
         { text: 'Orders', icon: <OrdersIcon />, path: '/orders' },
+        { text: 'Education', icon: <EducationIcon />, path: '/education' },
     ];
 
     if (user?.isAdmin) {

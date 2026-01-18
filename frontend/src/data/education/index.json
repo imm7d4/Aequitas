@@ -1,0 +1,204 @@
+{
+    "categories": [
+        {
+            "id": "foundations",
+            "title": "1. The Foundations",
+            "icon": "🏗️",
+            "description": "Essential knowledge to survive your first hour on the platform.",
+            "modules": [
+                "how-aequitas-works",
+                "reading-prices",
+                "beginner-mistakes"
+            ]
+        },
+        {
+            "id": "execution",
+            "title": "2. Execution Mastery",
+            "icon": "⚡",
+            "description": "Mastering the order book and the logic of professional entries.",
+            "modules": [
+                "order-types",
+                "order-book",
+                "why-orders-fail"
+            ]
+        },
+        {
+            "id": "risk-capital",
+            "title": "3. Risk & Capital",
+            "icon": "🛡️",
+            "description": "Managing margin, leverage, and the math of survival.",
+            "modules": [
+                "pl-explained",
+                "margin-leverage",
+                "short-selling",
+                "risk-management"
+            ]
+        },
+        {
+            "id": "intelligence",
+            "title": "4. Data Intelligence",
+            "icon": "🧬",
+            "description": "Leveraging diagnostics and advanced math to find your edge.",
+            "modules": [
+                "trading-diagnostics",
+                "indicators",
+                "vwap-volume",
+                "liquidity-metrics"
+            ]
+        },
+        {
+            "id": "theory",
+            "title": "5. Market Microstructure",
+            "icon": "🎓",
+            "description": "Deep theory for institutional-level understanding.",
+            "modules": [
+                "market-microstructure",
+                "trade-analytics"
+            ]
+        }
+    ],
+    "modules": {
+        "how-aequitas-works": {
+            "id": "how-aequitas-works",
+            "title": "How Aequitas Works",
+            "category": "foundations",
+            "difficulty": "beginner",
+            "estimatedTime": "10 min",
+            "description": "The 3-second heartbeat, atomic logic, and platform architecture.",
+            "featured": true,
+            "required": true
+        },
+        "reading-prices": {
+            "id": "reading-prices",
+            "title": "Reading Prices & Charts",
+            "category": "foundations",
+            "difficulty": "beginner",
+            "estimatedTime": "8 min",
+            "description": "Auction theory and candlestick battle reports."
+        },
+        "beginner-mistakes": {
+            "id": "beginner-mistakes",
+            "title": "Common Beginner Mistakes",
+            "category": "foundations",
+            "difficulty": "beginner",
+            "estimatedTime": "7 min",
+            "description": "The 'Slippage Trap' and survival psychology."
+        },
+        "order-types": {
+            "id": "order-types",
+            "title": "Order Types Explained",
+            "category": "execution",
+            "difficulty": "beginner",
+            "estimatedTime": "12 min",
+            "description": "Market, Limit, and the sentinel logic of Stop orders.",
+            "featured": true,
+            "required": true
+        },
+        "order-book": {
+            "id": "order-book",
+            "title": "Order Book & Depth",
+            "category": "execution",
+            "difficulty": "intermediate",
+            "estimatedTime": "15 min",
+            "description": "Visualizing liquidity and the queue of traders.",
+            "featured": true,
+            "required": true
+        },
+        "why-orders-fail": {
+            "id": "why-orders-fail",
+            "title": "Why Orders Don't Fill",
+            "category": "execution",
+            "difficulty": "intermediate",
+            "estimatedTime": "10 min",
+            "description": "Price gaps, liquidity voids, and matching failures."
+        },
+        "pl-explained": {
+            "id": "pl-explained",
+            "title": "P&L Explained",
+            "category": "risk-capital",
+            "difficulty": "beginner",
+            "estimatedTime": "12 min",
+            "description": "Realized vs Unrealized P&L and MTM math.",
+            "featured": true,
+            "required": true
+        },
+        "margin-leverage": {
+            "id": "margin-leverage",
+            "title": "Margin & Leverage",
+            "category": "risk-capital",
+            "difficulty": "intermediate",
+            "estimatedTime": "15 min",
+            "description": "The 5x multiplier and liquidation thresholds.",
+            "featured": true,
+            "required": true
+        },
+        "short-selling": {
+            "id": "short-selling",
+            "title": "Short Selling Mechanics",
+            "category": "risk-capital",
+            "difficulty": "advanced",
+            "estimatedTime": "18 min",
+            "description": "Profiting from declines and equity inversion math.",
+            "featured": true,
+            "required": true
+        },
+        "risk-management": {
+            "id": "risk-management",
+            "title": "Risk Management",
+            "category": "risk-capital",
+            "difficulty": "intermediate",
+            "estimatedTime": "18 min",
+            "description": "Position sizing and the mathematics of ruin."
+        },
+        "trading-diagnostics": {
+            "id": "trading-diagnostics",
+            "title": "Trading Diagnostics Engine",
+            "category": "intelligence",
+            "difficulty": "advanced",
+            "estimatedTime": "20 min",
+            "description": "MAE, MFE, and the Path Dependency of trades.",
+            "featured": true,
+            "required": true
+        },
+        "indicators": {
+            "id": "indicators",
+            "title": "Technical Indicators",
+            "category": "intelligence",
+            "difficulty": "intermediate",
+            "estimatedTime": "15 min",
+            "description": "Moving averages, RSI, and finding statistical signal."
+        },
+        "vwap-volume": {
+            "id": "vwap-volume",
+            "title": "VWAP & Volume Profile",
+            "category": "intelligence",
+            "difficulty": "intermediate",
+            "estimatedTime": "12 min",
+            "description": "The institutional fair value indicator."
+        },
+        "liquidity-metrics": {
+            "id": "liquidity-metrics",
+            "title": "Liquidity Metrics",
+            "category": "intelligence",
+            "difficulty": "advanced",
+            "estimatedTime": "18 min",
+            "description": "Bid-Ask spreads and depth analysis."
+        },
+        "market-microstructure": {
+            "id": "market-microstructure",
+            "title": "Market Microstructure",
+            "category": "theory",
+            "difficulty": "advanced",
+            "estimatedTime": "25 min",
+            "description": "How the modern exchange really works."
+        },
+        "trade-analytics": {
+            "id": "trade-analytics",
+            "title": "Trade Analytics",
+            "category": "theory",
+            "difficulty": "advanced",
+            "estimatedTime": "22 min",
+            "description": "Post-trade analysis and performance reviews."
+        }
+    }
+}

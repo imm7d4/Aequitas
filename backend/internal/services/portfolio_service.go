@@ -55,10 +55,14 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 	userID := trade.UserID.Hex()
 	instrumentID := trade.InstrumentID.Hex()
 	holding, err := s.portfolioRepo.GetHolding(ctx, userID, instrumentID)
-	if err != nil {
+
+	// CRITICAL FIX: "holding not found" is NOT an error - it's expected for new positions
+	// Only return error if it's a database/system error
+	if err != nil && err.Error() != "holding not found" {
 		log.Printf("[Portfolio] Error fetching holding: %v", err)
 		return err
 	}
+	// If err == "holding not found", holding will be nil, which is handled below
 
 	totalTradeCost := trade.Price * float64(trade.Quantity)
 	fees := trade.Commission + trade.Fees
