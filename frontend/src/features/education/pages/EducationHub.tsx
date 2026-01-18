@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useEducationIndex } from '../hooks/useEducation';
+import ScrollToTop from '../components/ScrollToTop';
 import './EducationHub.css';
 
 const EducationHub: React.FC = () => {
@@ -83,6 +84,13 @@ const EducationHub: React.FC = () => {
             <div className="quick-links">
                 <h3>Quick Access</h3>
                 <div className="quick-links-grid">
+                    <Link to="/education/glossary" className="quick-link">
+                        <span className="quick-link-icon">📚</span>
+                        <div>
+                            <h4>Financial Glossary</h4>
+                            <p>98 essential trading terms</p>
+                        </div>
+                    </Link>
                     <Link to="/diagnostics" className="quick-link">
                         <span className="quick-link-icon">📊</span>
                         <div>
@@ -92,6 +100,8 @@ const EducationHub: React.FC = () => {
                     </Link>
                 </div>
             </div>
+
+            <ScrollToTop />
         </div>
     );
 };

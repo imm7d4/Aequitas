@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useEducationModule } from '../hooks/useEducation';
 import { getCustomModule } from '../components/modules/ModuleRegistry';
+import ScrollToTop from '../components/ScrollToTop';
 import './ModulePage.css';
 
 const ModulePage: React.FC = () => {
@@ -10,6 +11,10 @@ const ModulePage: React.FC = () => {
 
     // Check for custom component
     const CustomComponent = getCustomModule(moduleId || null);
+
+    if (CustomComponent) {
+        return <CustomComponent />;
+    }
 
     if (loading) {
         return (
@@ -26,11 +31,6 @@ const ModulePage: React.FC = () => {
                 <Link to="/education" className="back-button">← Back to Education</Link>
             </div>
         );
-    }
-
-    // Render custom component if available
-    if (CustomComponent) {
-        return <CustomComponent />;
     }
 
     const renderSection = (section: any) => {
@@ -198,6 +198,8 @@ const ModulePage: React.FC = () => {
                     </ul>
                 </div>
             </div>
+
+            <ScrollToTop />
         </div>
     );
 };
