@@ -16,6 +16,7 @@ import { AdminManageHours } from '@/features/market/components/AdminManageHours'
 import { TelemetryProvider } from '@/shared/services/telemetry/TelemetryProvider';
 import { ProfilePage } from '@/features/profile/components/ProfilePage';
 import { NotFound } from '@/shared/components/NotFound';
+import ScrollToTop from '@/shared/components/ScrollToTop';
 
 import { PortfolioPage } from '@/features/portfolio/pages/PortfolioPage';
 import { WatchlistPage } from '@/features/watchlist/pages/WatchlistPage';
@@ -27,6 +28,7 @@ import ModulePage from '@/features/education/pages/ModulePage';
 export function Router(): JSX.Element {
     return (
         <BrowserRouter>
+            <ScrollToTop />
             <TelemetryProvider>
                 <Routes>
                     {/* Public Routes */}
