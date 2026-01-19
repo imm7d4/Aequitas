@@ -13,8 +13,23 @@ const HowAequitasWorks: React.FC = () => {
                     <p className="hero-lead">Understanding the journey of your order from click to execution. Learn how Aequitas processes trades, manages your capital, and ensures fair execution in real-time.</p>
                 </div>
                 <div className="hero-visual">
-                    <div className="heartbeat-ring"></div>
-                    <div className="engine-core">AQ</div>
+                    <div className="order-flow-visual">
+                        <div className="flow-step">
+                            <div className="flow-icon click">📱</div>
+                            <div className="flow-label">Click</div>
+                        </div>
+                        <div className="flow-arrow">→</div>
+                        <div className="flow-step">
+                            <div className="flow-icon validate">✓</div>
+                            <div className="flow-label">Validate</div>
+                        </div>
+                        <div className="flow-arrow">→</div>
+                        <div className="flow-step">
+                            <div className="flow-icon execute">⚡</div>
+                            <div className="flow-label">Execute</div>
+                        </div>
+                    </div>
+                    <div className="heartbeat-pulse"></div>
                 </div>
             </header>
 
@@ -30,19 +45,33 @@ const HowAequitasWorks: React.FC = () => {
                         <h3>🎯 Step 1: Order Validation</h3>
                         <p>The moment you click "Buy" or "Sell", the platform instantly checks:</p>
                         <ul>
-                            <li><strong>Do you have enough funds?</strong> For a ₹10,000 purchase, you need at least ₹2,000 (20% margin requirement)</li>
+                            <li><strong>Do you have enough funds?</strong> Requirements vary by position type (see below)</li>
                             <li><strong>Is your price valid?</strong> All prices must be in multiples of ₹0.05 (the tick size)</li>
                             <li><strong>Is the stock tradable?</strong> The instrument must be active and available for trading</li>
                         </ul>
+
                         <div className="info-box tip">
-                            <strong>💡 Why the 20% margin?</strong> Aequitas offers 5x leverage, meaning you can control ₹10,000 worth of stock with just ₹2,000. This amplifies both gains and losses, so trade carefully!
+                            <strong>💰 Fund Requirements by Position Type:</strong>
+                            <ul style={{ marginTop: '0.5rem', marginBottom: 0 }}>
+                                <li><strong>LONG (Buy):</strong> Requires 100% cash. To buy ₹10,000 worth of stock, you need ₹10,000 in your account.</li>
+                                <li><strong>SHORT (Sell):</strong> Requires only 20% margin (5x leverage). To short ₹10,000 worth of stock, you need just ₹2,000 as margin.</li>
+                            </ul>
+                        </div>
+
+                        <div className="info-box warning">
+                            <strong>⚠️ Leverage Warning:</strong> Short positions offer 5x leverage, meaning you can control ₹10,000 with ₹2,000. This amplifies both gains and losses dramatically. Use leverage responsibly!
                         </div>
                     </div>
 
                     <div className="glass-card">
                         <h3>⚡ Step 2: Funds Are Locked</h3>
                         <p>Once validated, your required capital is immediately <strong>locked</strong> (but not yet spent). This prevents you from accidentally placing multiple orders with the same money.</p>
-                        <p><strong>Example:</strong> You have ₹5,000. You place a BUY order for 100 shares at ₹40 = ₹4,000 total. The platform locks ₹800 (20% margin). You now have ₹4,200 available for other trades.</p>
+
+                        <p><strong>Example 1 - LONG Position (Buy):</strong></p>
+                        <p>You have ₹5,000. You place a BUY order for 100 shares at ₹40 = ₹4,000 total. The platform locks the <strong>full ₹4,000</strong>. You now have ₹1,000 available for other trades.</p>
+
+                        <p><strong>Example 2 - SHORT Position (Sell):</strong></p>
+                        <p>You have ₹5,000. You place a SHORT order for 100 shares at ₹40 = ₹4,000 position value. The platform locks only <strong>₹800 (20% margin)</strong>. You now have ₹4,200 available for other trades.</p>
                     </div>
                 </section>
 
@@ -228,7 +257,7 @@ const HowAequitasWorks: React.FC = () => {
                             <li>✅ <strong>Price improvement</strong> - You always get the best available price, sometimes better than your limit</li>
                             <li>✅ <strong>T+0 settlement</strong> - Your money is available immediately after selling, no waiting period</li>
                             <li>✅ <strong>Transparent fees</strong> - 0.03% commission, capped at ₹20 per trade</li>
-                            <li>✅ <strong>5x leverage available</strong> - Control larger positions with 20% margin (use responsibly!)</li>
+                            <li>✅ <strong>Position-based requirements</strong> - Long positions need 100% cash, short positions offer 5x leverage with 20% margin</li>
                             <li>✅ <strong>Complete trade history</strong> - Every action is recorded for your review and analysis</li>
                         </ul>
                     </div>
