@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { healthService } from '@/services/healthService';
 import { LandingHeader } from '../components/LandingHeader';
 import { HeroSection } from '../components/HeroSection';
 import { FeaturesSection } from '../components/FeaturesSection';
@@ -19,6 +20,9 @@ export function LandingPage(): JSX.Element {
 
         // Smooth scroll behavior
         document.documentElement.style.scrollBehavior = 'smooth';
+
+        // Warm up backend
+        healthService.checkHealth();
 
         return () => {
             document.documentElement.style.scrollBehavior = 'auto';

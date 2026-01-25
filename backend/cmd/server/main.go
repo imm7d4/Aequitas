@@ -167,6 +167,11 @@ func main() {
 	router.HandleFunc("/ws", wsHandler.HandleWebSocket)
 
 	// Auth routes (public)
+	api.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	}).Methods("GET", "OPTIONS")
+
 	api.HandleFunc("/auth/register", authController.Register).Methods("POST", "OPTIONS")
 	api.HandleFunc("/auth/login", authController.Login).Methods("POST", "OPTIONS")
 

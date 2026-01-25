@@ -1,6 +1,7 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { healthService } from '@/services/healthService';
 import { BrandLogo } from '../../../shared/components/header/BrandLogo';
 import styles from '../styles/Auth.module.css';
 
@@ -10,6 +11,10 @@ export function RegisterForm(): JSX.Element {
     const [localError, setLocalError] = useState<string>('');
     const navigate = useNavigate();
     const { register, isLoading, error } = useAuth();
+
+    useEffect(() => {
+        healthService.checkHealth();
+    }, []);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
