@@ -66,8 +66,18 @@ const TradeRow: React.FC<{ trade: TradeResult }> = ({ trade }) => {
     const pnlColor = isProfit ? 'success.main' : 'error.main';
 
     // Calculate Opportunity Cost
+    // Calculate Opportunity Cost
     // MFE in model is delta from Entry. Price = Entry + MFE.
-    const mfePrice = trade.avgEntryPrice + trade.mfe;
+    let mfePrice = trade.avgEntryPrice + trade.mfe;
+
+    // Correction: If actual Exit is better than recorded MFE (due to data granularity), 
+    // treat Exit as the effective MFE for opportunity cost calculation.
+    if (trade.side === 'LONG') {
+        mfePrice = Math.max(mfePrice, trade.avgExitPrice);
+    } else {
+        mfePrice = Math.min(mfePrice, trade.avgExitPrice);
+    }
+
     const oppCost = trade.side === 'LONG'
         ? mfePrice - trade.avgExitPrice
         : trade.avgExitPrice - mfePrice;

@@ -1,21 +1,18 @@
 import React from 'react';
-import { Box, Typography, Button } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import {
     History as HistoryIcon,
-    Bolt as BoltIcon,
 } from '@mui/icons-material';
-import { useTelemetry } from '@/shared/services/telemetry/TelemetryProvider';
+
 import type { Instrument } from '@/features/instruments/types/instrument.types';
 
 interface SearchOptionProps {
     props: React.HTMLAttributes<HTMLLIElement>;
     option: Instrument;
     isHistory: boolean;
-    onQuickTrade: (instrument: Instrument) => void;
 }
 
-export const SearchOption: React.FC<SearchOptionProps> = ({ props, option, isHistory, onQuickTrade }) => {
-    const { track } = useTelemetry();
+export const SearchOption: React.FC<SearchOptionProps> = ({ props, option, isHistory }) => {
 
     return (
         <li {...props} key={option.id} style={{ padding: '4px 12px' }}>
@@ -47,33 +44,7 @@ export const SearchOption: React.FC<SearchOptionProps> = ({ props, option, isHis
                         {option.exchange} • {option.type}
                     </Typography>
                 </Box>
-                <Box sx={{ ml: 2, display: 'flex', gap: 1 }}>
-                    <Button
-                        size="small"
-                        variant="text"
-                        startIcon={<BoltIcon fontSize="small" />}
-                        sx={{
-                            fontSize: '0.65rem',
-                            color: 'success.main',
-                            '&:hover': { bgcolor: 'rgba(46, 125, 50, 0.08)' }
-                        }}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            track({
-                                event_name: 'search.quick_trade_clicked',
-                                event_version: 'v1',
-                                classification: 'USER_ACTION',
-                                metadata: {
-                                    instrument_id: option.id,
-                                    symbol: option.symbol,
-                                }
-                            });
-                            onQuickTrade(option);
-                        }}
-                    >
-                        Trade
-                    </Button>
-                </Box>
+
             </Box>
         </li>
     );

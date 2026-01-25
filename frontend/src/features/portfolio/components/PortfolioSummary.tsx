@@ -20,6 +20,7 @@ import { Holding } from '../services/portfolioService';
 
 interface PortfolioSummaryProps {
     totalEquity: number;
+    totalHoldingsValue: number;
     cashBalance: number;
     blockedMargin: number;
     totalPL: number;
@@ -29,11 +30,14 @@ interface PortfolioSummaryProps {
     marketPrices?: Record<string, number>;
     freeCash: number;
     marginCash: number;
+    shortProceeds?: number;
     settlementPending: number;
+    holdingsCount?: number; // Added missing prop
 }
 
 export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     totalEquity = 0,
+    totalHoldingsValue = 0,
     cashBalance = 0,
     blockedMargin = 0,
     totalPL = 0,
@@ -43,8 +47,12 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     marketPrices = {},
     freeCash = 0,
     marginCash = 0,
+    shortProceeds = 0,
     settlementPending = 0,
+    holdingsCount = 0,
 }) => {
+    // ... existing code ...
+
     const theme = useTheme();
     const isUnrealizedProfit = totalPL >= 0;
     const isRealizedProfit = realizedPL >= 0;
@@ -199,25 +207,40 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                             Cash & Liquidity
                         </Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4 }}>
-                            <Tooltip title="Absolute ledger balance (Free Cash + Margin + Pending)." placement="left" arrow>
+                            <Tooltip title="Absolute ledger balance (Free Cash + Margin + Short Proceeds + Pending)." placement="left" arrow>
                                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', cursor: 'help' }}>Total Cash</Typography>
                             </Tooltip>
                             <Typography variant="body2" fontWeight={600} sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.8rem' }}>
                                 ₹{cashBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </Typography>
                         </Box>
+
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4, pl: 2 }}>
                             <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>• Free Cash</Typography>
                             <Typography variant="body2" sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.75rem' }}>
                                 ₹{freeCash.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </Typography>
                         </Box>
+
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4, pl: 2 }}>
                             <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>• Margin</Typography>
                             <Typography variant="body2" sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.75rem' }}>
                                 ₹{marginCash.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                             </Typography>
                         </Box>
+
+                        {/* Short Proceeds Line */}
+                        {shortProceeds > 0 && (
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4, pl: 2 }}>
+                                <Tooltip title="Cash generated from short selling. This is held as collateral and not withdrawable." placement="left" arrow>
+                                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', cursor: 'help' }}>• Short Proceeds</Typography>
+                                </Tooltip>
+                                <Typography variant="body2" color="text.primary" sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.75rem' }}>
+                                    ₹{shortProceeds.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                </Typography>
+                            </Box>
+                        )}
+
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 0.4, pl: 2 }}>
                             <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>• Pending</Typography>
                             <Typography variant="body2" sx={{ fontFamily: '"Roboto Mono", monospace', fontSize: '0.75rem' }}>

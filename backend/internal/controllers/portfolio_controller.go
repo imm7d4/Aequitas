@@ -61,30 +61,35 @@ func (c *PortfolioController) GetSummary(w http.ResponseWriter, r *http.Request)
 
 	log.Printf("[Portfolio Summary] User %s - Balance: %.2f, BlockedMargin: %.2f", userID, account.Balance, account.BlockedMargin)
 
-	// Calculate Cash Breakdown
-	settlementPending := 0.0 // TODO: Implement T+1/T+2 settlement tracking
-	marginCash := account.BlockedMargin
-	freeCash := account.Balance - marginCash - settlementPending
-
-	// Ensure accounting invariant: Balance = FreeCash + MarginCash + SettlementPending
-	if freeCash < 0 {
-		log.Printf("[Portfolio] WARNING: Negative free cash detected for user %s: %.2f", userID, freeCash)
-		freeCash = 0 // Prevent negative withdrawable cash display
-	}
-
-	// Calculate Short Risk Exposure (if short positions exist)
-	var shortRiskExposure map[string]interface{}
+	// 1. Calculate Short Liability First
 	var totalShortLiability float64
 	var hasShortPositions bool
 
 	for _, h := range holdings {
 		if h.PositionType == "SHORT" {
 			hasShortPositions = true
-			// Use AvgEntryPrice as current price (frontend will update with real-time data)
+			// Use AvgEntryPrice as proxy for liability (conservative/book value)
+			// Ideal: Use LTP, but we don't have it here. EntryPrice covers the principal.
 			liability := h.AvgEntryPrice * float64(h.Quantity)
 			totalShortLiability += liability
 		}
 	}
+
+	// 2. Calculate Cash Breakdown
+	settlementPending := 0.0 // TODO: Implement T+1/T+2 settlement tracking
+	marginCash := account.BlockedMargin
+
+	// Free Cash = Cash Balance - Margin Locked - Short Liability (Proceeds) - Unsettled
+	freeCash := account.Balance - marginCash - totalShortLiability - settlementPending
+
+	// Ensure accounting invariant
+	if freeCash < 0 {
+		log.Printf("[Portfolio] WARNING: Negative free cash detected for user %s: %.2f", userID, freeCash)
+		freeCash = 0 // Prevent negative withdrawable cash display
+	}
+
+	// 3. Calculate Short Risk Exposure Details (if short positions exist)
+	var shortRiskExposure map[string]interface{}
 
 	if hasShortPositions {
 		risk5Percent := totalShortLiability * 0.05
@@ -123,11 +128,12 @@ func (c *PortfolioController) GetSummary(w http.ResponseWriter, r *http.Request)
 	response := map[string]interface{}{
 		"holdings":          holdings,
 		"realizedPL":        account.RealizedPL,
-		"totalEquity":       account.Balance,
+		"totalEquity":       account.Balance - totalShortLiability, // Net Worth = Assets (Cash) - Liabilities
 		"cashBalance":       account.Balance,
 		"blockedMargin":     account.BlockedMargin,
 		"freeCash":          freeCash,
 		"marginCash":        marginCash,
+		"shortProceeds":     totalShortLiability, // Explicitly expose proceeds
 		"settlementPending": settlementPending,
 	}
 

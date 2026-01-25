@@ -19,7 +19,6 @@ export const GlobalSearch: React.FC = () => {
         searchRef,
         fetchInstruments,
         handleSelect,
-        addToRecentSearches,
     } = useGlobalSearch();
 
     return (
@@ -69,7 +68,6 @@ export const GlobalSearch: React.FC = () => {
                         props={props}
                         option={option}
                         isHistory={!inputValue && recentSearches.some(r => r.id === option.id)}
-                        onQuickTrade={addToRecentSearches}
                     />
                 )}
             />

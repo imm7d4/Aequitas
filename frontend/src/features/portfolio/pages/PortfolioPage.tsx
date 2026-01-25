@@ -79,8 +79,11 @@ export const PortfolioPage: React.FC = () => {
         const realizedPL = summaryData.realizedPL || 0;
         const blockedMargin = summaryData.blockedMargin || 0;
 
-        // Total Equity = Cash + Current Holdings Value
-        const totalEquity = cashBalance + totalHoldingsValue;
+        // Backend now handles the correct "Net Worth" logic (Assets - Liabilities)
+        // However, backend Equity is based on Entry Price (Book Value). 
+        // We need to add Unrealized P&L to get Mark-to-Market Equity.
+        const backendEquity = summaryData.totalEquity || 0;
+        const totalEquity = backendEquity + unrealizedPL;
 
         return {
             totalHoldingsValue,
@@ -159,6 +162,7 @@ export const PortfolioPage: React.FC = () => {
                         marketPrices={marketPrices}
                         freeCash={summaryData?.freeCash || 0}
                         marginCash={summaryData?.marginCash || 0}
+                        shortProceeds={summaryData?.shortProceeds || 0}
                         settlementPending={summaryData?.settlementPending || 0}
                     />
                 </Box>

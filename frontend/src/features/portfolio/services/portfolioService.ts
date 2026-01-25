@@ -31,6 +31,7 @@ export interface PortfolioSummaryData {
     blockedMargin: number;
     freeCash: number;
     marginCash: number;
+    shortProceeds?: number; // Added field
     settlementPending: number;
     shortRiskExposure?: ShortRiskExposure;
 }
