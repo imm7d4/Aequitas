@@ -2,48 +2,57 @@ import { motion } from 'framer-motion';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import styles from '../styles/LandingPage.module.css';
 
+import {
+    Bolt,
+    CandlestickChart,
+    Tune,
+    PieChart,
+    Security,
+    MonetizationOn
+} from '@mui/icons-material';
+
 interface Feature {
-    icon: string;
+    icon: JSX.Element;
     title: string;
     description: string;
 }
 
 const features: Feature[] = [
     {
-        icon: '⚡',
+        icon: <Bolt fontSize="inherit" />,
         title: 'Lightning-Fast Execution',
         description:
-            'Market orders execute instantly. Limit orders matched in real-time.',
+            'Market orders execute instantly. Limit orders matched in real-time with sub-millisecond latency.',
     },
     {
-        icon: '📊',
-        title: 'Professional-Grade Charts',
+        icon: <CandlestickChart fontSize="inherit" />,
+        title: 'Professional Charts',
         description:
-            'Interactive candlestick charts with multiple timeframes and live price overlays.',
+            'Interactive candlestick charts with multiple timeframes, technical indicators, and live overlays.',
     },
     {
-        icon: '🎯',
-        title: 'Advanced Order Types',
+        icon: <Tune fontSize="inherit" />,
+        title: 'Advanced Controls',
         description:
-            'Stop Loss, Stop Limit, Trailing Stop - manage risk like a pro.',
+            'Granular control with Stop Loss, Stop Limit, and Trailing Stop orders to manage risk effectively.',
     },
     {
-        icon: '💼',
-        title: 'Smart Portfolio Management',
+        icon: <PieChart fontSize="inherit" />,
+        title: 'Smart Portfolio',
         description:
-            'Track holdings, realized/unrealized P&L, and performance in real-time.',
+            'Track realtime holdings, realized and unrealized P&L, and performance analytics.',
     },
     {
-        icon: '🔒',
+        icon: <Security fontSize="inherit" />,
         title: 'Bank-Grade Security',
         description:
-            'JWT authentication, encrypted data, and complete audit trails.',
+            'Enterprise-level JWT authentication, end-to-end encrypted data, and regulatory grade audit trails.',
     },
     {
-        icon: '💰',
+        icon: <MonetizationOn fontSize="inherit" />,
         title: 'Transparent Pricing',
         description:
-            'Capped commissions (0.03% or ₹20, whichever is lower). No surprises.',
+            'Zero hidden fees. Capped commissions at 0.03% or ₹20. What you see is exactly what you pay.',
     },
 ];
 
