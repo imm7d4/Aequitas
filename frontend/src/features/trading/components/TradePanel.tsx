@@ -325,7 +325,7 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
     };
 
     return (
-        <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+        <Paper id="trade-panel" elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
             <Stack spacing={2}>
 
 

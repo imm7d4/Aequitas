@@ -42,6 +42,7 @@ export const FinanceSettings: React.FC = () => {
     const [fundAmount, setFundAmount] = useState('10000');
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [isFundingDialogOpen, setIsFundingDialogOpen] = useState(false);
+    const theme = useTheme();
 
     const fetchData = async () => {
         try {
@@ -55,9 +56,11 @@ export const FinanceSettings: React.FC = () => {
 
             // Create a lookup map for trades by tradeId
             const tradeMap: Record<string, TradeModel> = {};
-            userTrades.forEach(t => {
-                tradeMap[t.tradeId] = t;
-            });
+            if (userTrades) {
+                userTrades.forEach(t => {
+                    tradeMap[t.tradeId] = t;
+                });
+            }
             setTrades(tradeMap);
         } catch (err: any) {
             setMessage({ type: 'error', text: 'Failed to load financial data' });
@@ -195,7 +198,7 @@ export const FinanceSettings: React.FC = () => {
                                                                         </Grid>
                                                                     </Grid>
 
-                                                                    <Stack spacing={0.3} sx={{ p: 1, bgcolor: alpha(useTheme().palette.primary.main, 0.04), borderRadius: 0.5 }}>
+                                                                    <Stack spacing={0.3} sx={{ p: 1, bgcolor: alpha(theme.palette.primary.main, 0.04), borderRadius: 0.5 }}>
                                                                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                                                             <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Value</Typography>
                                                                             <Typography variant="caption" fontWeight={700} color="text.primary" sx={{ fontSize: '0.7rem' }}>₹{trades[tx.reference.replace('TRADE_', '')].value.toLocaleString()}</Typography>
@@ -248,13 +251,13 @@ export const FinanceSettings: React.FC = () => {
                                                         alignItems: 'center',
                                                         gap: 0.5,
                                                         cursor: 'help',
-                                                        bgcolor: alpha(useTheme().palette.primary.main, 0.05),
+                                                        bgcolor: alpha(theme.palette.primary.main, 0.05),
                                                         px: 1,
                                                         py: 0.5,
                                                         borderRadius: 1,
                                                         transition: 'all 0.2s',
                                                         '&:hover': {
-                                                            bgcolor: alpha(useTheme().palette.primary.main, 0.1),
+                                                            bgcolor: alpha(theme.palette.primary.main, 0.1),
                                                             transform: 'translateY(-1px)'
                                                         }
                                                     }}>

@@ -31,12 +31,14 @@ export function ProfilePage() {
     const { user, setUser } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState(0);
-    const [isLoading, setIsLoading] = useState(true);
+    // Only show loading if we don't have user data yet
+    const [isLoading, setIsLoading] = useState(!user);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const fetchProfile = async () => {
-        setIsLoading(true);
+        // If we already have a user, don't block UI with loading state
+        if (!user) setIsLoading(true);
         try {
             const profile = await profileService.getProfile();
             setUser(profile);
@@ -51,28 +53,32 @@ export function ProfilePage() {
         fetchProfile();
     }, []);
 
-    if (isLoading) {
+    // If we don't have user data yet, show loading skeleton or spinner inside container
+    // This ensures #profile-container is always present for tour
+    if (isLoading || !user) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-                <CircularProgress />
-            </Box>
+            <Container maxWidth="md" sx={{ mt: 4, mb: 4 }} id="profile-container">
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+                    <CircularProgress />
+                </Box>
+            </Container>
         );
     }
 
     if (!user) return null;
 
     return (
-        <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+        <Container maxWidth="md" sx={{ mt: 4, mb: 4 }} id="profile-container">
             <Typography variant="h4" fontWeight={700} gutterBottom>
                 Trader Settings
             </Typography>
 
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }} id="profile-tabs">
                 <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
                     <Tab icon={<PersonIcon />} iconPosition="start" label="Personal Identity" />
                     <Tab icon={<SecurityIcon />} iconPosition="start" label="Account Security" />
                     <Tab icon={<SettingsIcon />} iconPosition="start" label="Preferences" />
-                    <Tab icon={<WalletIcon />} iconPosition="start" label="Finances" />
+                    <Tab icon={<WalletIcon />} iconPosition="start" label="Finances" id="profile-finance-tab" />
                 </Tabs>
             </Box>
 

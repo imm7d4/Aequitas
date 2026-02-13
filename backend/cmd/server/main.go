@@ -206,6 +206,7 @@ func main() {
 	protected.HandleFunc("/user/profile", userController.UpdateProfile).Methods("PUT", "OPTIONS")
 	protected.HandleFunc("/user/password", userController.UpdatePassword).Methods("PUT", "OPTIONS")
 	protected.HandleFunc("/user/preferences", userController.UpdatePreferences).Methods("PUT", "OPTIONS")
+	protected.HandleFunc("/user/onboarding-status", userController.UpdateOnboardingStatus).Methods("PATCH", "OPTIONS")
 
 	// Account routes
 	protected.HandleFunc("/account/balance", accountController.GetBalance).Methods("GET", "OPTIONS")

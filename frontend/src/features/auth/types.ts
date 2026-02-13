@@ -17,6 +17,9 @@ export interface User {
     isAdmin: boolean;
     status: 'ACTIVE' | 'INACTIVE';
     createdAt: string;
+    isOnboardingComplete?: boolean;
+    onboardingSkipped?: boolean;
+    onboardingCompletedAt?: string;
 }
 
 export interface AuthResponse {

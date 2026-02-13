@@ -3,11 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { healthService } from '@/services/healthService';
 import { BrandLogo } from '../../../shared/components/header/BrandLogo';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import styles from '../styles/Auth.module.css';
 
 export function RegisterForm(): JSX.Element {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
+    const [showPassword, setShowPassword] = useState<boolean>(false);
     const [localError, setLocalError] = useState<string>('');
     const navigate = useNavigate();
     const { register, isLoading, error } = useAuth();
@@ -111,18 +113,42 @@ export function RegisterForm(): JSX.Element {
                             </div>
 
                             <div className={styles.formGroup}>
-                                <input
-                                    type="password"
-                                    id="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className={styles.formInput}
-                                    placeholder=" "
-                                    required
-                                />
-                                <label htmlFor="password" className={styles.formLabel}>
-                                    Password
-                                </label>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        id="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className={styles.formInput}
+                                        placeholder=" "
+                                        required
+                                        style={{ paddingRight: '40px' }}
+                                    />
+                                    <label htmlFor="password" className={styles.formLabel}>
+                                        Password
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        style={{
+                                            position: 'absolute',
+                                            right: '12px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            color: 'rgba(255, 255, 255, 0.7)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            padding: '4px',
+                                            zIndex: 10
+                                        }}
+                                    >
+                                        {showPassword ? <VisibilityOff sx={{ fontSize: 20 }} /> : <Visibility sx={{ fontSize: 20 }} />}
+                                    </button>
+                                </div>
                                 <p className={styles.helperText}>
                                     Minimum 8 characters
                                 </p>

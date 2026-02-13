@@ -78,7 +78,7 @@ export function Dashboard(): JSX.Element {
         marketIntelligence, portfolioDistribution } = dashboardData;
 
     return (
-        <Box sx={{ py: 3, px: { xs: 1, md: 3 } }}>
+        <Box id="dashboard-overview" sx={{ py: 3, px: { xs: 1, md: 3 } }}>
             {/* Greeter Section */}
             <Box
                 sx={{
@@ -130,13 +130,6 @@ export function Dashboard(): JSX.Element {
                     <StatCard
                         title="Realized P&L"
                         value={`₹${performanceOverview.realizedPL.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                        change={
-                            performanceOverview.realizedPL > 0
-                                ? `+${performanceOverview.realizedPL.toFixed(2)}`
-                                : performanceOverview.realizedPL.toFixed(2)
-                        }
-                        isPositive={performanceOverview.realizedPL > 0}
-                        subtitle="Closed trades"
                         isPrivate={!showBalance}
                     />
                 </Grid>
@@ -144,13 +137,6 @@ export function Dashboard(): JSX.Element {
                     <StatCard
                         title="Unrealized P&L"
                         value={`₹${performanceOverview.unrealizedPL.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                        change={
-                            performanceOverview.unrealizedPL > 0
-                                ? `+${performanceOverview.unrealizedPL.toFixed(2)}`
-                                : performanceOverview.unrealizedPL.toFixed(2)
-                        }
-                        isPositive={performanceOverview.unrealizedPL > 0}
-                        subtitle="Open positions"
                         isPrivate={!showBalance}
                     />
                 </Grid>

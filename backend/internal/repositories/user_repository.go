@@ -89,3 +89,35 @@ func (r *UserRepository) Update(user *models.User) error {
 	)
 	return err
 }
+
+// UpdateOnboardingStatus updates the user's onboarding status fields
+func (r *UserRepository) UpdateOnboardingStatus(userID string, complete, skipped bool, completedAt *time.Time) error {
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"is_onboarding_complete":  complete,
+			"onboarding_skipped":      skipped,
+			"onboarding_completed_at": completedAt,
+			"updated_at":              time.Now(),
+		},
+	}
+
+	result, err := r.collection.UpdateOne(
+		context.Background(),
+		bson.M{"_id": objectID},
+		update,
+	)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+
+	return nil
+}

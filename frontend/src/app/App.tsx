@@ -1,11 +1,15 @@
 import { useEffect } from 'react';
-import { Router } from './router';
+import { AppRoutes } from './router';
 import { Providers } from './providers';
 import { useAuth } from '@/features/auth';
 import { WatchlistSelectionDialog } from '@/features/watchlist/components/WatchlistSelectionDialog';
 
+import OnboardingTour from '@/features/onboarding/components/OnboardingTour';
+
+import { BrowserRouter } from 'react-router-dom';
+
 function App(): JSX.Element {
-    const { initialize } = useAuth();
+    const { initialize, isAuthenticated } = useAuth();
 
     useEffect(() => {
         initialize();
@@ -14,8 +18,15 @@ function App(): JSX.Element {
 
     return (
         <Providers>
-            <Router />
-            <WatchlistSelectionDialog />
+            <BrowserRouter>
+                <AppRoutes />
+                {isAuthenticated && (
+                    <>
+                        <WatchlistSelectionDialog />
+                        <OnboardingTour />
+                    </>
+                )}
+            </BrowserRouter>
         </Providers>
     );
 }

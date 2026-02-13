@@ -25,6 +25,7 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({ instrumentId }) 
 
     return (
         <Paper
+            id="indicator-panel"
             elevation={0}
             sx={{
                 borderTop: 1,

@@ -8,10 +8,15 @@ import {
     MenuItem,
     Divider,
     ListItemIcon,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
+    Button,
 } from '@mui/material';
 import {
     AccountCircle,
-    Settings as SettingsIcon,
     Logout as LogoutIcon,
     KeyboardArrowDown as ExpandIcon,
 } from '@mui/icons-material';
@@ -23,6 +28,7 @@ export const UserProfile: React.FC = () => {
     const { track } = useTelemetry();
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const [openLogoutConfirm, setOpenLogoutConfirm] = useState(false);
 
     const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
         track({
@@ -37,8 +43,13 @@ export const UserProfile: React.FC = () => {
         setAnchorEl(null);
     };
 
-    const handleLogout = async () => {
+    const handleLogoutClick = () => {
         handleMenuClose();
+        setOpenLogoutConfirm(true);
+    };
+
+    const handleLogoutConfirm = async () => {
+        setOpenLogoutConfirm(false);
         track({
             event_name: 'profile.logout_clicked',
             event_version: 'v1',
@@ -59,6 +70,7 @@ export const UserProfile: React.FC = () => {
     return (
         <Box>
             <Box
+                id="user-menu"
                 onClick={handleProfileMenuOpen}
                 sx={{
                     display: 'flex',
@@ -155,20 +167,38 @@ export const UserProfile: React.FC = () => {
                     </ListItemIcon>
                     Profile
                 </MenuItem>
-                <MenuItem onClick={handleMenuClose}>
-                    <ListItemIcon>
-                        <SettingsIcon fontSize="small" />
-                    </ListItemIcon>
-                    Settings
-                </MenuItem>
                 <Divider />
-                <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+                <MenuItem onClick={handleLogoutClick} sx={{ color: 'error.main' }}>
                     <ListItemIcon>
                         <LogoutIcon fontSize="small" color="error" />
                     </ListItemIcon>
                     Logout
                 </MenuItem>
             </Menu>
+
+            <Dialog
+                open={openLogoutConfirm}
+                onClose={() => setOpenLogoutConfirm(false)}
+                aria-labelledby="logout-dialog-title"
+                aria-describedby="logout-dialog-description"
+            >
+                <DialogTitle id="logout-dialog-title">
+                    {"Confirm Logout"}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="logout-dialog-description">
+                        Are you sure you want to log out of your account?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenLogoutConfirm(false)} color="inherit">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleLogoutConfirm} color="error" autoFocus>
+                        Logout
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

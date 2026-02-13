@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"time"
 
 	"aequitas/internal/models"
 	"aequitas/internal/repositories"
@@ -98,4 +99,15 @@ func (s *UserService) UpdatePreferences(userID string, prefs models.UserPreferen
 	}
 
 	return user, nil
+}
+
+// UpdateOnboardingStatus updates the user's onboarding status
+func (s *UserService) UpdateOnboardingStatus(userID string, complete, skipped bool) error {
+	var completedAt *time.Time
+	if complete {
+		now := time.Now()
+		completedAt = &now
+	}
+
+	return s.userRepo.UpdateOnboardingStatus(userID, complete, skipped, completedAt)
 }

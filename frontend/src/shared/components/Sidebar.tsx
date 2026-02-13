@@ -40,17 +40,17 @@ export const Sidebar: React.FC = () => {
     const { track } = useTelemetry();
 
     const menuItems = [
-        { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
-        { text: 'Instruments', icon: <InstrumentsIcon />, path: '/instruments' },
-        { text: 'Watchlists', icon: <WatchlistIcon />, path: '/watchlists' },
-        { text: 'Diagnostics', icon: <DiagnosticsIcon />, path: '/diagnostics' },
-        { text: 'Portfolio', icon: <PortfolioIcon />, path: '/portfolio' },
-        { text: 'Orders', icon: <OrdersIcon />, path: '/orders' },
-        { text: 'Education', icon: <EducationIcon />, path: '/education' },
+        { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', id: 'dashboard-nav' },
+        { text: 'Instruments', icon: <InstrumentsIcon />, path: '/instruments', id: 'market-data-nav' },
+        { text: 'Watchlists', icon: <WatchlistIcon />, path: '/watchlists', id: 'watchlists-nav' },
+        { text: 'Diagnostics', icon: <DiagnosticsIcon />, path: '/diagnostics', id: 'diagnostics-nav' },
+        { text: 'Portfolio', icon: <PortfolioIcon />, path: '/portfolio', id: 'portfolio-nav' },
+        { text: 'Orders', icon: <OrdersIcon />, path: '/orders', id: 'orders-nav' },
+        { text: 'Education', icon: <EducationIcon />, path: '/education', id: 'education-nav' },
     ];
 
     if (user?.isAdmin) {
-        menuItems.push({ text: 'Admin', icon: <AdminIcon />, path: '/admin' });
+        menuItems.push({ text: 'Admin', icon: <AdminIcon />, path: '/admin', id: 'admin-nav' });
     }
 
     return (
@@ -82,7 +82,7 @@ export const Sidebar: React.FC = () => {
                     {menuItems.map((item) => {
                         const isActive = location.pathname.startsWith(item.path);
                         return (
-                            <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
+                            <ListItem key={item.text} disablePadding sx={{ display: 'block' }} id={item.id}>
                                 <Tooltip title={!isSidebarOpen ? item.text : ''} placement="right">
                                     <ListItemButton
                                         onClick={() => {

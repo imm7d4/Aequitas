@@ -9,8 +9,6 @@ import {
     Grid,
     CircularProgress,
     Alert,
-    ToggleButton,
-    ToggleButtonGroup
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import StarIcon from '@mui/icons-material/Star';
@@ -37,7 +35,7 @@ export function InstrumentDetail() {
     const [instrument, setInstrument] = useState<Instrument | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [tabValue, setTabValue] = useState(0);
+
     const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
 
     const { prices } = useMarketData(id ? [id] : []);
@@ -129,8 +127,24 @@ export function InstrumentDetail() {
 
     if (isLoading) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-                <CircularProgress />
+            <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pb: 8 }}>
+                <Box sx={{ height: 64, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }} />
+                <Container maxWidth="xl" sx={{ mt: 3 }}>
+                    <Box sx={{ height: 48, mb: 4, bgcolor: 'rgba(0,0,0,0.03)', borderRadius: 1 }} />
+                    <Grid container spacing={2.5}>
+                        <Grid item xs={12} lg={8.5}>
+                            {/* Indicator Panel Placeholder with ID for Tour */}
+                            <Box id="indicator-panel" sx={{ mb: 2 }}>
+                                <Paper sx={{ height: 56, borderRadius: 0 }} />
+                            </Box>
+                            <Paper sx={{ height: 500, borderRadius: 3, bgcolor: 'background.paper' }} />
+                        </Grid>
+                        <Grid item xs={12} lg={3.5}>
+                            {/* Trade Panel Placeholder with ID for Tour */}
+                            <Paper id="trade-panel" sx={{ height: 600, borderRadius: 2 }} />
+                        </Grid>
+                    </Grid>
+                </Container>
             </Box>
         );
     }
@@ -214,6 +228,7 @@ export function InstrumentDetail() {
                             startIcon={<AddAlarmIcon />}
                             onClick={() => setIsAlertModalOpen(true)}
                             sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, px: 2 }}
+                            id="set-alert-btn"
                         >
                             Set Alert
                         </Button>
@@ -285,74 +300,31 @@ export function InstrumentDetail() {
 
 
 
-                        {/* TABS SECTION: Analysis */}
-                        <Box sx={{ mt: 3.5 }}>
-                            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2.5 }}>
-                                <ToggleButtonGroup
-                                    value={tabValue}
-                                    exclusive
-                                    onChange={(_: React.MouseEvent<HTMLElement>, v: number | null) => v !== null && setTabValue(v)}
-                                    size="small"
-                                    sx={{
-                                        mb: -0.1,
-                                        '& .MuiToggleButton-root': {
-                                            border: 'none',
-                                            borderRadius: 0,
-                                            px: 3,
-                                            py: 1.2,
-                                            fontWeight: 600,
-                                            color: 'text.secondary',
-                                            '&.Mui-selected': {
-                                                color: 'primary.main',
-                                                bgcolor: 'transparent',
-                                                borderBottom: '2px solid',
-                                                borderColor: 'primary.main'
-                                            }
-                                        }
-                                    }}
-                                >
-                                    <ToggleButton value={0}>Overview</ToggleButton>
-                                    <ToggleButton value={1}>Market Depth</ToggleButton>
-                                    <ToggleButton value={2}>Fundamentals</ToggleButton>
-                                </ToggleButtonGroup>
-                            </Box>
 
-                            <Box sx={{ py: 1 }}>
-                                {tabValue === 0 && (
-                                    <Grid container spacing={3}>
-                                        <Grid item xs={12} md={7}>
-                                            <Typography variant="subtitle1" fontWeight={700} gutterBottom>Business Summary</Typography>
-                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, fontSize: '0.9rem' }}>
-                                                {instrument.name} ({instrument.symbol}) is a leading enterprise in the {instrument.sector} space,
-                                                incorporated and listed on the {instrument.exchange}. The instrument is currently {instrument.status.toLowerCase()}
-                                                for market participants. Key trading parameters include a lot size of {instrument.lotSize} units
-                                                and a minimum price movement (tick size) of ₹{instrument.tickSize.toFixed(2)}.
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} md={5}>
-                                            <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: '1px solid', borderColor: 'divider', bgcolor: 'rgba(0,0,0,0.01)' }}>
-                                                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2 }}>Technical Profiling</Typography>
-                                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.8 }}>
-                                                    <MetricRow label="ISIN Alpha-code" value={instrument.isin} />
-                                                    <MetricRow label="Public Listing" value={new Date(instrument.listingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} />
-                                                    <MetricRow label="Asset Classification" value={instrument.type} />
-                                                    <MetricRow label="Market Segment" value="EQUITY - MAIN" />
-                                                </Box>
-                                            </Paper>
-                                        </Grid>
-                                    </Grid>
-                                )}
-                                {tabValue === 1 && (
-                                    <Box sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>
-                                        <Typography variant="body2">Market Depth data stream is initializing...</Typography>
-                                    </Box>
-                                )}
-                                {tabValue === 2 && (
-                                    <Box sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>
-                                        <Typography variant="body2">Fundamental Analysis tools coming soon.</Typography>
-                                    </Box>
-                                )}
-                            </Box>
+                        {/* ANALYSIS SECTION */}
+                        <Box sx={{ mt: 3.5 }}>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12} md={7}>
+                                    <Typography variant="subtitle1" fontWeight={700} gutterBottom>Business Summary</Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, lineHeight: 1.7, fontSize: '0.9rem' }}>
+                                        {instrument.name} ({instrument.symbol}) is a leading enterprise in the {instrument.sector} space,
+                                        incorporated and listed on the {instrument.exchange}. The instrument is currently {instrument.status.toLowerCase()}
+                                        for market participants. Key trading parameters include a lot size of {instrument.lotSize} units
+                                        and a minimum price movement (tick size) of ₹{instrument.tickSize.toFixed(2)}.
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12} md={5}>
+                                    <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: '1px solid', borderColor: 'divider', bgcolor: 'rgba(0,0,0,0.01)' }}>
+                                        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2 }}>Technical Profiling</Typography>
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.8 }}>
+                                            <MetricRow label="ISIN Alpha-code" value={instrument.isin} />
+                                            <MetricRow label="Public Listing" value={new Date(instrument.listingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} />
+                                            <MetricRow label="Asset Classification" value={instrument.type} />
+                                            <MetricRow label="Market Segment" value="EQUITY - MAIN" />
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+                            </Grid>
                         </Box>
                     </Grid>
 

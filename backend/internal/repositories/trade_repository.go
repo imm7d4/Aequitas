@@ -44,7 +44,7 @@ func (r *TradeRepository) FindByUserID(userID string) ([]*models.Trade, error) {
 	}
 	defer cursor.Close(context.Background())
 
-	var trades []*models.Trade
+	trades := []*models.Trade{}
 	if err = cursor.All(context.Background(), &trades); err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (r *TradeRepository) FindByOrderID(orderID string) ([]*models.Trade, error)
 	}
 	defer cursor.Close(context.Background())
 
-	var trades []*models.Trade
+	trades := []*models.Trade{}
 	if err = cursor.All(context.Background(), &trades); err != nil {
 		return nil, err
 	}

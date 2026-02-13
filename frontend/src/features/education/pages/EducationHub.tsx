@@ -2,6 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useEducationIndex } from '../hooks/useEducation';
 import ScrollToTop from '../components/ScrollToTop';
+import {
+    Typography,
+} from '@mui/material';
 import './EducationHub.css';
 
 const EducationHub: React.FC = () => {
@@ -27,9 +30,12 @@ const EducationHub: React.FC = () => {
         <div className="education-hub">
             {/* Header */}
             <header className="education-header">
-                <div className="header-badge">The Aequitas Academy</div>
-                <h1>Master the Markets</h1>
-                <p className="hero-lead">Follow the <strong>Institutional Trader's Path</strong>. From platform architecture to advanced market microstructure, learn how the modern exchange really works.</p>
+                <Typography variant="h4" fontWeight={700} gutterBottom>
+                    Education Hub
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                    Master the markets with our curated learning paths and resources.
+                </Typography>
                 <div className="learning-path-visual">
                     <div className="path-stat"><span>5</span> Phases</div>
                     <div className="path-stat"><span>16</span> Modules</div>

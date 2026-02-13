@@ -180,12 +180,14 @@
     transition: all 0.3s ease;
     background: transparent;
     padding: 0 0.25rem;
+    line-height: normal;
 }
 
 .formInput:focus+.formLabel,
 .formInput:not(:placeholder-shown)+.formLabel {
-    top: 0;
-    font-size: 0.75rem;
+    top: -0.75rem;
+    left: 0.75rem;
+    font-size: 0.8rem;
     color: #0066FF;
     background: #0f1f35;
     padding: 0 0.5rem;

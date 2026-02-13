@@ -136,3 +136,31 @@ func (c *UserController) UpdatePreferences(w http.ResponseWriter, r *http.Reques
 
 	utils.RespondJSON(w, http.StatusOK, user, "Preferences updated successfully")
 }
+
+type UpdateOnboardingStatusRequest struct {
+	IsOnboardingComplete bool `json:"isOnboardingComplete"`
+	Skipped              bool `json:"skipped"`
+}
+
+// UpdateOnboardingStatus handles PATCH /api/user/onboarding-status
+func (c *UserController) UpdateOnboardingStatus(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var req UpdateOnboardingStatusRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	err := c.userService.UpdateOnboardingStatus(userID, req.IsOnboardingComplete, req.Skipped)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, nil, "Onboarding status updated successfully")
+}

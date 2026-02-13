@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Chip, Box, Typography } from '@mui/material';
+import { Chip, Box, Typography, Tooltip } from '@mui/material';
 import { useMarketStatus } from '../hooks/useMarketStatus';
 
 export const MarketStatusBadge = () => {
@@ -83,17 +83,19 @@ export const MarketStatusBadge = () => {
                     {formatTime(currentTime)}
                 </Typography>
             )}
-            <Chip
-                label={`${marketStatus.exchange}: ${getStatusLabel()}`}
-                color={getStatusColor()}
-                size="small"
-                sx={{
-                    fontWeight: 'bold',
-                    height: 24,
-                    fontSize: '0.65rem',
-                    '& .MuiChip-label': { px: 1 }
-                }}
-            />
+            <Tooltip title="Since this is a simulation, trading is allowed 24/7" arrow>
+                <Chip
+                    label={`${marketStatus.exchange}: ${getStatusLabel()}`}
+                    color={getStatusColor()}
+                    size="small"
+                    sx={{
+                        fontWeight: 'bold',
+                        height: 24,
+                        fontSize: '0.65rem',
+                        '& .MuiChip-label': { px: 1 }
+                    }}
+                />
+            </Tooltip>
         </Box>
     );
 };

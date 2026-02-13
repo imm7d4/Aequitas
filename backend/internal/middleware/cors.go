@@ -24,7 +24,7 @@ func CORS(allowedOrigins []string) mux.MiddlewareFunc {
 			if isAllowed {
 				// log.Printf("[CORS] Match: %s %s", r.Method, origin)
 				w.Header().Set("Access-Control-Allow-Origin", origin)
-				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 				w.Header().Set("Access-Control-Allow-Credentials", "true")
 			} else {

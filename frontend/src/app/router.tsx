@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { LoginForm, RegisterForm } from '@/features/auth';
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute';
 import { PublicRoute } from '@/shared/components/PublicRoute';
@@ -25,9 +25,9 @@ import { TradeDiagnosticsPage } from '@/features/analytics/pages/TradeDiagnostic
 import EducationHub from '@/features/education/pages/EducationHub';
 import ModulePage from '@/features/education/pages/ModulePage';
 
-export function Router(): JSX.Element {
+export function AppRoutes(): JSX.Element {
     return (
-        <BrowserRouter>
+        <>
             <ScrollToTop />
             <TelemetryProvider>
                 <Routes>
@@ -77,6 +77,6 @@ export function Router(): JSX.Element {
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </TelemetryProvider>
-        </BrowserRouter>
+        </>
     );
 }

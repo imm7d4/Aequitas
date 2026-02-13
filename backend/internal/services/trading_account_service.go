@@ -58,7 +58,9 @@ func (s *TradingAccountService) GetByUserID(userID string) (*models.TradingAccou
 		return nil, err
 	}
 	if account == nil {
-		return nil, errors.New("trading account not found")
+		// Lazily create account if it doesn't exist (US-0.1.2)
+		// This handles legacy users or registration failures
+		return s.CreateForUser(userID)
 	}
 	return account, nil
 }
@@ -107,7 +109,8 @@ func (s *TradingAccountService) GetTransactions(userID string) ([]*models.Transa
 		return nil, err
 	}
 	if account == nil {
-		return nil, errors.New("trading account not found")
+		// If no account exists, user has no transactions
+		return []*models.Transaction{}, nil
 	}
 
 	return s.txRepo.FindByAccountID(account.ID.Hex())
