@@ -15,11 +15,12 @@ import {
     Select,
     MenuItem,
     FormControl,
-    InputLabel,
     Snackbar,
     Alert,
-    FormControlLabel,
     Switch,
+    useTheme,
+    alpha,
+    Divider,
 } from '@mui/material';
 import {
     TrendingUp as BuyIcon,
@@ -40,6 +41,7 @@ interface TradePanelProps {
 }
 
 export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initialSide = 'BUY', initialQuantity, initialIntent }) => {
+    const theme = useTheme();
     const [side, setSide] = useState<'BUY' | 'SELL'>(initialSide);
     const [orderType, setOrderType] = useState<'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT' | 'TRAILING_STOP'>('LIMIT');
     const [quantity, setQuantity] = useState<string>(initialQuantity ? initialQuantity.toString() : '');
@@ -325,49 +327,65 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
     };
 
     return (
-        <Paper id="trade-panel" elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-            <Stack spacing={2}>
-
-
+        <Paper 
+            id="trade-panel" 
+            elevation={0} 
+            sx={{ 
+                p: 2, // Reduced from 3
+                border: '1px solid', 
+                borderColor: 'divider', 
+                borderRadius: 3, // Slightly smaller radius
+                background: 'rgba(255, 255, 255, 0.6)',
+                backdropFilter: 'blur(12px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.04)'
+            }}
+        >
+            <Stack spacing={2}> {/* Reduced from 3 */}
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography variant="h6" fontWeight={700}>
+                    <Typography variant="subtitle1" fontWeight={800} sx={{ letterSpacing: '-0.01em' }}>
                         Trade {instrument.symbol}
                     </Typography>
                     <Chip
-                        icon={<AdvancedIcon />}
+                        icon={<AdvancedIcon sx={{ fontSize: '14px !important' }} />}
                         label={advancedMode ? 'Advanced' : 'Basic'}
                         onClick={() => {
                             setAdvancedMode(!advancedMode);
                             if (advancedMode) {
-                                // Reset to LIMIT when disabling advanced mode
                                 setOrderType('LIMIT');
                             }
                         }}
-                        color={advancedMode ? 'primary' : 'default'}
                         size="small"
-                        sx={{ cursor: 'pointer' }}
+                        sx={{ 
+                            cursor: 'pointer', 
+                            fontWeight: 700,
+                            borderRadius: '8px',
+                            bgcolor: advancedMode ? 'primary.main' : 'rgba(0,0,0,0.05)',
+                            color: advancedMode ? 'white' : 'text.primary',
+                            '&:hover': { bgcolor: advancedMode ? 'primary.dark' : 'rgba(0,0,0,0.1)' }
+                        }}
                     />
                 </Box>
 
-
-
                 {/* Short Selling Toggle */}
                 {instrument.isShortable && (
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={shortMode}
-                                    onChange={(e) => handleShortModeChange(e.target.checked)}
-                                    size="small"
-                                    color="warning"
-                                />
-                            }
-                            label={
-                                <Typography variant="caption" fontWeight={600} color={shortMode ? 'warning.main' : 'text.secondary'}>
-                                    Short Sell Mode
-                                </Typography>
-                            }
+                    <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        p: 1.2,
+                        borderRadius: 2,
+                        bgcolor: shortMode ? alpha(theme.palette.warning.main, 0.05) : 'transparent',
+                        border: '1px solid',
+                        borderColor: shortMode ? alpha(theme.palette.warning.main, 0.2) : 'transparent'
+                    }}>
+                        <Typography variant="caption" fontWeight={700} color={shortMode ? 'warning.main' : 'text.secondary'}>
+                            Short Sell Mode
+                        </Typography>
+                        <Switch
+                            checked={shortMode}
+                            onChange={(e) => handleShortModeChange(e.target.checked)}
+                            size="small"
+                            color="warning"
                         />
                     </Box>
                 )}
@@ -382,313 +400,252 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                     value={side}
                     exclusive
                     onChange={(_, v) => v && setSide(v)}
-                    size="small"
+                    sx={{
+                        p: 0.5,
+                        bgcolor: 'rgba(0,0,0,0.03)',
+                        borderRadius: '12px',
+                        border: 'none',
+                        '& .MuiToggleButton-root': {
+                            border: 'none',
+                            borderRadius: '10px !important',
+                            fontWeight: 800,
+                            transition: 'all 0.2s ease',
+                            '&.Mui-selected': {
+                                color: 'white',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                            }
+                        }
+                    }}
                 >
                     <ToggleButton
                         value="BUY"
                         sx={{
                             '&.Mui-selected': {
-                                bgcolor: shortMode ? 'success.main' : 'success.main',
-                                color: 'white',
-                                '&:hover': { bgcolor: shortMode ? 'success.dark' : 'success.dark' }
+                                bgcolor: 'success.main',
+                                '&:hover': { bgcolor: 'success.dark' }
                             }
                         }}
                     >
-                        <BuyIcon sx={{ mr: 1, fontSize: 18 }} /> {shortMode ? 'COVER (BUY)' : 'BUY'}
+                        <BuyIcon sx={{ mr: 1, fontSize: 18 }} /> {shortMode ? 'COVER' : 'BUY'}
                     </ToggleButton>
                     <ToggleButton
                         value="SELL"
                         sx={{
                             '&.Mui-selected': {
-                                bgcolor: shortMode ? 'error.main' : 'error.main',
-                                color: 'white',
-                                '&:hover': { bgcolor: shortMode ? 'error.dark' : 'error.dark' }
+                                bgcolor: 'error.main',
+                                '&:hover': { bgcolor: 'error.dark' }
                             }
                         }}
                     >
-                        <SellIcon sx={{ mr: 1, fontSize: 18 }} /> {shortMode ? 'SHORT (SELL)' : 'SELL'}
+                        <SellIcon sx={{ mr: 1, fontSize: 18 }} /> {shortMode ? 'SHORT' : 'SELL'}
                     </ToggleButton>
                 </ToggleButtonGroup>
 
-
-                {/* SECTION 2: Order Type Selection */}
-                <Stack spacing={1.5}>
-                    {/* Basic Order Types - Always Visible */}
-                    <ToggleButtonGroup
-                        fullWidth
-                        value={['LIMIT', 'MARKET'].includes(orderType) ? orderType : ''}
-                        exclusive
-                        onChange={(_, v) => {
-                            if (v) {
-                                setOrderType(v);
-                            }
-                        }}
-                        size="small"
-                    >
-                        <ToggleButton value="LIMIT">
-                            <Tooltip title="Order executes only at specified price or better">
-                                <span>LIMIT</span>
-                            </Tooltip>
-                        </ToggleButton>
-                        <ToggleButton value="MARKET">
-                            <Tooltip title="Order executes immediately at best available price">
-                                <span>MARKET</span>
-                            </Tooltip>
-                        </ToggleButton>
-                    </ToggleButtonGroup>
-
-                    {/* Advanced Order Types - Dropdown Select */}
-                    {advancedMode && (
-                        <FormControl fullWidth size="small">
-                            <InputLabel>Advanced Order Type</InputLabel>
-                            <Select
-                                value={['STOP', 'STOP_LIMIT', 'TRAILING_STOP'].includes(orderType) ? orderType : ''}
-                                label="Advanced Order Type"
-                                onChange={(e) => {
-                                    if (e.target.value) {
-                                        setOrderType(e.target.value as any);
-                                    }
-                                }}
-                            >
-                                <MenuItem value="">
-                                    <em>Select advanced type...</em>
-                                </MenuItem>
-                                <MenuItem value="STOP">
-                                    <Box>
-                                        <Typography variant="body2" fontWeight={600}>STOP</Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            Triggers market order when stop price is reached
-                                        </Typography>
-                                    </Box>
-                                </MenuItem>
-                                <MenuItem value="STOP_LIMIT">
-                                    <Box>
-                                        <Typography variant="body2" fontWeight={600}>STOP-LIMIT</Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            Triggers limit order when stop price is reached
-                                        </Typography>
-                                    </Box>
-                                </MenuItem>
-                                <MenuItem value="TRAILING_STOP">
-                                    <Box>
-                                        <Typography variant="body2" fontWeight={600}>TRAILING STOP</Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            Stop price trails market price to lock in profits
-                                        </Typography>
-                                    </Box>
-                                </MenuItem>
-                            </Select>
-                        </FormControl>
-                    )}
-                </Stack>
-
-                {/* Quantity Input - Moved after order type selection */}
                 <Box>
-                    <TextField
-                        fullWidth
-                        label="Quantity"
-                        type="number"
-                        size="small"
-                        value={quantity}
-                        onChange={(e) => {
-                            // Only allow integers
-                            const value = e.target.value;
-                            if (value === '' || /^\d+$/.test(value)) {
-                                setQuantity(value);
-                            }
-                        }}
-                        inputProps={{
-                            step: 1,
-                            min: 0
-                        }}
-                        InputProps={{
-                            endAdornment: <InputAdornment position="end">Qty</InputAdornment>,
-                        }}
-                    />
-                </Box>
+                    <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ mb: 1, display: 'block', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Order Configuration
+                    </Typography>
+                    <Stack spacing={1.2}> {/* Reduced from 2 */}
+                        <ToggleButtonGroup
+                            fullWidth
+                            value={['LIMIT', 'MARKET'].includes(orderType) ? orderType : ''}
+                            exclusive
+                            onChange={(_, v) => v && setOrderType(v)}
+                            size="small"
+                            sx={{
+                                '& .MuiToggleButton-root': {
+                                    borderRadius: '8px',
+                                    fontWeight: 700,
+                                    fontSize: '0.75rem'
+                                }
+                            }}
+                        >
+                            <ToggleButton value="LIMIT">LIMIT</ToggleButton>
+                            <ToggleButton value="MARKET">MARKET</ToggleButton>
+                        </ToggleButtonGroup>
 
-                {/* Validity Selection */}
-                <FormControl fullWidth size="small">
-                    <InputLabel>Validity</InputLabel>
-                    <Select
-                        value={validity}
-                        label="Validity"
-                        onChange={(e) => setValidity(e.target.value as any)}
-                    >
-                        <MenuItem value="DAY">DAY (Standard)</MenuItem>
-                        <MenuItem value="IOC">IOC (Immediate or Cancel)</MenuItem>
-                        <MenuItem value="GTC" disabled={orderType === 'MARKET'}>
-                            GTC (Good Til Cancelled) {orderType === 'MARKET' && '- N/A for Market'}
-                        </MenuItem>
-                    </Select>
-                </FormControl>
+                        {advancedMode && (
+                            <FormControl fullWidth size="small">
+                                <Select
+                                    value={['STOP', 'STOP_LIMIT', 'TRAILING_STOP'].includes(orderType) ? orderType : ''}
+                                    displayEmpty
+                                    onChange={(e) => e.target.value && setOrderType(e.target.value as any)}
+                                    sx={{ borderRadius: '8px', fontWeight: 600 }}
+                                >
+                                    <MenuItem value="" disabled>Advanced Order Type</MenuItem>
+                                    <MenuItem value="STOP">STOP (MARKET)</MenuItem>
+                                    <MenuItem value="STOP_LIMIT">STOP-LIMIT</MenuItem>
+                                    <MenuItem value="TRAILING_STOP">TRAILING STOP</MenuItem>
+                                </Select>
+                            </FormControl>
+                        )}
 
-                {/* Compact Input Fields */}
-                <Stack spacing={1.5}>
-                    {/* Price input for LIMIT orders */}
-                    {orderType === 'LIMIT' && (
                         <TextField
                             fullWidth
-                            label="Price"
+                            label="Quantity"
                             type="number"
                             size="small"
-                            value={price}
+                            value={quantity}
                             onChange={(e) => {
-                                setPrice(e.target.value);
-                                setIsPriceTouched(true);
+                                const value = e.target.value;
+                                if (value === '' || /^\d+$/.test(value)) {
+                                    setQuantity(value);
+                                }
                             }}
                             InputProps={{
-                                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                                endAdornment: <InputAdornment position="end" sx={{ fontWeight: 700, fontSize: '0.75rem' }}>QTY</InputAdornment>,
+                                sx: { borderRadius: '8px', fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' }
                             }}
                         />
-                    )}
 
-                    {/* Stop Price Input for STOP and STOP_LIMIT orders */}
-                    {(orderType === 'STOP' || orderType === 'STOP_LIMIT') && (
-                        <TextField
-                            fullWidth
-                            label="Stop Price"
-                            type="number"
-                            size="small"
-                            value={stopPrice}
-                            onChange={(e) => setStopPrice(e.target.value)}
-                            helperText={
-                                stopPrice && parseFloat(stopPrice) > 0
-                                    ? `Distance: ₹${Math.abs(ltp - parseFloat(stopPrice)).toFixed(2)} (${((Math.abs(ltp - parseFloat(stopPrice)) / ltp) * 100).toFixed(2)}%)`
-                                    : `Trigger when ${side === 'BUY' ? 'above' : 'below'} this price`
-                            }
-                            InputProps={{
-                                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                            }}
-                        />
-                    )}
-
-                    {/* Limit Price Input for STOP_LIMIT orders */}
-                    {orderType === 'STOP_LIMIT' && (
-                        <TextField
-                            fullWidth
-                            label="Limit Price"
-                            type="number"
-                            size="small"
-                            value={limitPrice}
-                            onChange={(e) => setLimitPrice(e.target.value)}
-                            helperText="Max price to pay (BUY) or min to accept (SELL)"
-                            InputProps={{
-                                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                            }}
-                        />
-                    )}
-
-                    {/* Trailing Stop Controls */}
-                    {orderType === 'TRAILING_STOP' && (
-                        <>
-                            <ToggleButtonGroup
-                                fullWidth
-                                value={trailType}
-                                exclusive
-                                onChange={(_, v) => v && setTrailType(v)}
-                                size="small"
-                            >
-                                <ToggleButton value="PERCENTAGE">Percentage %</ToggleButton>
-                                <ToggleButton value="ABSOLUTE">Absolute ₹</ToggleButton>
-                            </ToggleButtonGroup>
-
+                        {orderType === 'LIMIT' && (
                             <TextField
                                 fullWidth
-                                label={`Trail Amount (${trailType === 'PERCENTAGE' ? '%' : '₹'})`}
+                                label="Limit Price"
                                 type="number"
                                 size="small"
-                                value={trailAmount}
-                                onChange={(e) => setTrailAmount(e.target.value)}
-                                helperText={`Stop trails ${trailAmount || '0'}${trailType === 'PERCENTAGE' ? '%' : '₹'} behind peak`}
+                                value={price}
+                                onChange={(e) => {
+                                    setPrice(e.target.value);
+                                    setIsPriceTouched(true);
+                                }}
                                 InputProps={{
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            {trailType === 'PERCENTAGE' ? '%' : '₹'}
-                                        </InputAdornment>
-                                    ),
+                                    startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                                    sx: { borderRadius: '8px', fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' }
                                 }}
                             />
-                        </>
-                    )}
-                </Stack>
+                        )}
 
-                {/* Margin / Proceeds Display */}
-                {estValue > 0 && (
-                    <Box sx={{ p: 1.5, bgcolor: 'background.default', borderRadius: 1 }}>
-                        <Stack direction="row" justifyContent="space-between">
-                            <Typography variant="caption" color="text.secondary">Est. Value</Typography>
-                            <Typography variant="body2">₹{estValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</Typography>
-                        </Stack>
+                        {/* Combined Advanced Inputs */}
+                        {(orderType === 'STOP' || orderType === 'STOP_LIMIT') && (
+                            <TextField
+                                fullWidth
+                                label="Trigger Price"
+                                type="number"
+                                size="small"
+                                value={stopPrice}
+                                onChange={(e) => setStopPrice(e.target.value)}
+                                InputProps={{
+                                    startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                                    sx: { borderRadius: '8px', fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' }
+                                }}
+                                helperText={`Triggers when ${side === 'BUY' ? 'rises to' : 'falls to'}`}
+                            />
+                        )}
 
-                        <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.5 }}>
-                            <Typography variant="caption" color="text.secondary">Est. Fees</Typography>
-                            <Typography variant="body2">₹{(fees).toLocaleString(undefined, { maximumFractionDigits: 2 })}</Typography>
-                        </Stack>
+                        {orderType === 'STOP_LIMIT' && (
+                            <TextField
+                                fullWidth
+                                label="Limit Price"
+                                type="number"
+                                size="small"
+                                value={limitPrice}
+                                onChange={(e) => setLimitPrice(e.target.value)}
+                                InputProps={{
+                                    startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                                    sx: { borderRadius: '8px', fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' }
+                                }}
+                            />
+                        )}
 
-                        {/* Divider */}
-                        <Box sx={{ my: 0.5, borderTop: '1px dashed', borderColor: 'divider' }} />
-
-                        {side === 'BUY' || (side === 'SELL' && shortMode) ? (
-                            <Stack direction="row" justifyContent="space-between">
-                                <Typography variant="caption" fontWeight={600}>Required Margin</Typography>
-                                <Typography variant="body2" fontWeight={700} color="primary.main">
-                                    ₹{requiredMargin.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                                </Typography>
-                            </Stack>
-                        ) : (
-                            <Stack direction="row" justifyContent="space-between">
-                                <Typography variant="caption" fontWeight={600}>Net Proceeds</Typography>
-                                <Typography variant="body2" fontWeight={700} color="success.main">
-                                    ₹{(estValue - fees).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                                </Typography>
+                        {orderType === 'TRAILING_STOP' && (
+                            <Stack direction="row" spacing={1}>
+                                <TextField
+                                    fullWidth
+                                    label="Trail Amount"
+                                    type="number"
+                                    size="small"
+                                    value={trailAmount}
+                                    onChange={(e) => setTrailAmount(e.target.value)}
+                                    InputProps={{
+                                        sx: { borderRadius: '8px', fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' }
+                                    }}
+                                />
+                                <Select
+                                    value={trailType}
+                                    onChange={(e) => setTrailType(e.target.value as any)}
+                                    size="small"
+                                    sx={{ minWidth: 80, borderRadius: '8px', fontWeight: 700 }}
+                                >
+                                    <MenuItem value="PERCENTAGE">%</MenuItem>
+                                    <MenuItem value="ABSOLUTE">₹</MenuItem>
+                                </Select>
                             </Stack>
                         )}
+
+                        <FormControl fullWidth size="small">
+                            <Select
+                                value={validity}
+                                onChange={(e) => setValidity(e.target.value as any)}
+                                sx={{ borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem' }}
+                            >
+                                <MenuItem value="DAY">DAY (Standard)</MenuItem>
+                                <MenuItem value="IOC">IOC (Immediate or Cancel)</MenuItem>
+                                <MenuItem value="GTC" disabled={orderType === 'MARKET'}>GTC (Good Til Cancelled)</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Stack>
+                </Box>
+
+                {/* Digital Receipt / Margin Summary */}
+                {estValue > 0 && (
+                    <Box sx={{ 
+                        p: 1.5, // Reduced from 2
+                        bgcolor: 'rgba(0,0,0,0.02)', 
+                        borderRadius: 2.5, 
+                        border: '1px solid', 
+                        borderColor: 'divider',
+                        position: 'relative',
+                        '&::before, &::after': {
+                            content: '""',
+                            position: 'absolute',
+                            left: 12,
+                            right: 12,
+                            height: '1px',
+                            borderTop: '1px dashed',
+                            borderColor: 'divider',
+                        },
+                        '&::before': { top: 0 },
+                        '&::after': { bottom: 0 }
+                    }}>
+                        <Stack spacing={1}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Typography variant="caption" color="text.secondary" fontWeight={600}>Est. Value</Typography>
+                                <Typography variant="caption" fontWeight={800} sx={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                                    ₹{estValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                </Typography>
+                            </Box>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <Typography variant="caption" color="text.secondary" fontWeight={600}>Taxes & Charges</Typography>
+                                <Typography variant="caption" fontWeight={800} sx={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                                    ₹{fees.toFixed(2)}
+                                </Typography>
+                            </Box>
+                            <Divider sx={{ borderStyle: 'dashed', my: 1 }} />
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography variant="caption" fontWeight={800} sx={{ textTransform: 'uppercase' }}>
+                                    {side === 'BUY' || (side === 'SELL' && shortMode) ? 'Total Required' : 'Net Proceeds'}
+                                </Typography>
+                                <Typography variant="h6" fontWeight={900} color={side === 'BUY' || shortMode ? "primary.main" : "success.main"} sx={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                                    ₹{(side === 'BUY' || (side === 'SELL' && shortMode) ? requiredMargin : estValue - fees).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                </Typography>
+                            </Box>
+                        </Stack>
                     </Box>
                 )}
 
-                {/* SECTION 3: Inline Validation Warnings */}
                 {validationWarnings.length > 0 && (
-                    <Stack spacing={0.5}>
-                        {validationWarnings.map((warning, idx) => (
-                            <Typography
-                                key={idx}
-                                variant="caption"
-                                sx={{
-                                    color: warning.startsWith('❌') ? 'error.main' : 'warning.main',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 0.5
-                                }}
-                            >
-                                {warning}
-                            </Typography>
-                        ))}
-                    </Stack>
+                    <Alert severity="warning" sx={{ borderRadius: 2, fontSize: '0.75rem', py: 0 }}>
+                        {validationWarnings[0]}
+                    </Alert>
                 )}
 
-
-
-                <Tooltip
-                    title={
-                        liveInterpretation ? (
-                            <Box>
-                                <Typography variant="caption" fontWeight={600} display="block" sx={{ mb: 0.5 }}>
-                                    💡 What This Order Will Do
-                                </Typography>
-                                <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
-                                    Current Price: ₹{ltp.toFixed(2)}
-                                </Typography>
-                                <Typography variant="caption">
-                                    {liveInterpretation}
-                                </Typography>
-                            </Box>
-                        ) : ''
-                    }
-                    arrow
+                <Tooltip 
+                    title={liveInterpretation || ''} 
+                    arrow 
                     placement="top"
                 >
-                    <span style={{ width: '100%' }}>
+                    <Box>
                         <Button
                             fullWidth
                             variant="contained"
@@ -696,36 +653,34 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                             color={side === 'BUY' ? 'success' : 'error'}
                             disabled={!isValid || isLoading}
                             onClick={handlePlaceOrder}
-                            sx={{ py: 1.5, fontWeight: 700 }}
+                            sx={{ 
+                                py: 1.4, // Reduced from 2
+                                fontWeight: 900, 
+                                borderRadius: '12px', 
+                                fontSize: '0.9rem',
+                                letterSpacing: '0.02em',
+                                boxShadow: `0 6px 12px ${alpha(side === 'BUY' ? theme.palette.success.main : theme.palette.error.main, 0.2)}`,
+                                '&:hover': {
+                                    boxShadow: `0 10px 18px ${alpha(side === 'BUY' ? theme.palette.success.main : theme.palette.error.main, 0.3)}`,
+                                }
+                            }}
                         >
                             {isLoading ? (
                                 <CircularProgress size={24} color="inherit" />
                             ) : (
-                                `PLACE ${side} ${orderType === 'STOP_LIMIT' ? 'STOP-LIMIT' : orderType === 'TRAILING_STOP' ? 'TRAILING STOP' : orderType} ORDER`
+                                `${side} ${instrument.symbol}`
                             )}
                         </Button>
-                    </span>
+                    </Box>
                 </Tooltip>
 
-                {/* Toast Notifications */}
                 <Snackbar
                     open={!!success || !!error}
                     autoHideDuration={success ? 3000 : 5000}
-                    onClose={() => {
-                        setSuccess(null);
-                        setError(null);
-                    }}
+                    onClose={() => { setSuccess(null); setError(null); }}
                     anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                 >
-                    <Alert
-                        onClose={() => {
-                            setSuccess(null);
-                            setError(null);
-                        }}
-                        severity={success ? 'success' : 'error'}
-                        variant="filled"
-                        sx={{ width: '100%' }}
-                    >
+                    <Alert severity={success ? 'success' : 'error'} variant="filled" sx={{ borderRadius: 2 }}>
                         {success || error}
                     </Alert>
                 </Snackbar>

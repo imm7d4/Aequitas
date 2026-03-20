@@ -2,16 +2,16 @@ import React from 'react';
 import {
     Box,
     Typography,
-    FormGroup,
-    FormControlLabel,
-    Checkbox,
+    Switch,
     Paper,
     Collapse,
     IconButton,
-    Divider
+    Divider,
+    useTheme,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import { useIndicatorStore } from '../store/indicatorStore';
 
 interface IndicatorPanelProps {
@@ -19,18 +19,92 @@ interface IndicatorPanelProps {
 }
 
 export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({ instrumentId }) => {
+    const theme = useTheme();
     const [expanded, setExpanded] = React.useState(false);
     const { getIndicators, toggleIndicator } = useIndicatorStore();
     const indicators = getIndicators(instrumentId);
+
+    const IndicatorToggle = ({ 
+        label, 
+        description, 
+        enabled, 
+        onToggle 
+    }: { 
+        label: string, 
+        description: string, 
+        enabled: boolean, 
+        onToggle: () => void 
+    }) => (
+        <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            py: 1,
+            px: 0.5,
+            '&:hover': { bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 2 }
+        }}>
+            <Box>
+                <Typography variant="body2" fontWeight={700} sx={{ letterSpacing: '-0.01em' }}>
+                    {label}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                    {description}
+                </Typography>
+            </Box>
+            <Switch
+                checked={enabled}
+                onChange={onToggle}
+                size="small"
+                sx={{
+                    width: 32,
+                    height: 18,
+                    padding: 0,
+                    '& .MuiSwitch-switchBase': {
+                        padding: 0,
+                        margin: '2px',
+                        transitionDuration: '300ms',
+                        '&.Mui-checked': {
+                            transform: 'translateX(14px)',
+                            color: '#fff',
+                            '& + .MuiSwitch-track': {
+                                backgroundColor: 'primary.main',
+                                opacity: 1,
+                                border: 0,
+                            },
+                        },
+                    },
+                    '& .MuiSwitch-thumb': {
+                        boxSizing: 'border-box',
+                        width: 14,
+                        height: 14,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    },
+                    '& .MuiSwitch-track': {
+                        borderRadius: 18 / 2,
+                        backgroundColor: 'rgba(0,0,0,0.1)',
+                        opacity: 1,
+                        transition: theme.transitions.create(['background-color'], {
+                            duration: 300,
+                            easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                        }),
+                    },
+                }}
+            />
+        </Box>
+    );
 
     return (
         <Paper
             id="indicator-panel"
             elevation={0}
             sx={{
-                borderTop: 1,
+                borderRadius: 3,
+                border: '1px solid',
                 borderColor: 'divider',
-                borderRadius: 0
+                bgcolor: 'rgba(255, 255, 255, 0.7)',
+                backdropFilter: 'blur(12px)',
+                overflow: 'hidden',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
         >
             <Box
@@ -38,150 +112,80 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({ instrumentId }) 
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    p: 1.5,
+                    px: 1.5,
+                    py: 1, // Reduced padding
                     cursor: 'pointer',
                     '&:hover': {
-                        bgcolor: 'action.hover'
+                        bgcolor: 'rgba(0,0,0,0.03)'
                     }
                 }}
                 onClick={() => setExpanded(!expanded)}
             >
-                <Typography variant="subtitle2" fontWeight={600}>
-                    📊 Technical Indicators
-                </Typography>
-                <IconButton size="small">
-                    {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                    <Box sx={{ 
+                        display: 'flex', 
+                        p: 0.6, // Smaller icon container
+                        borderRadius: '6px', 
+                        bgcolor: 'primary.main', 
+                        color: 'white' 
+                    }}>
+                        <BarChartIcon sx={{ fontSize: 14 }} />
+                    </Box>
+                    <Box>
+                        <Typography variant="caption" fontWeight={800} sx={{ letterSpacing: '-0.01em', display: 'block', lineHeight: 1.2 }}>
+                            Technical Indicators
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: '0.65rem' }}>
+                            Analyze price action with pro tools
+                        </Typography>
+                    </Box>
+                </Box>
+                <IconButton size="small" sx={{ width: 24, height: 24, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
+                    {expanded ? <ExpandLessIcon sx={{ fontSize: 14 }} /> : <ExpandMoreIcon sx={{ fontSize: 14 }} />}
                 </IconButton>
             </Box>
 
             <Collapse in={expanded}>
                 <Divider />
-                <Box sx={{ p: 2 }}>
-                    <FormGroup>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={indicators.sma.enabled}
-                                    onChange={() => toggleIndicator(instrumentId, 'sma')}
-                                    size="small"
-                                />
-                            }
-                            label={
-                                <Box>
-                                    <Typography variant="body2" fontWeight={500}>
-                                        SMA (Simple Moving Average)
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Periods: 20, 50, 200
-                                    </Typography>
-                                </Box>
-                            }
+                <Box sx={{ p: 1.5 }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 1 }}>
+                        <IndicatorToggle
+                            label="SMA"
+                            description="Simple Moving Average (20, 50, 200)"
+                            enabled={indicators.sma.enabled}
+                            onToggle={() => toggleIndicator(instrumentId, 'sma')}
                         />
-
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={indicators.ema.enabled}
-                                    onChange={() => toggleIndicator(instrumentId, 'ema')}
-                                    size="small"
-                                />
-                            }
-                            label={
-                                <Box>
-                                    <Typography variant="body2" fontWeight={500}>
-                                        EMA (Exponential Moving Average)
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Periods: 9, 21, 50
-                                    </Typography>
-                                </Box>
-                            }
+                        <IndicatorToggle
+                            label="EMA"
+                            description="Exp. Moving Average (9, 21, 50)"
+                            enabled={indicators.ema.enabled}
+                            onToggle={() => toggleIndicator(instrumentId, 'ema')}
                         />
-
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={indicators.rsi.enabled}
-                                    onChange={() => toggleIndicator(instrumentId, 'rsi')}
-                                    size="small"
-                                />
-                            }
-                            label={
-                                <Box>
-                                    <Typography variant="body2" fontWeight={500}>
-                                        RSI (Relative Strength Index)
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Period: 14 | Oscillator (0-100)
-                                    </Typography>
-                                </Box>
-                            }
+                        <IndicatorToggle
+                            label="RSI"
+                            description="Relative Strength Index (14)"
+                            enabled={indicators.rsi.enabled}
+                            onToggle={() => toggleIndicator(instrumentId, 'rsi')}
                         />
-
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={indicators.macd.enabled}
-                                    onChange={() => toggleIndicator(instrumentId, 'macd')}
-                                    size="small"
-                                />
-                            }
-                            label={
-                                <Box>
-                                    <Typography variant="body2" fontWeight={500}>
-                                        MACD (Moving Average Convergence Divergence)
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Settings: 12, 26, 9
-                                    </Typography>
-                                </Box>
-                            }
+                        <IndicatorToggle
+                            label="MACD"
+                            description="Convergence Divergence (12, 26, 9)"
+                            enabled={indicators.macd.enabled}
+                            onToggle={() => toggleIndicator(instrumentId, 'macd')}
                         />
-
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={indicators.bollingerBands.enabled}
-                                    onChange={() => toggleIndicator(instrumentId, 'bollingerBands')}
-                                    size="small"
-                                />
-                            }
-                            label={
-                                <Box>
-                                    <Typography variant="body2" fontWeight={500}>
-                                        Bollinger Bands
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Period: 20 | StdDev: 2
-                                    </Typography>
-                                </Box>
-                            }
+                        <IndicatorToggle
+                            label="Bollinger Bands"
+                            description="Volatility Bands (20, 2)"
+                            enabled={indicators.bollingerBands.enabled}
+                            onToggle={() => toggleIndicator(instrumentId, 'bollingerBands')}
                         />
-
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={indicators.vwap.enabled}
-                                    onChange={() => toggleIndicator(instrumentId, 'vwap')}
-                                    size="small"
-                                />
-                            }
-                            label={
-                                <Box>
-                                    <Typography variant="body2" fontWeight={500}>
-                                        VWAP (Volume Weighted Average Price)
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        Intraday volume-weighted average
-                                    </Typography>
-                                </Box>
-                            }
+                        <IndicatorToggle
+                            label="VWAP"
+                            description="Volume Weighted Avg Price"
+                            enabled={indicators.vwap.enabled}
+                            onToggle={() => toggleIndicator(instrumentId, 'vwap')}
                         />
-                    </FormGroup>
-
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
-                        💡 Indicators calculated from last 100 candles
-                    </Typography>
+                    </Box>
                 </Box>
             </Collapse>
         </Paper>

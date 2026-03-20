@@ -90,9 +90,10 @@ export const PositionBanner: React.FC<PositionBannerProps> = ({ instrument, ltp 
             <Paper
                 elevation={0}
                 sx={{
-                    mb: 2,
-                    p: 2,
-                    borderRadius: 3,
+                    mb: 1.5,
+                    px: 2,
+                    py: 1, // Reduced padding
+                    borderRadius: 2,
                     border: '1px solid',
                     borderColor: isProfit ? 'success.light' : 'error.light',
                     bgcolor: isProfit ? 'rgba(46, 125, 50, 0.04)' : 'rgba(211, 47, 47, 0.04)',
@@ -102,63 +103,64 @@ export const PositionBanner: React.FC<PositionBannerProps> = ({ instrument, ltp 
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: 2
+                    flexWrap: 'nowrap', // Force single line
+                    gap: 2,
+                    overflowX: 'auto'
                 }}
             >
-                <Stack direction="row" spacing={3} alignItems="center">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <AccountBalanceWalletIcon color="action" />
+                <Stack direction="row" spacing={3} alignItems="center" sx={{ flexShrink: 0 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                        <AccountBalanceWalletIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                         <Box>
-                            <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
-                                CURRENT POSITION
+                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                                Position
                             </Typography>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <Typography variant="h6" fontWeight={800}>
-                                    {position.quantity} <Typography component="span" variant="caption" sx={{ verticalAlign: 'middle' }}>Qty</Typography>
+                            <Stack direction="row" spacing={0.8} alignItems="center">
+                                <Typography variant="subtitle2" fontWeight={800}>
+                                    {position.quantity}
                                 </Typography>
                                 <Chip
-                                    label={position.positionType === 'SHORT' ? "SHORT" : "LONG"}
+                                    label={position.positionType}
                                     size="small"
                                     color={position.positionType === 'SHORT' ? "error" : "success"}
-                                    variant="outlined"
-                                    sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700, borderRadius: 1 }}
+                                    sx={{ height: 16, fontSize: '0.6rem', fontWeight: 800, borderRadius: 0.5 }}
                                 />
                             </Stack>
                         </Box>
                     </Box>
 
-                    <Box sx={{ width: '1px', height: 40, bgcolor: 'divider' }} />
+                    <Box sx={{ width: '1px', height: 24, bgcolor: 'divider' }} />
 
                     <Box>
-                        <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
-                            AVG. COST
+                        <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                            Avg. Cost
                         </Typography>
-                        <Typography variant="subtitle1" fontWeight={700}>
+                        <Typography variant="subtitle2" fontWeight={800} sx={{ fontFamily: '"JetBrains Mono", monospace' }}>
                             ₹{position.avgEntryPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </Typography>
                     </Box>
 
-                    <Box sx={{ width: '1px', height: 40, bgcolor: 'divider' }} />
+                    <Box sx={{ width: '1px', height: 24, bgcolor: 'divider' }} />
 
                     <Box>
-                        <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
-                            UNREALIZED P&L
+                        <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                            Unrealized P&L
                         </Typography>
                         <Stack direction="row" spacing={1} alignItems="center">
                             <Typography
-                                variant="h6"
-                                fontWeight={800}
+                                variant="subtitle2"
+                                fontWeight={900}
                                 color={isProfit ? "success.main" : "error.main"}
-                                sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                                sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontFamily: '"JetBrains Mono", monospace' }}
                             >
-                                {isProfit ? <TrendingUpIcon fontSize="small" /> : <TrendingDownIcon fontSize="small" />}
+                                {isProfit ? <TrendingUpIcon sx={{ fontSize: 14 }} /> : <TrendingDownIcon sx={{ fontSize: 14 }} />}
                                 ₹{Math.abs(unrealizedPL).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                             </Typography>
                             <Typography
                                 variant="caption"
-                                fontWeight={700}
+                                fontWeight={800}
                                 color={isProfit ? "success.main" : "error.main"}
+                                sx={{ fontSize: '0.65rem' }}
                             >
                                 ({isProfit ? '+' : ''}{plPercentage.toFixed(2)}%)
                             </Typography>
@@ -169,14 +171,17 @@ export const PositionBanner: React.FC<PositionBannerProps> = ({ instrument, ltp 
                 <Button
                     variant="contained"
                     color="inherit"
-                    size="medium"
-                    startIcon={isSquaringOff ? <CircularProgress size={16} color="inherit" /> : <CloseIcon />}
+                    size="small"
+                    startIcon={isSquaringOff ? <CircularProgress size={12} color="inherit" /> : <CloseIcon sx={{ fontSize: 14 }} />}
                     onClick={handleSquareOff}
                     disabled={isSquaringOff}
                     sx={{
-                        borderRadius: 2,
+                        borderRadius: 1.5,
                         textTransform: 'none',
-                        fontWeight: 700,
+                        fontWeight: 800,
+                        fontSize: '0.75rem',
+                        px: 1.5,
+                        py: 0.5,
                         bgcolor: 'text.primary',
                         color: 'background.paper',
                         '&:hover': {
@@ -184,7 +189,7 @@ export const PositionBanner: React.FC<PositionBannerProps> = ({ instrument, ltp 
                         }
                     }}
                 >
-                    {isSquaringOff ? 'SQUARING OFF...' : 'SQUARE OFF'}
+                    {isSquaringOff ? 'EXITING...' : 'SQUARE OFF'}
                 </Button>
             </Paper>
 

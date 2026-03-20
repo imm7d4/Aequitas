@@ -9,11 +9,10 @@ import { IndicatorService } from '../services/indicatorService';
 
 interface StockChartProps {
     instrumentId: string;
-    symbol: string;
     height?: number | string;
 }
 
-export function StockChart({ instrumentId, symbol, height = 400 }: StockChartProps) {
+export function StockChart({ instrumentId, height = 400 }: StockChartProps) {
     const theme = useTheme();
     const chartContainerRef = useRef<HTMLDivElement>(null);
     const chartRef = useRef<any>(null);
@@ -575,21 +574,21 @@ export function StockChart({ instrumentId, symbol, height = 400 }: StockChartPro
         const macdTop = 0.75;
         const macdBottom = 0;
 
+        const offset = closePrices.length - macdData.length;
+        const commonData = macdData.map((d, i) => ({ time: sanitizedCandles[offset + i].time, ...d }));
+
+        // Histogram - Add series first so price scale 'macd' is created
+        const histSeries = chartRef.current.addSeries(HistogramSeries, {
+            priceScaleId: 'macd',
+            title: 'MACD Hist',
+            priceLineVisible: false,
+        });
+
         chartRef.current.priceScale('macd').applyOptions({
             scaleMargins: {
                 top: macdTop,
                 bottom: macdBottom,
             },
-        });
-
-        const offset = closePrices.length - macdData.length;
-        const commonData = macdData.map((d, i) => ({ time: sanitizedCandles[offset + i].time, ...d }));
-
-        // Histogram
-        const histSeries = chartRef.current.addSeries(HistogramSeries, {
-            priceScaleId: 'macd',
-            title: 'MACD Hist',
-            priceLineVisible: false,
         });
         histSeries.setData(commonData.map(d => ({
             time: d.time,
@@ -642,10 +641,7 @@ export function StockChart({ instrumentId, symbol, height = 400 }: StockChartPro
 
     return (
         <Box sx={{ width: '100%', height: height, display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" fontWeight={600}>
-                    {symbol} Chart
-                </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 1 }}>
                 <ToggleButtonGroup
                     value={interval}
                     exclusive
