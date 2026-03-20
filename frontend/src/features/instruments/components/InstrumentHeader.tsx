@@ -35,7 +35,7 @@ export const InstrumentHeader: React.FC<InstrumentHeaderProps> = ({
     return (
         <Box sx={{ 
             position: 'sticky', 
-            top: 0, 
+            top: 64, 
             zIndex: 110, 
             background: 'rgba(249, 250, 251, 0.85)',
             backdropFilter: 'blur(20px)',
