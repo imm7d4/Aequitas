@@ -7,7 +7,6 @@ import {
     ListItemIcon,
     ListItemText,
     Toolbar,
-    Divider,
     Box,
     Tooltip,
 } from '@mui/material';
@@ -73,17 +72,20 @@ export const Sidebar: React.FC = () => {
                         duration: theme.transitions.duration.standard,
                     }),
                     overflowX: 'hidden',
+                    background: 'linear-gradient(180deg, #F9FAFB 0%, #F3F4F6 100%)', // Subtle gradient for depth
+                    borderRight: '1px solid rgba(0, 0, 0, 0.08)',
+                    boxShadow: 'none',
                 },
             }}
         >
-            <Toolbar />
-            <Box sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-                <List>
+            <Toolbar sx={{ minHeight: '64px !important' }} />
+            <Box sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'hidden', pt: 1.5 }}>
+                <List sx={{ px: 1.5 }}>
                     {menuItems.map((item) => {
                         const isActive = location.pathname.startsWith(item.path);
                         return (
-                            <ListItem key={item.text} disablePadding sx={{ display: 'block' }} id={item.id}>
-                                <Tooltip title={!isSidebarOpen ? item.text : ''} placement="right">
+                            <ListItem key={item.text} disablePadding sx={{ display: 'block', mb: 0.75 }} id={item.id}>
+                                <Tooltip title={!isSidebarOpen ? item.text : ''} placement="right" arrow>
                                     <ListItemButton
                                         onClick={() => {
                                             track({
@@ -98,40 +100,68 @@ export const Sidebar: React.FC = () => {
                                             navigate(item.path);
                                         }}
                                         sx={{
-                                            minHeight: 48,
+                                            minHeight: 44,
                                             justifyContent: isSidebarOpen ? 'initial' : 'center',
-                                            px: 2.5,
-                                            color: isActive ? 'primary.main' : 'inherit',
-                                            bgcolor: isActive ? alpha(theme.palette.primary.main, 0.08) : 'transparent',
+                                            px: 2,
+                                            borderRadius: '12px',
+                                            color: isActive ? 'primary.main' : 'text.primary', // High contrast
+                                            bgcolor: isActive ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                                            position: 'relative',
+                                            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            boxShadow: isActive ? `0 4px 12px ${alpha(theme.palette.primary.main, 0.15)}` : 'none',
                                             '&:hover': {
-                                                bgcolor: alpha(theme.palette.primary.main, 0.12),
+                                                bgcolor: isActive 
+                                                    ? alpha(theme.palette.primary.main, 0.14) 
+                                                    : 'rgba(0, 0, 0, 0.05)',
+                                                transform: 'scale(1.02)', // Subtle lift
+                                                '& .MuiListItemIcon-root': {
+                                                    color: isActive ? 'primary.main' : 'text.primary',
+                                                }
                                             },
                                         }}
                                     >
+                                        {/* Active Indicator Bar - More integrated pill */}
+                                        {isActive && (
+                                            <Box
+                                                sx={{
+                                                    position: 'absolute',
+                                                    left: -6,
+                                                    width: 4,
+                                                    height: 18,
+                                                    bgcolor: 'primary.main',
+                                                    borderRadius: '0 4px 4px 0',
+                                                    boxShadow: `0 0 10px ${alpha(theme.palette.primary.main, 0.4)}`,
+                                                }}
+                                            />
+                                        )}
+
                                         <ListItemIcon
                                             sx={{
                                                 minWidth: 0,
-                                                mr: isSidebarOpen ? 3 : 0,
+                                                mr: isSidebarOpen ? 2 : 0,
                                                 justifyContent: 'center',
-                                                transition: theme.transitions.create('margin', {
-                                                    easing: theme.transitions.easing.easeInOut,
-                                                    duration: theme.transitions.duration.standard,
-                                                }),
-                                                color: isActive ? 'primary.main' : 'inherit',
+                                                color: isActive ? 'primary.main' : 'rgba(0, 0, 0, 0.45)', // Stronger than disabled
+                                                transition: 'all 0.2s ease',
+                                                '& svg': { 
+                                                    fontSize: 22,
+                                                    filter: isActive ? `drop-shadow(0 0 2px ${alpha(theme.palette.primary.main, 0.3)})` : 'none'
+                                                }
                                             }}
                                         >
                                             {item.icon}
                                         </ListItemIcon>
                                         <ListItemText
                                             primary={item.text}
+                                            primaryTypographyProps={{
+                                                fontSize: '0.85rem',
+                                                fontWeight: isActive ? 700 : 500,
+                                                letterSpacing: '0.015em',
+                                            }}
                                             sx={{
                                                 opacity: isSidebarOpen ? 1 : 0,
-                                                fontWeight: isActive ? 700 : 500,
                                                 whiteSpace: 'nowrap',
-                                                transition: theme.transitions.create(['opacity', 'margin'], {
-                                                    easing: theme.transitions.easing.easeInOut,
-                                                    duration: theme.transitions.duration.standard,
-                                                }),
+                                                transition: theme.transitions.create('opacity'),
+                                                color: isActive ? 'primary.main' : 'text.secondary',
                                             }}
                                         />
                                     </ListItemButton>
@@ -142,52 +172,47 @@ export const Sidebar: React.FC = () => {
                 </List>
             </Box>
 
-            <Divider />
-            <Tooltip title="Made with Love by Dharmesh 💚" placement="right" arrow>
-                <Box
-                    sx={{
-                        p: 2,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        minHeight: 64,
-                        cursor: 'pointer',
-                        position: 'relative',
-                        transition: theme.transitions.create(['padding', 'min-height'], {
-                            easing: theme.transitions.easing.easeInOut,
-                            duration: theme.transitions.duration.standard,
-                        }),
+            <Box
+                sx={{
+                    p: 2.5,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: 80,
+                    cursor: 'pointer',
+                    position: 'relative',
+                    transition: 'all 0.2s ease',
+                    borderTop: '1px solid rgba(0, 0, 0, 0.04)', // Discrete separator
+                    mt: 'auto', // Ensure it stays at the bottom
+                }}
+            >
+                <img
+                    src={logoFull}
+                    alt="Aequitas Logo"
+                    style={{
+                        width: 'auto',
+                        height: '32px', // Fixed height for consistency
+                        position: 'absolute',
+                        opacity: isSidebarOpen ? 1 : 0,
+                        transition: `opacity 0.2s ease-in-out, transform 0.2s ease`,
+                        transform: isSidebarOpen ? 'scale(1)' : 'scale(0.9)',
+                        pointerEvents: isSidebarOpen ? 'auto' : 'none',
                     }}
-                >
-                    <img
-                        src={logoFull}
-                        alt="Aequitas Logo"
-                        style={{
-                            width: '100%',
-                            maxWidth: '160px',
-                            height: 'auto',
-                            position: 'absolute',
-                            opacity: isSidebarOpen ? 1 : 0,
-                            transition: `opacity ${theme.transitions.duration.standard}ms ease-in-out`,
-                            pointerEvents: isSidebarOpen ? 'auto' : 'none',
-                            display: 'block'
-                        }}
-                    />
-                    <img
-                        src={logoIcon}
-                        alt="Aequitas Icon"
-                        style={{
-                            width: '32px',
-                            height: '32px',
-                            position: 'absolute',
-                            opacity: isSidebarOpen ? 0 : 1,
-                            transition: `opacity ${theme.transitions.duration.standard}ms ease-in-out`,
-                            pointerEvents: !isSidebarOpen ? 'auto' : 'none',
-                            display: 'block'
-                        }}
-                    />
-                </Box>
-            </Tooltip>
+                />
+                <img
+                    src={logoIcon}
+                    alt="Aequitas Icon"
+                    style={{
+                        width: '32px',
+                        height: '32px',
+                        position: 'absolute',
+                        opacity: isSidebarOpen ? 0 : 1,
+                        transition: `opacity 0.2s ease-in-out, transform 0.2s ease`,
+                        transform: !isSidebarOpen ? 'scale(1)' : 'scale(0.9)',
+                        pointerEvents: !isSidebarOpen ? 'auto' : 'none',
+                    }}
+                />
+            </Box>
         </Drawer>
     );
 };

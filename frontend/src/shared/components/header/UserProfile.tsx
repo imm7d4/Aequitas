@@ -69,44 +69,58 @@ export const UserProfile: React.FC = () => {
 
     return (
         <Box>
-            <Box
+            <Button
                 id="user-menu"
                 onClick={handleProfileMenuOpen}
+                aria-label="User Profile"
                 sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 1.5,
-                    cursor: 'pointer',
-                    px: 1.5,
-                    py: 0.75,
-                    borderRadius: 2,
+                    gap: 1.25,
+                    textTransform: 'none', // Prevent MUI button default
+                    color: 'inherit',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: '12px',
                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    minWidth: 'auto',
                     '&:hover': {
-                        bgcolor: 'action.hover',
+                        bgcolor: 'rgba(0, 0, 0, 0.04)',
                     }
                 }}
             >
                 <Avatar
                     src={user?.avatar}
                     sx={{
-                        width: 36,
-                        height: 36,
+                        width: 32, // Refined size
+                        height: 32,
                         background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                        fontSize: '0.9rem',
+                        fontSize: '0.8rem',
                         fontWeight: 800,
-                        boxShadow: '0 2px 8px rgba(25, 118, 210, 0.25)',
-                        border: '2px solid rgba(25, 118, 210, 0.1)',
+                        boxShadow: '0 2px 4px rgba(25, 118, 210, 0.15)',
+                        border: '1.5px solid rgba(25, 118, 210, 0.1)',
                     }}
                 >
                     {userInitial}
                 </Avatar>
-                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                <Box
+                    sx={{
+                        display: { xs: 'none', sm: 'block' },
+                        textAlign: 'left',
+                        maxWidth: 140
+                    }}
+                >
                     <Typography
                         variant="subtitle2"
                         sx={{
-                            lineHeight: 1.2,
+                            lineHeight: 1.1,
                             fontWeight: 700,
-                            color: 'text.primary'
+                            color: 'text.primary',
+                            fontSize: '0.85rem',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: 120
                         }}
                     >
                         {displayName}
@@ -114,9 +128,12 @@ export const UserProfile: React.FC = () => {
                     <Typography
                         variant="caption"
                         sx={{
-                            color: 'primary.main',
+                            color: 'text.disabled',
                             fontWeight: 500,
-                            letterSpacing: '0.02em'
+                            fontSize: '0.7rem',
+                            letterSpacing: '0.01em',
+                            display: { xs: 'none', lg: 'block' }, // Hide role earlier
+                            lineHeight: 1
                         }}
                     >
                         {user?.isAdmin ? 'Administrator' : 'Master Trader'}
@@ -124,13 +141,14 @@ export const UserProfile: React.FC = () => {
                 </Box>
                 <ExpandIcon
                     sx={{
-                        fontSize: 20,
-                        color: 'text.secondary',
+                        fontSize: 16, // Subtler caret
+                        color: 'text.disabled',
+                        ml: -0.5,
                         transition: 'transform 0.2s',
                         transform: Boolean(anchorEl) ? 'rotate(180deg)' : 'none'
                     }}
                 />
-            </Box>
+            </Button>
 
             <Menu
                 anchorEl={anchorEl}

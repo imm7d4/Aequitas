@@ -66,11 +66,37 @@ export const NotificationCenter: React.FC = () => {
 
     return (
         <>
-            <IconButton color="inherit" onClick={handleClick}>
-                <Badge badgeContent={unreadCount} color="error">
-                    <NotificationsIcon />
-                </Badge>
-            </IconButton>
+        <IconButton
+            color="inherit"
+            onClick={handleClick}
+            aria-label="Notifications"
+            sx={{
+                width: 40,
+                height: 40,
+                transition: 'all 0.2s',
+                '&:hover': {
+                    bgcolor: 'rgba(0, 0, 0, 0.04)',
+                }
+            }}
+        >
+            <Badge
+                badgeContent={unreadCount}
+                color="error"
+                sx={{
+                    '& .MuiBadge-badge': {
+                        fontSize: '0.6rem',
+                        height: 16,
+                        minWidth: 16,
+                        top: 2,
+                        right: 2,
+                        border: '2px solid #F9FAFB', // Match header bg
+                        fontWeight: 700
+                    }
+                }}
+            >
+                <NotificationsIcon sx={{ fontSize: 22, color: 'text.secondary' }} />
+            </Badge>
+        </IconButton>
             <Popover
                 open={open}
                 anchorEl={anchorEl}
