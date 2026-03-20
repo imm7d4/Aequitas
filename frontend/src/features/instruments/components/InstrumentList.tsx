@@ -5,20 +5,11 @@ import {
     Typography,
     CircularProgress,
     Alert,
-    Grid,
     TextField,
     MenuItem,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
     TablePagination,
-    TableSortLabel,
     IconButton,
     Button,
-    Paper,
     Chip,
     Tooltip,
 } from '@mui/material';
@@ -30,6 +21,7 @@ import { useWatchlistStore } from '@/features/watchlist/store/watchlistStore';
 import { useMarketData } from '@/features/market/hooks/useMarketData';
 import { InstrumentSearch } from './InstrumentSearch';
 import { TickColoredPrice } from '@/shared/components/TickColoredPrice';
+import { CustomGrid } from '@/shared/components/CustomGrid';
 import type { Instrument } from '../types/instrument.types';
 
 
@@ -201,362 +193,299 @@ export const InstrumentList = () => {
         }
     };
 
+
+
+    const columns = useMemo(() => [
+        {
+            id: 'symbol',
+            label: 'Symbol',
+            sortable: true,
+            format: (value: string, row: Instrument) => (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography fontWeight={700} color="primary.main">{value}</Typography>
+                    {row.isShortable && (
+                        <Tooltip title="Short Selling Available">
+                            <Chip
+                                label="S"
+                                size="small"
+                                variant="outlined"
+                                sx={{
+                                    height: 18,
+                                    width: 18,
+                                    fontSize: '0.625rem',
+                                    color: 'text.secondary',
+                                    borderColor: 'divider',
+                                    borderRadius: '4px',
+                                    '& .MuiChip-label': { px: 0 }
+                                }}
+                            />
+                        </Tooltip>
+                    )}
+                </Box>
+            )
+        },
+        {
+            id: 'name',
+            label: 'Name',
+            sortable: true,
+            format: (value: string) => (
+                <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {value}
+                </Typography>
+            )
+        },
+        {
+            id: 'ltp',
+            label: 'LTP',
+            align: 'right' as const,
+            sortable: true,
+            format: (_: any, row: Instrument) => (
+                <Box sx={{ fontFamily: '"JetBrains Mono", monospace', fontWeight: 700 }}>
+                    <TickColoredPrice marketData={prices[row.id]} />
+                </Box>
+            )
+        },
+        {
+            id: 'change',
+            label: 'Change',
+            align: 'right' as const,
+            sortable: true,
+            format: (_: any, row: Instrument) => {
+                const md = prices[row.id];
+                if (!md) return '--';
+                const isPos = md.change >= 0;
+                return (
+                    <Typography 
+                        variant="body2" 
+                        fontWeight={600} 
+                        sx={{ color: isPos ? 'success.main' : 'error.main', fontFamily: '"JetBrains Mono", monospace' }}
+                    >
+                        {isPos ? '+' : ''}{md.change.toFixed(2)}
+                    </Typography>
+                );
+            }
+        },
+        {
+            id: 'changePct',
+            label: 'Change %',
+            align: 'right' as const,
+            sortable: true,
+            format: (_: any, row: Instrument) => {
+                const md = prices[row.id];
+                if (!md) return '--';
+                const isPos = md.changePct >= 0;
+                return (
+                    <Chip
+                        label={`${isPos ? '+' : ''}${md.changePct.toFixed(2)}%`}
+                        size="small"
+                        sx={{
+                            height: 24,
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            bgcolor: isPos ? 'success.light' : 'error.light',
+                            color: isPos ? 'success.dark' : 'error.dark',
+                            border: 'none',
+                            borderRadius: '6px'
+                        }}
+                    />
+                );
+            }
+        },
+        {
+            id: 'volume',
+            label: 'Volume',
+            align: 'right' as const,
+            sortable: true,
+            format: (_: any, row: Instrument) => (
+                <Typography variant="caption" sx={{ fontFamily: '"JetBrains Mono", monospace', color: 'text.secondary' }}>
+                    {prices[row.id]?.volume.toLocaleString() || '--'}
+                </Typography>
+            )
+        },
+        {
+            id: 'exchange',
+            label: 'Exch',
+            format: (value: string) => (
+                <Chip 
+                    label={value} 
+                    size="small" 
+                    variant="outlined" 
+                    sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700, borderRadius: '4px', borderColor: 'divider' }} 
+                />
+            )
+        },
+        {
+            id: 'sector',
+            label: 'Sector',
+            format: (value: string) => (
+                <Typography variant="caption" sx={{ fontWeight: 500, color: 'text.secondary' }}>{value}</Typography>
+            )
+        },
+        {
+            id: 'watchlist',
+            label: '',
+            align: 'center' as const,
+            format: (_: any, row: Instrument) => {
+                const isStarred = watchlists.some(w => w.instrumentIds.includes(row.id));
+                return (
+                    <IconButton
+                        size="small"
+                        onClick={(e) => handleWatchlistToggle(e, row)}
+                        sx={{
+                            color: isStarred ? 'warning.main' : 'action.disabled',
+                            '&:hover': { color: 'warning.dark' }
+                        }}
+                    >
+                        {isStarred ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
+                    </IconButton>
+                );
+            }
+        }
+    ], [prices, watchlists, handleWatchlistToggle]);
+
     const isFiltered = filters.exchange !== 'ALL' || filters.type !== 'ALL' || filters.sector !== 'ALL' || searchQuery !== '';
 
     if (isLoading && instruments.length === 0) {
         return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                <CircularProgress />
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress size={32} thickness={5} sx={{ color: 'primary.main' }} />
             </Box>
         );
     }
 
     if (error) {
         return (
-            <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+            <Box sx={{ p: 4 }}>
+                <Alert severity="error" variant="filled" sx={{ borderRadius: 2 }}>{error}</Alert>
+            </Box>
         );
     }
 
     return (
-        <Box sx={{ height: 'calc(100vh - 64px)', pt: 1, px: 2, pb: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                <Typography variant="h5" fontWeight={700}>Instruments</Typography>
+        <Box sx={{ 
+            height: 'calc(100vh - 64px)', 
+            pt: 2, px: { xs: 2, lg: 3 }, pb: 2, 
+            display: 'flex', flexDirection: 'column', 
+            overflow: 'hidden',
+            bgcolor: 'background.default'
+        }}>
+            {/* Header Area */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="h6" color="primary.main">Market Instruments</Typography>
+                {isFiltered && (
+                    <Button 
+                        size="small" 
+                        variant="text" 
+                        onClick={resetFilters}
+                        sx={{ borderRadius: '8px', fontWeight: 700, color: 'primary.main', py: 0 }}
+                    >
+                        Clear Filters
+                    </Button>
+                )}
             </Box>
 
-            <Grid container spacing={1} sx={{ mb: 1 }}>
-                <Grid item xs={12} md={6}>
+            {/* Filter Ribbon */}
+            <Box sx={{ 
+                p: 1, 
+                mb: 1.5, 
+                display: 'flex', 
+                gap: 2, 
+                alignItems: 'center',
+                bgcolor: 'background.paper',
+                borderRadius: '12px',
+                border: '1px solid',
+                borderColor: 'divider',
+                boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.05)'
+            }}>
+                <Box sx={{ flex: 1 }}>
                     <InstrumentSearch />
-                </Grid>
-                <Grid item xs={12} md={2}>
-                    <TextField
-                        fullWidth
-                        select
-                        label="Exchange"
-                        name="exchange"
-                        value={filters.exchange}
-                        onChange={handleFilterChange}
-                        size="small"
-                        sx={{ '& .MuiInputBase-root': { fontSize: '0.875rem' } }}
-                        InputLabelProps={{ sx: { fontSize: '0.875rem' } }}
-                    >
-                        <MenuItem value="ALL">All Exchanges</MenuItem>
-                        <MenuItem value="NSE">NSE</MenuItem>
-                        <MenuItem value="BSE">BSE</MenuItem>
-                    </TextField>
-                </Grid>
-                <Grid item xs={12} md={2}>
-                    <TextField
-                        fullWidth
-                        select
-                        label="Type"
-                        name="type"
-                        value={filters.type}
-                        onChange={handleFilterChange}
-                        size="small"
-                        sx={{ '& .MuiInputBase-root': { fontSize: '0.875rem' } }}
-                        InputLabelProps={{ sx: { fontSize: '0.875rem' } }}
-                    >
-                        <MenuItem value="ALL">All Types</MenuItem>
-                        <MenuItem value="STOCK">STOCK</MenuItem>
-                        <MenuItem value="ETF">ETF</MenuItem>
-                    </TextField>
-                </Grid>
-                <Grid item xs={12} md={2}>
-                    <TextField
-                        fullWidth
-                        select
-                        label="Sector"
-                        name="sector"
-                        value={filters.sector}
-                        onChange={handleFilterChange}
-                        size="small"
-                        sx={{ '& .MuiInputBase-root': { fontSize: '0.875rem' } }}
-                        InputLabelProps={{ sx: { fontSize: '0.875rem' } }}
-                    >
-                        <MenuItem value="ALL">All Sectors</MenuItem>
-                        {sectors.map((sector: string) => (
-                            <MenuItem key={sector} value={sector}>{sector}</MenuItem>
-                        ))}
-                    </TextField>
-                </Grid>
-                {isFiltered && (
-                    <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mt: -1 }}>
-                        <Button size="small" onClick={resetFilters}>Reset All</Button>
-                    </Grid>
-                )}
-            </Grid>
-
-            {displayInstruments.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 8 }}>
-                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                        No instruments found
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        Try adjusting your filters or search query
-                    </Typography>
                 </Box>
-            ) : (
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                    <TableContainer component={Paper} elevation={0} sx={{ flex: 1, overflow: 'auto', border: '1px solid', borderColor: 'divider' }}>
-                        <Table
-                            sx={{
-                                minWidth: 650,
-                                '& .MuiTableCell-root': {
-                                    py: 0.75, // Slightly more breathing room than 0.5
-                                    px: 2,
-                                    fontSize: '0.8125rem', // 13px
-                                    fontFamily: 'Inter, Roboto, sans-serif',
-                                },
-                                '& .MuiTableCell-head': {
-                                    fontWeight: 600,
-                                    backgroundColor: 'background.paper', // Solid background to prevent scroll overlap
-                                    color: 'text.secondary',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.05em',
-                                    fontSize: '0.75rem', // 12px for headers
-                                    borderBottom: '1px solid',
-                                    borderColor: 'divider',
-                                },
-                                '& .MuiTableRow-root': {
-                                    transition: 'background-color 0.2s ease',
-                                    '&:hover': {
-                                        backgroundColor: 'action.hover',
-                                    },
-                                }
-                            }}
-                            stickyHeader
-                            size="small"
-                        >
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>
-                                        <TableSortLabel
-                                            active={sorting.column === 'symbol'}
-                                            direction={sorting.column === 'symbol' ? sorting.direction : 'asc'}
-                                            onClick={() => handleSort('symbol')}
-                                        >
-                                            Symbol
-                                        </TableSortLabel>
-                                    </TableCell>
-                                    <TableCell>
-                                        <TableSortLabel
-                                            active={sorting.column === 'name'}
-                                            direction={sorting.column === 'name' ? sorting.direction : 'asc'}
-                                            onClick={() => handleSort('name')}
-                                        >
-                                            Name
-                                        </TableSortLabel>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <TableSortLabel
-                                            active={sorting.column === 'ltp'}
-                                            direction={sorting.column === 'ltp' ? sorting.direction : 'asc'}
-                                            onClick={() => handleSort('ltp')}
-                                        >
-                                            LTP
-                                        </TableSortLabel>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <TableSortLabel
-                                            active={sorting.column === 'change'}
-                                            direction={sorting.column === 'change' ? sorting.direction : 'asc'}
-                                            onClick={() => handleSort('change')}
-                                        >
-                                            Change
-                                        </TableSortLabel>
-                                    </TableCell>
-                                    <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                                        <TableSortLabel
-                                            active={sorting.column === 'changePct'}
-                                            direction={sorting.column === 'changePct' ? sorting.direction : 'asc'}
-                                            onClick={() => handleSort('changePct')}
-                                        >
-                                            Change %
-                                        </TableSortLabel>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <TableSortLabel
-                                            active={sorting.column === 'volume'}
-                                            direction={sorting.column === 'volume' ? sorting.direction : 'asc'}
-                                            onClick={() => handleSort('volume')}
-                                        >
-                                            Volume
-                                        </TableSortLabel>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <TableSortLabel
-                                            active={sorting.column === 'high'}
-                                            direction={sorting.column === 'high' ? sorting.direction : 'asc'}
-                                            onClick={() => handleSort('high')}
-                                        >
-                                            High
-                                        </TableSortLabel>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <TableSortLabel
-                                            active={sorting.column === 'low'}
-                                            direction={sorting.column === 'low' ? sorting.direction : 'asc'}
-                                            onClick={() => handleSort('low')}
-                                        >
-                                            Low
-                                        </TableSortLabel>
-                                    </TableCell>
-                                    <TableCell>
-                                        <TableSortLabel
-                                            active={sorting.column === 'exchange'}
-                                            direction={sorting.column === 'exchange' ? sorting.direction : 'asc'}
-                                            onClick={() => handleSort('exchange')}
-                                        >
-                                            Exchange
-                                        </TableSortLabel>
-                                    </TableCell>
-                                    <TableCell>
-                                        <TableSortLabel
-                                            active={sorting.column === 'sector'}
-                                            direction={sorting.column === 'sector' ? sorting.direction : 'asc'}
-                                            onClick={() => handleSort('sector')}
-                                        >
-                                            Sector
-                                        </TableSortLabel>
-                                    </TableCell>
-                                    <TableCell align="center">Watchlist</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {displayInstruments.map((instrument: Instrument) => {
-                                    const isStarred = watchlists.some(w => w.instrumentIds.includes(instrument.id));
-                                    const marketData = prices[instrument.id];
-                                    const isPositive = marketData ? marketData.change >= 0 : true;
+                <TextField
+                    select
+                    value={filters.exchange}
+                    name="exchange"
+                    onChange={handleFilterChange}
+                    size="small"
+                    sx={{ width: 140, '& .MuiInputBase-root': { borderRadius: '8px' } }}
+                    label="Exchange"
+                >
+                    <MenuItem value="ALL">All Exchanges</MenuItem>
+                    <MenuItem value="NSE">NSE</MenuItem>
+                    <MenuItem value="BSE">BSE</MenuItem>
+                </TextField>
+                <TextField
+                    select
+                    value={filters.type}
+                    name="type"
+                    onChange={handleFilterChange}
+                    size="small"
+                    sx={{ width: 140, '& .MuiInputBase-root': { borderRadius: '8px' } }}
+                    label="Asset Type"
+                >
+                    <MenuItem value="ALL">All Types</MenuItem>
+                    <MenuItem value="STOCK">STOCKS</MenuItem>
+                    <MenuItem value="ETF">ETFS</MenuItem>
+                </TextField>
+                <TextField
+                    select
+                    value={filters.sector}
+                    name="sector"
+                    onChange={handleFilterChange}
+                    size="small"
+                    sx={{ width: 180, '& .MuiInputBase-root': { borderRadius: '8px' } }}
+                    label="Sector"
+                >
+                    <MenuItem value="ALL">All Sectors</MenuItem>
+                    {sectors.map((sector: string) => (
+                        <MenuItem key={sector} value={sector}>{sector}</MenuItem>
+                    ))}
+                </TextField>
+            </Box>
 
-                                    return (
-                                        <TableRow
-                                            key={instrument.id}
-                                            sx={{ cursor: 'pointer' }}
-                                            onClick={() => navigate(`/instruments/${instrument.id}`)}
-                                        >
-                                            <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                    {instrument.symbol}
-                                                    {instrument.isShortable && (
-                                                        <Tooltip title="Short Selling Available">
-                                                            <Chip
-                                                                label="S"
-                                                                size="small"
-                                                                variant="outlined"
-                                                                sx={{
-                                                                    height: 18,
-                                                                    width: 18,
-                                                                    fontSize: '0.625rem',
-                                                                    color: 'text.secondary',
-                                                                    borderColor: 'divider',
-                                                                    borderRadius: '4px',
-                                                                    '& .MuiChip-label': { px: 0 }
-                                                                }}
-                                                            />
-                                                        </Tooltip>
-                                                    )}
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell sx={{ color: 'text.secondary', maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                {instrument.name}
-                                            </TableCell>
-                                            <TableCell align="right" sx={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-                                                <TickColoredPrice marketData={marketData} />
-                                            </TableCell>
-                                            <TableCell align="right" sx={{
-                                                color: isPositive ? 'success.main' : 'error.main',
-                                                fontWeight: 500,
-                                                fontVariantNumeric: 'tabular-nums',
-                                                whiteSpace: 'nowrap'
-                                            }}>
-                                                {marketData ? `${isPositive ? '+' : ''}${marketData.change.toFixed(2)}` : '--'}
-                                            </TableCell>
-                                            <TableCell align="right" sx={{
-                                                color: isPositive ? 'success.main' : 'error.main',
-                                                fontWeight: 500,
-                                                fontVariantNumeric: 'tabular-nums',
-                                                whiteSpace: 'nowrap'
-                                            }}>
-                                                <Chip
-                                                    label={marketData ? `${isPositive ? '+' : ''}${marketData.changePct.toFixed(2)}%` : '--'}
-                                                    size="small"
-                                                    color={isPositive ? 'success' : 'error'}
-                                                    variant="outlined"
-                                                    sx={{
-                                                        height: 20,
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: 600,
-                                                        border: 'none',
-                                                        bgcolor: isPositive ? 'success.lighter' : 'error.lighter'
-                                                    }}
-                                                />
-                                            </TableCell>
-                                            <TableCell align="right" sx={{ color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}>
-                                                {marketData ? marketData.volume.toLocaleString() : '--'}
-                                            </TableCell>
-                                            <TableCell align="right" sx={{ color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}>
-                                                {marketData ? marketData.high.toFixed(2) : '--'}
-                                            </TableCell>
-                                            <TableCell align="right" sx={{ color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}>
-                                                {marketData ? marketData.low.toFixed(2) : '--'}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Chip label={instrument.exchange} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.7rem', color: 'text.secondary' }} />
-                                            </TableCell>
-                                            <TableCell sx={{ color: 'text.secondary' }}>{instrument.sector}</TableCell>
-                                            <TableCell align="center">
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={(e) => handleWatchlistToggle(e, instrument)}
-                                                    sx={{
-                                                        color: isStarred ? 'warning.main' : 'action.disabled',
-                                                        transition: 'transform 0.2s',
-                                                        '&:hover': { transform: 'scale(1.1)', color: isStarred ? 'warning.dark' : 'warning.light' }
-                                                    }}
-                                                >
-                                                    {isStarred ? (
-                                                        <StarIcon fontSize="small" />
-                                                    ) : (
-                                                        <StarBorderIcon fontSize="small" />
-                                                    )}
-                                                </IconButton>
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-
-
-                    <Box sx={{
-                        borderTop: '1px solid',
-                        borderColor: 'divider',
-                        bgcolor: 'background.paper',
-                        '& .MuiTablePagination-root': {
-                            minHeight: '32px'
-                        },
-                        '& .MuiTablePagination-toolbar': {
-                            minHeight: '32px',
-                            paddingTop: 0.5,
-                            paddingBottom: 0.5,
-                            paddingLeft: 1,
-                            paddingRight: 1
-                        }
-                    }}>
-                        <TablePagination
-                            rowsPerPageOptions={[25, 50, 75, 100]}
-                            component="div"
-                            count={filteredInstruments.length}
-                            rowsPerPage={pagination.rowsPerPage}
-                            page={pagination.page}
-                            onPageChange={handleChangePage}
-                            onRowsPerPageChange={handleChangeRowsPerPage}
-                        />
+            {/* Grid Content */}
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+                {displayInstruments.length === 0 ? (
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', opacity: 0.6 }}>
+                        <Typography variant="h6" fontWeight={700}>No matches found</Typography>
+                        <Typography variant="body2">Try adjusting your search or filters</Typography>
                     </Box>
-                </Box>
-            )
-            }
-        </Box >
+                ) : (
+                    <>
+                        <CustomGrid
+                            columns={columns}
+                            rows={displayInstruments}
+                            onRowClick={(row: Instrument) => navigate(`/instruments/${row.id}`)}
+                            sorting={sorting}
+                            onSort={(col: string) => handleSort(col as SortColumn)}
+                            maxHeight="100%"
+                        />
+                        
+                        {/* Pagination Footer */}
+                        <Box sx={{ 
+                            mt: 1, 
+                            px: 1,
+                            display: 'flex', 
+                            justifyContent: 'flex-end', 
+                            alignItems: 'center',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: '12px',
+                            bgcolor: 'background.paper'
+                        }}>
+                            <TablePagination
+                                rowsPerPageOptions={[25, 50, 100]}
+                                component="div"
+                                count={filteredInstruments.length}
+                                rowsPerPage={pagination.rowsPerPage}
+                                page={pagination.page}
+                                onPageChange={handleChangePage}
+                                onRowsPerPageChange={handleChangeRowsPerPage}
+                                sx={{ border: 'none' }}
+                            />
+                        </Box>
+                    </>
+                )}
+            </Box>
+        </Box>
     );
 };
