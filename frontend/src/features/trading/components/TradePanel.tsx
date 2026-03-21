@@ -31,6 +31,7 @@ import { Instrument } from '@/features/instruments/types/instrument.types';
 import { ShortSellWarning } from './ShortSellWarning';
 import { orderService } from '../services/orderService';
 import { usePortfolioStore } from '@/features/portfolio/store/portfolioStore';
+import { formatCurrency } from '../../../shared/utils/formatters';
 
 interface TradePanelProps {
     instrument: Instrument;
@@ -159,9 +160,9 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
             const sp = parseFloat(stopPrice);
             if (!isNaN(sp) && sp > 0) {
                 if (side === 'BUY' && sp <= ltp) {
-                    warnings.push('⚠ Stop price must be ABOVE current price (₹' + ltp.toFixed(2) + ') for BUY orders');
+                    warnings.push(`⚠ Stop price must be ABOVE current price (${formatCurrency(ltp)}) for BUY orders`);
                 } else if (side === 'SELL' && sp >= ltp) {
-                    warnings.push('⚠ Stop price must be BELOW current price (₹' + ltp.toFixed(2) + ') for SELL orders');
+                    warnings.push(`⚠ Stop price must be BELOW current price (${formatCurrency(ltp)}) for SELL orders`);
                 }
             }
         }
@@ -184,23 +185,23 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
     // Generate live interpretation text
     const liveInterpretation = useMemo(() => {
         if (orderType === 'MARKET') {
-            return `Order will execute immediately at best available price (around ₹${ltp.toFixed(2)})`;
+            return `Order will execute immediately at best available price (around ${formatCurrency(ltp)})`;
         }
 
         if (orderType === 'LIMIT') {
             const p = parseFloat(price);
             if (isNaN(p)) return null;
             return side === 'BUY'
-                ? `Order will execute when price falls to ₹${p.toFixed(2)} or better`
-                : `Order will execute when price rises to ₹${p.toFixed(2)} or better`;
+                ? `Order will execute when price falls to ${formatCurrency(p)} or better`
+                : `Order will execute when price rises to ${formatCurrency(p)} or better`;
         }
 
         if (orderType === 'STOP') {
             const sp = parseFloat(stopPrice);
             if (isNaN(sp)) return null;
             return side === 'BUY'
-                ? `When price rises to ₹${sp.toFixed(2)}, system will place a MARKET BUY order`
-                : `When price falls to ₹${sp.toFixed(2)}, system will place a MARKET SELL order`;
+                ? `When price rises to ${formatCurrency(sp)}, system will place a MARKET BUY order`
+                : `When price falls to ${formatCurrency(sp)}, system will place a MARKET SELL order`;
         }
 
         if (orderType === 'STOP_LIMIT') {
@@ -208,14 +209,14 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
             const lp = parseFloat(limitPrice);
             if (isNaN(sp) || isNaN(lp)) return null;
             return side === 'BUY'
-                ? `When price rises to ₹${sp.toFixed(2)}, system will try to buy at ₹${lp.toFixed(2)} or better. ⚠ Fast breakout may skip your order.`
-                : `When price falls to ₹${sp.toFixed(2)}, system will try to sell at ₹${lp.toFixed(2)} or better. ⚠ Fast breakdown may skip your order.`;
+                ? `When price rises to ${formatCurrency(sp)}, system will try to buy at ${formatCurrency(lp)} or better. ⚠ Fast breakout may skip your order.`
+                : `When price falls to ${formatCurrency(sp)}, system will try to sell at ${formatCurrency(lp)} or better. ⚠ Fast breakdown may skip your order.`;
         }
 
         if (orderType === 'TRAILING_STOP') {
             const ta = parseFloat(trailAmount);
             if (isNaN(ta)) return null;
-            const trailText = trailType === 'PERCENTAGE' ? `${ta}%` : `₹${ta}`;
+            const trailText = trailType === 'PERCENTAGE' ? `${ta}%` : formatCurrency(ta);
             return side === 'BUY'
                 ? `Stop price will trail ${trailText} above the lowest price. When triggered, places MARKET BUY order.`
                 : `Stop price will trail ${trailText} below the highest price. When triggered, places MARKET SELL order.`;
@@ -306,7 +307,7 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
             const res = await orderService.placeOrder(orderRequest);
 
             if (res.status === 'FILLED') {
-                setSuccess(`Order ${res.orderId} filled at ₹${res.avgFillPrice?.toLocaleString()}!`);
+                setSuccess(`Order ${res.orderId} filled at ${formatCurrency(res.avgFillPrice || 0)}!`);
             } else {
                 setSuccess(`Order ${res.orderId} placed successfully!`);
             }
@@ -327,13 +328,13 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
     };
 
     return (
-        <Paper 
-            id="trade-panel" 
-            elevation={0} 
-            sx={{ 
+        <Paper
+            id="trade-panel"
+            elevation={0}
+            sx={{
                 p: 2, // Reduced from 3
-                border: '1px solid', 
-                borderColor: 'divider', 
+                border: '1px solid',
+                borderColor: 'divider',
                 borderRadius: 3, // Slightly smaller radius
                 background: 'rgba(255, 255, 255, 0.6)',
                 backdropFilter: 'blur(12px)',
@@ -349,9 +350,9 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
                         {instrument.isShortable && (
                             <Stack direction="row" alignItems="center" spacing={0.5}>
-                                <Typography 
-                                    variant="caption" 
-                                    fontWeight={700} 
+                                <Typography
+                                    variant="caption"
+                                    fontWeight={700}
                                     color={shortMode ? 'warning.main' : 'text.secondary'}
                                     sx={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}
                                 >
@@ -362,7 +363,7 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                                     onChange={(e) => handleShortModeChange(e.target.checked)}
                                     size="small"
                                     color="warning"
-                                    sx={{ 
+                                    sx={{
                                         padding: 0,
                                         width: 32,
                                         height: 18,
@@ -404,8 +405,8 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                                 }
                             }}
                             size="small"
-                            sx={{ 
-                                cursor: 'pointer', 
+                            sx={{
+                                cursor: 'pointer',
                                 fontWeight: 700,
                                 borderRadius: '8px',
                                 bgcolor: advancedMode ? 'primary.main' : 'rgba(0,0,0,0.05)',
@@ -615,11 +616,11 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
 
                 {/* Digital Receipt / Margin Summary */}
                 {estValue > 0 && (
-                    <Box sx={{ 
+                    <Box sx={{
                         p: 1.5, // Reduced from 2
-                        bgcolor: 'rgba(0,0,0,0.02)', 
-                        borderRadius: 2.5, 
-                        border: '1px solid', 
+                        bgcolor: 'rgba(0,0,0,0.02)',
+                        borderRadius: 2.5,
+                        border: '1px solid',
                         borderColor: 'divider',
                         position: 'relative',
                         '&::before, &::after': {
@@ -638,13 +639,13 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="caption" color="text.secondary" fontWeight={600}>Est. Value</Typography>
                                 <Typography variant="caption" fontWeight={800} sx={{ fontFamily: '"JetBrains Mono", monospace' }}>
-                                    ₹{estValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                    {formatCurrency(estValue)}
                                 </Typography>
                             </Box>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="caption" color="text.secondary" fontWeight={600}>Taxes & Charges</Typography>
                                 <Typography variant="caption" fontWeight={800} sx={{ fontFamily: '"JetBrains Mono", monospace' }}>
-                                    ₹{fees.toFixed(2)}
+                                    {formatCurrency(fees)}
                                 </Typography>
                             </Box>
                             <Divider sx={{ borderStyle: 'dashed', my: 1 }} />
@@ -653,7 +654,7 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                                     {side === 'BUY' || (side === 'SELL' && shortMode) ? 'Total Required' : 'Net Proceeds'}
                                 </Typography>
                                 <Typography variant="h6" fontWeight={900} color={side === 'BUY' || shortMode ? "primary.main" : "success.main"} sx={{ fontFamily: '"JetBrains Mono", monospace' }}>
-                                    ₹{(side === 'BUY' || (side === 'SELL' && shortMode) ? requiredMargin : estValue - fees).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                    {formatCurrency(side === 'BUY' || (side === 'SELL' && shortMode) ? requiredMargin : estValue - fees)}
                                 </Typography>
                             </Box>
                         </Stack>
@@ -666,9 +667,9 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                     </Alert>
                 )}
 
-                <Tooltip 
-                    title={liveInterpretation || ''} 
-                    arrow 
+                <Tooltip
+                    title={liveInterpretation || ''}
+                    arrow
                     placement="top"
                 >
                     <Box>
@@ -679,10 +680,10 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
                             color={side === 'BUY' ? 'success' : 'error'}
                             disabled={!isValid || isLoading}
                             onClick={handlePlaceOrder}
-                            sx={{ 
+                            sx={{
                                 py: 1.4, // Reduced from 2
-                                fontWeight: 900, 
-                                borderRadius: '12px', 
+                                fontWeight: 900,
+                                borderRadius: '12px',
                                 fontSize: '0.9rem',
                                 letterSpacing: '0.02em',
                                 boxShadow: `0 6px 12px ${alpha(side === 'BUY' ? theme.palette.success.main : theme.palette.error.main, 0.2)}`,
