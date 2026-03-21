@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -12,14 +13,26 @@ import (
 )
 
 type TradingAccountService struct {
-	repo   *repositories.TradingAccountRepository
-	txRepo *repositories.TransactionRepository
+	repo        *repositories.TradingAccountRepository
+	txRepo      *repositories.TransactionRepository
+	userRepo    *repositories.UserRepository
+	otpService  *OTPService
+	commService CommunicationProvider
 }
 
-func NewTradingAccountService(repo *repositories.TradingAccountRepository, txRepo *repositories.TransactionRepository) *TradingAccountService {
+func NewTradingAccountService(
+	repo *repositories.TradingAccountRepository,
+	txRepo *repositories.TransactionRepository,
+	userRepo *repositories.UserRepository,
+	otpService *OTPService,
+	commService CommunicationProvider,
+) *TradingAccountService {
 	return &TradingAccountService{
-		repo:   repo,
-		txRepo: txRepo,
+		repo:        repo,
+		txRepo:      txRepo,
+		userRepo:    userRepo,
+		otpService:  otpService,
+		commService: commService,
 	}
 }
 
@@ -65,41 +78,162 @@ func (s *TradingAccountService) GetByUserID(userID string) (*models.TradingAccou
 	return account, nil
 }
 
-// FundAccount adds simulated funds to the user's trading account
-func (s *TradingAccountService) FundAccount(userID string, amount float64) (*models.TradingAccount, error) {
+// InitiateDeposit starts a fund transfer by creating a PENDING transaction and sending an OTP
+func (s *TradingAccountService) InitiateDeposit(userID string, amount float64) (*models.Transaction, string, error) {
 	if amount <= 0 {
-		return nil, errors.New("amount must be greater than zero")
+		return nil, "", errors.New("amount must be greater than zero")
 	}
 
 	account, err := s.repo.FindByUserID(userID)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	if account == nil {
-		return nil, errors.New("trading account not found")
+		return nil, "", errors.New("trading account not found")
 	}
 
-	// Update balance
-	newBalance := account.Balance + amount
-	err = s.repo.UpdateBalance(account.ID, newBalance)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create transaction record
+	// Create PENDING transaction
 	tx := &models.Transaction{
 		AccountID: account.ID,
 		UserID:    account.UserID,
 		Type:      "DEPOSIT",
 		Amount:    amount,
 		Currency:  account.Currency,
-		Status:    "COMPLETED",
-		Reference: "SIMULATED_DEPOSIT",
+		Status:    "PENDING",
+		Reference: "OTP_REQUIRED",
 	}
-	_, _ = s.txRepo.Create(tx)
+	savedTx, err := s.txRepo.Create(tx)
+	if err != nil {
+		fmt.Printf("[Deposit Error] Failed to create transaction: %v\n", err)
+		return nil, "", err
+	}
 
+	// Generate OTP
+	otp, err := s.otpService.GenerateOTP(account.UserID, models.OTPPurposeFundTransfer)
+	if err != nil {
+		fmt.Printf("[Deposit Error] Failed to generate OTP: %v\n", err)
+		return nil, "", fmt.Errorf("failed to generate otp: %v", err)
+	}
+
+	// Fetch user for email
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		fmt.Printf("[Deposit Error] Failed to fetch user: %v\n", err)
+		return nil, "", fmt.Errorf("failed to fetch user: %v", err)
+	}
+	if user == nil {
+		fmt.Printf("[Deposit Error] User not found: %s\n", userID)
+		return nil, "", errors.New("user not found")
+	}
+
+	subject := "Aequitas: Fund Transfer OTP"
+	
+	// Determine best name to use
+	var firstName string
+	if user.FullName != "" {
+		firstName = strings.Split(user.FullName, " ")[0]
+	} else if user.DisplayName != "" {
+		firstName = user.DisplayName
+	} else {
+		// Fallback to email prefix
+		firstName = strings.Split(user.Email, "@")[0]
+	}
+
+	if firstName == "" {
+		firstName = "Valued Member"
+	}
+
+	htmlContent := fmt.Sprintf(`
+		<div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 10px;">
+			<h2 style="color: #1976d2; margin-top: 0;">Secure Fund Transfer</h2>
+			<p>Hi <strong>%s</strong>,</p>
+			<p>You have initiated a deposit of <strong style="color: #2e7d32;">₹%.2f</strong> to your Aequitas trading account.</p>
+			<p>To complete this transaction, please use the following One-Time Password (OTP):</p>
+			<div style="font-size: 32px; font-weight: bold; background: #f8f9fa; padding: 20px; text-align: center; border-radius: 8px; letter-spacing: 5px; color: #1976d2; border: 1px dashed #1976d2; margin: 20px 0;">
+				%s
+			</div>
+			<p style="font-size: 14px; color: #666;">This code is valid for <strong>5 minutes</strong>. For your security, please do not share this code with anyone.</p>
+			<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+			<p style="font-size: 12px; color: #888;">If you did not initiate this request, please contact our support team or secure your account password immediately.</p>
+			<p style="margin-bottom: 0;">Best regards,<br/><strong>The Aequitas Team</strong></p>
+		</div>
+	`, firstName, amount, otp)
+
+	err = s.commService.SendEmail(user.Email, subject, htmlContent)
+	if err != nil {
+		fmt.Printf("[Deposit Error] Failed to send email: %v\n", err)
+		return nil, "", fmt.Errorf("failed to send email: %v", err)
+	}
+
+	return savedTx, otp, nil
+}
+
+// CompleteDeposit finalizes a pending transaction after OTP verification
+func (s *TradingAccountService) CompleteDeposit(userID string, txID string, otpCode string) (*models.TradingAccount, error) {
+	// 1. Verify OTP first
+	userObjID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		fmt.Printf("[Deposit Complete Error] Invalid user ID format: %v\n", err)
+		return nil, err
+	}
+
+	valid, err := s.otpService.VerifyOTP(userObjID, models.OTPPurposeFundTransfer, otpCode)
+	if err != nil {
+		fmt.Printf("[Deposit Complete Error] OTP verification failed: %v\n", err)
+		return nil, err
+	}
+	if !valid {
+		fmt.Printf("[Deposit Complete Error] Invalid OTP for user %s\n", userID)
+		return nil, errors.New("invalid or expired OTP")
+	}
+
+	// 2. Find the transaction
+	tx, err := s.txRepo.FindByID(txID)
+	if err != nil {
+		fmt.Printf("[Deposit Complete Error] Transaction find error: %v\n", err)
+		return nil, err
+	}
+	if tx == nil || tx.UserID != userObjID || tx.Status != "PENDING" {
+		fmt.Printf("[Deposit Complete Error] Transaction not found or invalid: %s\n", txID)
+		return nil, errors.New("invalid or already processed transaction")
+	}
+
+	// 3. Update balance and transaction status
+	account, err := s.repo.FindByUserID(userID)
+	if err != nil {
+		fmt.Printf("[Deposit Complete Error] Account find error: %v\n", err)
+		return nil, err
+	}
+	if account == nil {
+		fmt.Printf("[Deposit Complete Error] Account not found for user: %s\n", userID)
+		return nil, errors.New("trading account not found")
+	}
+
+	newBalance := account.Balance + tx.Amount
+	err = s.repo.UpdateBalance(account.ID, newBalance)
+	if err != nil {
+		fmt.Printf("[Deposit Complete Error] Balance update error: %v\n", err)
+		return nil, err
+	}
+
+	// 4. Update transaction status
+	tx.Status = "COMPLETED"
+	tx.Reference = "EMAIL_VERIFIED"
+	_ = s.txRepo.UpdateStatus(tx.ID.Hex(), "COMPLETED", tx.Reference)
+
+	// Refresh local account balance for returning to UI
 	account.Balance = newBalance
 	return account, nil
+}
+
+// FundAccount is now deprecated in favor of InitiateDeposit/CompleteDeposit
+func (s *TradingAccountService) FundAccount(userID string, amount float64) (*models.TradingAccount, error) {
+	// For backward compatibility or internal use
+	tx, otp, err := s.InitiateDeposit(userID, amount)
+	if err != nil {
+		return nil, err
+	}
+	return s.CompleteDeposit(userID, tx.ID.Hex(), otp)
 }
 
 // GetTransactions retrieves the transaction history for a user

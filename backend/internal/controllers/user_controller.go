@@ -23,6 +23,7 @@ type UpdateProfileRequest struct {
 	DisplayName string `json:"displayName"`
 	Bio         string `json:"bio"`
 	Avatar      string `json:"avatar"`
+	Phone       string `json:"phone"`
 }
 
 // GetProfile handles GET /api/user/profile
@@ -68,6 +69,7 @@ func (c *UserController) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		req.DisplayName,
 		req.Bio,
 		req.Avatar,
+		req.Phone,
 	)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())

@@ -22,6 +22,7 @@ export function ProfileEditForm({ user, onSuccess, onCancel }: ProfileEditFormPr
     const [displayName, setDisplayName] = useState(user.displayName || '');
     const [bio, setBio] = useState(user.bio || '');
     const [avatar, setAvatar] = useState(user.avatar || '');
+    const [phone, setPhone] = useState(user.phone || '');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +54,7 @@ export function ProfileEditForm({ user, onSuccess, onCancel }: ProfileEditFormPr
                 displayName,
                 bio,
                 avatar,
+                phone,
             });
             onSuccess(updatedUser);
         } catch (err: any) {
@@ -113,6 +115,15 @@ export function ProfileEditForm({ user, onSuccess, onCancel }: ProfileEditFormPr
                     variant="outlined"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
+                />
+
+                <TextField
+                    fullWidth
+                    label="Phone Number"
+                    variant="outlined"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+919876543210"
                 />
 
                 <TextField

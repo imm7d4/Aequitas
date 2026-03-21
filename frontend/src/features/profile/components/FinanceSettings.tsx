@@ -42,6 +42,10 @@ export const FinanceSettings: React.FC = () => {
     const [fundAmount, setFundAmount] = useState('10000');
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [isFundingDialogOpen, setIsFundingDialogOpen] = useState(false);
+    const [fundingStep, setFundingStep] = useState<'amount' | 'otp'>('amount');
+    const [otpCode, setOtpCode] = useState('');
+    const [pendingTransactionId, setPendingTransactionId] = useState<string | null>(null);
+    const [timer, setTimer] = useState(0);
     const theme = useTheme();
 
     const fetchData = async () => {
@@ -73,6 +77,16 @@ export const FinanceSettings: React.FC = () => {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        let interval: any;
+        if (timer > 0) {
+            interval = setInterval(() => {
+                setTimer((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [timer]);
+
     const handleFund = async () => {
         const amount = parseFloat(fundAmount);
         if (isNaN(amount) || amount <= 0) {
@@ -82,17 +96,49 @@ export const FinanceSettings: React.FC = () => {
 
         setIsFunding(true);
         try {
-            const updatedAccount = await accountService.fundAccount(amount);
-            setAccount(updatedAccount);
-            const updatedTxs = await accountService.getTransactions();
-            setTransactions(updatedTxs);
-            setMessage({ type: 'success', text: `Successfully added ${amount} ${updatedAccount.currency} to your account` });
-            setIsFundingDialogOpen(false);
+            const { transactionId } = await accountService.initiateDeposit(amount);
+            setPendingTransactionId(transactionId);
+            setFundingStep('otp');
+            setTimer(60);
+            setMessage({ type: 'success', text: 'OTP has been sent to your registered email.' });
         } catch (err: any) {
-            setMessage({ type: 'error', text: 'Failed to fund account' });
+            setMessage({ type: 'error', text: err?.response?.data?.message || 'Failed to initiate deposit' });
         } finally {
             setIsFunding(false);
         }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (!otpCode || !pendingTransactionId) {
+            setMessage({ type: 'error', text: 'Please enter the OTP' });
+            return;
+        }
+
+        setIsFunding(true);
+        try {
+            const updatedAccount = await accountService.completeDeposit(pendingTransactionId, otpCode);
+            setAccount(updatedAccount);
+            const updatedTxs = await accountService.getTransactions();
+            setTransactions(updatedTxs);
+            setMessage({ type: 'success', text: `Successfully added funds to your account!` });
+            handleCloseDialog();
+        } catch (err: any) {
+            setMessage({ type: 'error', text: err?.response?.data?.message || 'Invalid or expired OTP' });
+        } finally {
+            setIsFunding(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        if (timer > 0) return;
+        await handleFund();
+    };
+
+    const handleCloseDialog = () => {
+        setIsFundingDialogOpen(false);
+        setFundingStep('amount');
+        setOtpCode('');
+        setPendingTransactionId(null);
     };
 
     if (isLoading) {
@@ -124,7 +170,7 @@ export const FinanceSettings: React.FC = () => {
                         startIcon={<AddIcon />}
                         onClick={() => setIsFundingDialogOpen(true)}
                     >
-                        Fund Account
+                        Add Funds
                     </Button>
                 </Box>
 
@@ -325,47 +371,104 @@ export const FinanceSettings: React.FC = () => {
                 </TableContainer>
             </Box>
 
-            <Dialog open={isFundingDialogOpen} onClose={() => !isFunding && setIsFundingDialogOpen(false)}>
-                <DialogTitle>Fund Trading Account</DialogTitle>
+            <Dialog open={isFundingDialogOpen} onClose={() => !isFunding && handleCloseDialog()}>
+                <DialogTitle>{fundingStep === 'amount' ? 'Add Funds' : 'Verify Deposit'}</DialogTitle>
                 <DialogContent>
-                    <Box sx={{ pt: 1 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            Enter the amount you would like to add to your account. This is a simulated transaction for testing purposes.
-                        </Typography>
-                        <TextField
-                            fullWidth
-                            label="Amount"
-                            variant="outlined"
-                            type="number"
-                            value={fundAmount}
-                            onChange={(e) => setFundAmount(e.target.value)}
-                            InputProps={{
-                                startAdornment: <Typography sx={{ mr: 1 }}>₹</Typography>,
-                            }}
-                        />
-                        <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-                            {['1000', '5000', '10000', '50000'].map((amt) => (
-                                <Button
-                                    key={amt}
-                                    size="small"
+                    <Box sx={{ pt: 1, minWidth: { xs: '100%', sm: 400 } }}>
+                        {fundingStep === 'amount' ? (
+                            <>
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                    Enter the amount you would like to add to your account.
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    autoFocus
+                                    label="Amount"
                                     variant="outlined"
-                                    onClick={() => setFundAmount(amt)}
-                                >
-                                    ₹{amt}
-                                </Button>
-                            ))}
-                        </Stack>
+                                    type="number"
+                                    value={fundAmount}
+                                    onChange={(e) => setFundAmount(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: <Typography sx={{ mr: 1 }}>₹</Typography>,
+                                    }}
+                                />
+                                <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: 'wrap', gap: 1 }}>
+                                    {['1000', '5000', '10000', '50000'].map((amt) => (
+                                        <Button
+                                            key={amt}
+                                            size="small"
+                                            variant="outlined"
+                                            onClick={() => setFundAmount(amt)}
+                                            sx={{ borderRadius: 1.5 }}
+                                        >
+                                            ₹{(parseInt(amt) / 1000)}k
+                                        </Button>
+                                    ))}
+                                </Stack>
+                            </>
+                        ) : (
+                            <>
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                    We've sent a 6-digit verification code to your email. Please enter it below to complete the deposit.
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    autoFocus
+                                    label="Enter OTP"
+                                    variant="outlined"
+                                    placeholder="000000"
+                                    value={otpCode}
+                                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').substring(0, 6))}
+                                    inputProps={{
+                                        textAlign: 'center',
+                                        letterSpacing: '0.5rem',
+                                        style: { fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }
+                                    }}
+                                />
+                                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1 }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                        Didn't receive code?
+                                    </Typography>
+                                    {timer > 0 ? (
+                                        <Typography variant="caption" color="primary.main" fontWeight={700}>
+                                            Resend in {timer}s
+                                        </Typography>
+                                    ) : (
+                                        <Button
+                                            size="small"
+                                            onClick={handleResendOtp}
+                                            disabled={isFunding}
+                                            sx={{ p: 0, minWidth: 0, textTransform: 'none', fontWeight: 700 }}
+                                        >
+                                            Resend Now
+                                        </Button>
+                                    )}
+                                </Box>
+                            </>
+                        )}
                     </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setIsFundingDialogOpen(false)} disabled={isFunding}>Cancel</Button>
-                    <Button
-                        onClick={handleFund}
-                        variant="contained"
-                        disabled={isFunding}
-                    >
-                        {isFunding ? 'Processing...' : 'Add Funds'}
-                    </Button>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button onClick={handleCloseDialog} disabled={isFunding}>Cancel</Button>
+                    {fundingStep === 'amount' ? (
+                        <Button
+                            onClick={handleFund}
+                            variant="contained"
+                            disabled={isFunding}
+                            sx={{ px: 4, borderRadius: 1.5 }}
+                        >
+                            {isFunding ? <CircularProgress size={24} color="inherit" /> : 'Send OTP'}
+                        </Button>
+                    ) : (
+                        <Button
+                            onClick={handleVerifyOtp}
+                            variant="contained"
+                            disabled={isFunding || otpCode.length < 6}
+                            sx={{ px: 4, borderRadius: 1.5 }}
+                        >
+                            {isFunding ? <CircularProgress size={24} color="inherit" /> : 'Complete Deposit'}
+                        </Button>
+                    )}
                 </DialogActions>
             </Dialog>
         </Stack>

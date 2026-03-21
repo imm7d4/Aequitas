@@ -6,6 +6,7 @@ export interface UpdateProfileRequest {
     displayName: string;
     bio: string;
     avatar: string;
+    phone: string;
 }
 
 export const profileService = {

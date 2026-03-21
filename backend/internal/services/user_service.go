@@ -30,7 +30,7 @@ func (s *UserService) GetProfile(userID string) (*models.User, error) {
 }
 
 // UpdateProfile updates the profile information for a user
-func (s *UserService) UpdateProfile(userID string, fullName, displayName, bio, avatar string) (*models.User, error) {
+func (s *UserService) UpdateProfile(userID string, fullName, displayName, bio, avatar, phone string) (*models.User, error) {
 	user, err := s.userRepo.FindByID(userID)
 	if err != nil {
 		return nil, err
@@ -44,6 +44,7 @@ func (s *UserService) UpdateProfile(userID string, fullName, displayName, bio, a
 	user.DisplayName = displayName
 	user.Bio = bio
 	user.Avatar = avatar
+	user.Phone = phone
 
 	err = s.userRepo.Update(user)
 	if err != nil {

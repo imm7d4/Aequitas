@@ -11,6 +11,7 @@ export interface User {
     displayName?: string;
     bio?: string;
     avatar?: string;
+    phone?: string;
     lastLoginAt?: string;
     lastLoginIP?: string;
     preferences: UserPreferences;

@@ -50,3 +50,26 @@ func (r *TransactionRepository) FindByAccountID(accountID string) ([]*models.Tra
 	}
 	return transactions, nil
 }
+
+func (r *TransactionRepository) FindByID(id string) (*models.Transaction, error) {
+	objID, _ := primitive.ObjectIDFromHex(id)
+	var tx models.Transaction
+	err := r.collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&tx)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	return &tx, err
+}
+
+func (r *TransactionRepository) UpdateStatus(id string, status string, reference string) error {
+	objID, _ := primitive.ObjectIDFromHex(id)
+	_, err := r.collection.UpdateOne(
+		context.Background(),
+		bson.M{"_id": objID},
+		bson.M{"$set": bson.M{
+			"status":    status,
+			"reference": reference,
+		}},
+	)
+	return err
+}

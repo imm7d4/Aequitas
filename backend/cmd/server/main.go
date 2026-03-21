@@ -70,9 +70,14 @@ func main() {
 	notificationRepo := repositories.NewNotificationRepository(db)
 	tradeResultRepo := repositories.NewTradeResultRepository(db)
 	activeUnitRepo := repositories.NewActiveTradeUnitRepository(db)
+	otpRepo := repositories.NewOTPRepository(db)
+
+	// Initialize basic services
+	otpService := services.NewOTPService(otpRepo)
+	commProvider := services.NewBrevoProvider(cfg)
 
 	// Initialize services (Basic)
-	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo, transactionRepo)
+	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo, transactionRepo, userRepo, otpService, commProvider)
 	authService := services.NewAuthService(userRepo, tradingAccountService, cfg)
 	instrumentService := services.NewInstrumentService(instrumentRepo)
 	marketService := services.NewMarketService(marketRepo, marketDataRepo)
@@ -211,6 +216,8 @@ func main() {
 	// Account routes
 	protected.HandleFunc("/account/balance", accountController.GetBalance).Methods("GET", "OPTIONS")
 	protected.HandleFunc("/account/fund", accountController.FundAccount).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/account/deposit/initiate", accountController.InitiateDeposit).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/account/deposit/complete", accountController.CompleteDeposit).Methods("POST", "OPTIONS")
 	protected.HandleFunc("/account/transactions", accountController.GetTransactions).Methods("GET", "OPTIONS")
 
 	// Order routes

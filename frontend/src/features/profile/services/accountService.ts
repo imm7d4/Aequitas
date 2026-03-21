@@ -34,6 +34,16 @@ export const accountService = {
         return response.data.data;
     },
 
+    initiateDeposit: async (amount: number): Promise<{ transactionId: string, message: string }> => {
+        const response = await api.post<APIResponse<{ transactionId: string, message: string }>>('/account/deposit/initiate', { amount });
+        return response.data.data;
+    },
+
+    completeDeposit: async (transactionId: string, otpCode: string): Promise<TradingAccount> => {
+        const response = await api.post<APIResponse<TradingAccount>>('/account/deposit/complete', { transactionId, otpCode });
+        return response.data.data;
+    },
+
     getTransactions: async (): Promise<Transaction[]> => {
         const response = await api.get<APIResponse<Transaction[]>>('/account/transactions');
         return response.data.data;

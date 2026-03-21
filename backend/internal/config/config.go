@@ -24,6 +24,10 @@ type Config struct {
 	FlatFee float64
 	// MaxCommission is the maximum commission capable of being charged
 	MaxCommission float64
+	// Brevo Configuration
+	BrevoAPIKey      string
+	BrevoSenderName    string
+	BrevoSenderEmail   string
 }
 
 type FeeConfig struct {
@@ -65,6 +69,9 @@ func New() *Config {
 		CommissionRate: commissionRate,
 		FlatFee:        flatFee,
 		MaxCommission:  maxCommission,
+		BrevoAPIKey:      getEnv("BREVO_API_KEY", ""),
+		BrevoSenderName:   getEnv("BREVO_SENDER_NAME", "AEQUIT"),
+		BrevoSenderEmail:  getEnv("BREVO_SENDER_EMAIL", ""),
 	}
 }
 
@@ -92,7 +99,7 @@ func parseAllowedOrigins(origins string) []string {
 
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
-		return value
+		return strings.TrimSpace(value)
 	}
 	return defaultValue
 }

@@ -38,7 +38,7 @@ type FundRequest struct {
 	Amount float64 `json:"amount"`
 }
 
-// FundAccount handles POST /api/account/fund
+// FundAccount handles POST /api/account/fund (Legacy/Shortcut)
 func (c *AccountController) FundAccount(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r)
 	if userID == "" {
@@ -59,6 +59,75 @@ func (c *AccountController) FundAccount(w http.ResponseWriter, r *http.Request) 
 	}
 
 	utils.RespondJSON(w, http.StatusOK, account, "Account funded successfully")
+}
+
+type DepositInitiateRequest struct {
+	Amount float64 `json:"amount"`
+}
+
+// InitiateDeposit handles POST /api/account/deposit/initiate
+func (c *AccountController) InitiateDeposit(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var req DepositInitiateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	tx, otp, err := c.accountService.InitiateDeposit(userID, req.Amount)
+	if err != nil {
+		statusCode := http.StatusInternalServerError
+		if err.Error() == "please update your profile with a valid phone number to receive SMS OTP" || 
+		   err.Error() == "trading account not found" ||
+		   err.Error() == "amount must be greater than zero" {
+			statusCode = http.StatusBadRequest
+		}
+		utils.RespondError(w, statusCode, err.Error())
+		return
+	}
+
+	// For simulation convenience, we return debug_otp in non-production
+	response := map[string]interface{}{
+		"transactionId": tx.ID.Hex(),
+		"amount":        tx.Amount,
+		"status":        tx.Status,
+		"debug_otp":      otp, // Remove in real production!
+	}
+
+	utils.RespondJSON(w, http.StatusAccepted, response, "Deposit initiated, check SMS for OTP")
+}
+
+type DepositCompleteRequest struct {
+	TransactionID string `json:"transactionId"`
+	OTPCode       string `json:"otpCode"`
+}
+
+// CompleteDeposit handles POST /api/account/deposit/complete
+func (c *AccountController) CompleteDeposit(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var req DepositCompleteRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	account, err := c.accountService.CompleteDeposit(userID, req.TransactionID, req.OTPCode)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, account, "Deposit completed successfully")
 }
 
 // GetTransactions handles GET /api/account/transactions
