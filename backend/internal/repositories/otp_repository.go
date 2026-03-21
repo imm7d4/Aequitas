@@ -63,11 +63,35 @@ func (r *OTPRepository) FindLatest(userID string, purpose models.OTPPurpose) (*m
 	return &otp, err
 }
 
+func (r *OTPRepository) FindLatestByEmail(email string, purpose models.OTPPurpose) (*models.OTPRecord, error) {
+	var otp models.OTPRecord
+	filter := bson.M{
+		"email":   email,
+		"purpose": purpose,
+		"expires_at": bson.M{"$gt": time.Now()},
+	}
+	err := r.collection.FindOne(
+		context.Background(),
+		filter,
+		options.FindOne().SetSort(bson.D{{Key: "created_at", Value: -1}}),
+	).Decode(&otp)
+
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	return &otp, err
+}
+
 func (r *OTPRepository) DeleteAllForUser(userID string, purpose models.OTPPurpose) error {
 	objID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return err
 	}
 	_, err = r.collection.DeleteMany(context.Background(), bson.M{"user_id": objID, "purpose": purpose})
+	return err
+}
+
+func (r *OTPRepository) DeleteAllByEmail(email string, purpose models.OTPPurpose) error {
+	_, err := r.collection.DeleteMany(context.Background(), bson.M{"email": email, "purpose": purpose})
 	return err
 }

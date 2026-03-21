@@ -9,13 +9,17 @@ import (
 type OTPPurpose string
 
 const (
-	OTPPurposeFundTransfer OTPPurpose = "FUND_TRANSFER"
-	OTPPurposeLogin        OTPPurpose = "LOGIN"
+	OTPPurposeFundTransfer   OTPPurpose = "FUND_TRANSFER"
+	OTPPurposeLogin          OTPPurpose = "LOGIN"
+	OTPPurposeRegistration   OTPPurpose = "REGISTRATION"
+	OTPPurposeForgotPassword OTPPurpose = "FORGOT_PASSWORD"
+	OTPPurposeEmailUpdate    OTPPurpose = "EMAIL_UPDATE"
 )
 
 type OTPRecord struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	UserID    primitive.ObjectID `bson:"user_id" json:"userId"`
+	UserID    primitive.ObjectID `bson:"user_id,omitempty" json:"userId,omitempty"`
+	Email     string             `bson:"email,omitempty" json:"email,omitempty"`
 	Purpose   OTPPurpose         `bson:"purpose" json:"purpose"`
 	CodeHash  string             `bson:"code_hash" json:"-"` // BCrypt hash of the 6-digit code
 	ExpiresAt time.Time          `bson:"expires_at" json:"expiresAt"`

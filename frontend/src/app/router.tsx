@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { LoginForm, RegisterForm } from '@/features/auth';
+import { LoginForm, RegisterForm, ForgotPasswordForm } from '@/features/auth';
 import { ProtectedRoute } from '@/shared/components/ProtectedRoute';
 import { PublicRoute } from '@/shared/components/PublicRoute';
 import { Layout } from '@/shared/components/Layout';
@@ -42,6 +42,7 @@ export function AppRoutes(): JSX.Element {
                     />
                     <Route path="/login" element={<LoginForm />} />
                     <Route path="/register" element={<RegisterForm />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordForm />} />
 
                     {/* Protected Routes inside Layout */}
                     <Route

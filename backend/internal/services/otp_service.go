@@ -75,6 +75,50 @@ func (s *OTPService) VerifyOTP(userID primitive.ObjectID, purpose models.OTPPurp
 	return true, nil
 }
 
+// GenerateEmailOTP creates a 6-digit code for an email (unregistered users)
+func (s *OTPService) GenerateEmailOTP(email string, purpose models.OTPPurpose) (string, error) {
+	code, err := s.generateRandomCode(6)
+	if err != nil {
+		return "", err
+	}
+
+	hash, err := utils.HashPassword(code)
+	if err != nil {
+		return "", err
+	}
+
+	_ = s.repo.DeleteAllByEmail(email, purpose)
+
+	record := &models.OTPRecord{
+		ID:        primitive.NewObjectID(),
+		Email:     email,
+		Purpose:   purpose,
+		CodeHash:  hash,
+		ExpiresAt: time.Now().Add(5 * time.Minute),
+	}
+
+	err = s.repo.Create(record)
+	return code, err
+}
+
+// VerifyEmailOTP checks code for an email
+func (s *OTPService) VerifyEmailOTP(email string, purpose models.OTPPurpose, code string) (bool, error) {
+	record, err := s.repo.FindLatestByEmail(email, purpose)
+	if err != nil {
+		return false, err
+	}
+	if record == nil {
+		return false, errors.New("OTP expired or not found")
+	}
+
+	if !utils.CheckPassword(code, record.CodeHash) {
+		return false, nil
+	}
+
+	_ = s.repo.DeleteAllByEmail(email, purpose)
+	return true, nil
+}
+
 func (s *OTPService) generateRandomCode(length int) (string, error) {
 	const digits = "0123456789"
 	result := make([]byte, length)

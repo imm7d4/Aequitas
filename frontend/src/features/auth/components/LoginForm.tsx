@@ -5,6 +5,7 @@ import { healthService } from '@/services/healthService';
 import { BrandLogo } from '../../../shared/components/header/BrandLogo';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import styles from '../styles/Auth.module.css';
+import { useLocation } from 'react-router-dom';
 
 export function LoginForm(): JSX.Element {
     const [email, setEmail] = useState<string>('');
@@ -12,7 +13,10 @@ export function LoginForm(): JSX.Element {
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [localError, setLocalError] = useState<string>('');
     const navigate = useNavigate();
+    const location = useLocation();
     const { login, isLoading, error } = useAuth();
+
+    const successMessage = location.state?.message;
 
     useEffect(() => {
         healthService.checkHealth();
@@ -91,6 +95,13 @@ export function LoginForm(): JSX.Element {
                             </div>
                         )}
 
+                        {successMessage && !displayError && (
+                            <div className={`${styles.alert} ${styles.alertSuccess}`} style={{ marginBottom: '20px', padding: '12px', background: 'rgba(76, 175, 80, 0.1)', color: '#4caf50', borderRadius: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span>✓</span>
+                                <span>{successMessage}</span>
+                            </div>
+                        )}
+
                         <form onSubmit={handleSubmit} className={styles.authForm}>
                             <div className={styles.formGroup}>
                                 <input
@@ -108,40 +119,48 @@ export function LoginForm(): JSX.Element {
                             </div>
 
                             <div className={styles.formGroup}>
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    id="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className={styles.formInput}
-                                    placeholder=" "
-                                    required
-                                    style={{ paddingRight: '40px' }}
-                                />
-                                <label htmlFor="password" className={styles.formLabel}>
-                                    Password
-                                </label>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    style={{
-                                        position: 'absolute',
-                                        right: '12px',
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        background: 'none',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        color: 'rgba(255, 255, 255, 0.7)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        padding: '4px',
-                                        zIndex: 10
-                                    }}
-                                >
-                                    {showPassword ? <VisibilityOff sx={{ fontSize: 20 }} /> : <Visibility sx={{ fontSize: 20 }} />}
-                                </button>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        id="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className={styles.formInput}
+                                        placeholder=" "
+                                        required
+                                        style={{ paddingRight: '40px' }}
+                                    />
+                                    <label htmlFor="password" className={styles.formLabel}>
+                                        Password
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        style={{
+                                            position: 'absolute',
+                                            right: '12px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            color: 'rgba(255, 255, 255, 0.7)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            padding: '4px',
+                                            zIndex: 10
+                                        }}
+                                    >
+                                        {showPassword ? <VisibilityOff sx={{ fontSize: 20 }} /> : <Visibility sx={{ fontSize: 20 }} />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', marginTop: '-8px' }}>
+                                <Link to="/forgot-password" className={styles.formLink} style={{ fontSize: '13px' }}>
+                                    Forgot Password?
+                                </Link>
                             </div>
 
                             <button

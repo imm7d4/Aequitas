@@ -8,28 +8,85 @@ import (
 	"aequitas/internal/models"
 	"aequitas/internal/repositories"
 	"aequitas/internal/utils"
+	"fmt"
+	"strings"
 )
 
 type AuthService struct {
 	userRepo              *repositories.UserRepository
 	tradingAccountService *TradingAccountService
+	otpService            *OTPService
+	commService           CommunicationProvider
 	config                *config.Config
 }
 
 func NewAuthService(
 	userRepo *repositories.UserRepository,
 	tradingAccountService *TradingAccountService,
+	otpService *OTPService,
+	commService CommunicationProvider,
 	config *config.Config,
 ) *AuthService {
 	return &AuthService{
 		userRepo:              userRepo,
 		tradingAccountService: tradingAccountService,
+		otpService:            otpService,
+		commService:           commService,
 		config:                config,
 	}
 }
 
-// Register handles user registration (US-0.1.1)
-func (s *AuthService) Register(email, password string) (*models.User, error) {
+// InitiateRegistration starts the registration flow by sending an OTP
+func (s *AuthService) InitiateRegistration(email, password string) error {
+	if !utils.IsValidEmail(email) {
+		return errors.New("invalid email format")
+	}
+
+	if len(password) < 8 {
+		return errors.New("password must be at least 8 characters")
+	}
+
+	existing, _ := s.userRepo.FindByEmail(email)
+	if existing != nil {
+		return errors.New("email already registered")
+	}
+
+	otp, err := s.otpService.GenerateEmailOTP(email, models.OTPPurposeRegistration)
+	if err != nil {
+		return err
+	}
+
+	subject := "Confirm Your Aequitas Registration"
+	htmlContent := fmt.Sprintf(`
+		<div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 10px;">
+			<h2 style="color: #1976d2; margin-top: 0;">Welcome to Aequitas!</h2>
+			<p>Almost there! To complete your registration, please verify your email address using the code below:</p>
+			<div style="font-size: 32px; font-weight: bold; background: #f8f9fa; padding: 20px; text-align: center; border-radius: 8px; letter-spacing: 5px; color: #1976d2; border: 1px dashed #1976d2; margin: 20px 0;">
+				%s
+			</div>
+			<p>This code is valid for <strong>5 minutes</strong>. If you did not request this, please ignore this email.</p>
+			<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+			<p style="margin-bottom: 0;">Best regards,<br/><strong>The Aequitas Team</strong></p>
+		</div>
+	`, otp)
+
+	return s.commService.SendEmail(email, subject, htmlContent)
+}
+
+// CompleteRegistration verifies the OTP and creates the account
+func (s *AuthService) CompleteRegistration(email, password, otp string) (*models.User, error) {
+	valid, err := s.otpService.VerifyEmailOTP(email, models.OTPPurposeRegistration, otp)
+	if err != nil {
+		return nil, err
+	}
+	if !valid {
+		return nil, errors.New("invalid or expired OTP")
+	}
+
+	return s.register(email, password)
+}
+
+func (s *AuthService) register(email, password string) (*models.User, error) {
 	// Business validation
 	if !utils.IsValidEmail(email) {
 		return nil, errors.New("invalid email format")
@@ -112,4 +169,74 @@ func (s *AuthService) Login(email, password, ipAddress string) (string, *models.
 	}
 
 	return token, user, nil
+}
+
+// InitiateForgotPassword sends a reset link/OTP to the registered email
+func (s *AuthService) InitiateForgotPassword(email string) error {
+	user, err := s.userRepo.FindByEmail(email)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		// Security: don't reveal if user exists
+		return nil 
+	}
+
+	otp, err := s.otpService.GenerateOTP(user.ID, models.OTPPurposeForgotPassword)
+	if err != nil {
+		return err
+	}
+
+	firstName := strings.Split(user.FullName, " ")[0]
+	if firstName == "" {
+		firstName = "User"
+	}
+
+	subject := "Reset Your Aequitas Password"
+	htmlContent := fmt.Sprintf(`
+		<div style="font-family: Arial, sans-serif; padding: 20px; color: #333; max-width: 600px; margin: auto; border: 1px solid #eee; border-radius: 10px;">
+			<h2 style="color: #d32f2f; margin-top: 0;">Password Reset Request</h2>
+			<p>Hi <strong>%s</strong>,</p>
+			<p>We received a request to reset your password. Use the following code to proceed:</p>
+			<div style="font-size: 32px; font-weight: bold; background: #fff5f5; padding: 20px; text-align: center; border-radius: 8px; letter-spacing: 5px; color: #d32f2f; border: 1px dashed #d32f2f; margin: 20px 0;">
+				%s
+			</div>
+			<p>This code is valid for <strong>5 minutes</strong>. If you didn't request this, you can safely ignore this email.</p>
+			<hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+			<p style="margin-bottom: 0;">Best regards,<br/><strong>The Aequitas Team</strong></p>
+		</div>
+	`, firstName, otp)
+
+	return s.commService.SendEmail(email, subject, htmlContent)
+}
+
+// ResetPassword verifies the OTP and updates the password
+func (s *AuthService) ResetPassword(email, otp, newPassword string) error {
+	if len(newPassword) < 8 {
+		return errors.New("password must be at least 8 characters")
+	}
+
+	user, err := s.userRepo.FindByEmail(email)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return errors.New("user not found")
+	}
+
+	valid, err := s.otpService.VerifyOTP(user.ID, models.OTPPurposeForgotPassword, otp)
+	if err != nil {
+		return err
+	}
+	if !valid {
+		return errors.New("invalid or expired OTP")
+	}
+
+	hashedPassword, err := utils.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	user.Password = hashedPassword
+	return s.userRepo.Update(user)
 }

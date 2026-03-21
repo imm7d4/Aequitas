@@ -78,12 +78,12 @@ func main() {
 
 	// Initialize services (Basic)
 	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo, transactionRepo, userRepo, otpService, commProvider)
-	authService := services.NewAuthService(userRepo, tradingAccountService, cfg)
+	authService := services.NewAuthService(userRepo, tradingAccountService, otpService, commProvider, cfg)
 	instrumentService := services.NewInstrumentService(instrumentRepo)
 	marketService := services.NewMarketService(marketRepo, marketDataRepo)
 	watchlistService := services.NewWatchlistService(watchlistRepo, instrumentRepo)
 	telemetryService := services.NewTelemetryService(telemetryRepo)
-	userService := services.NewUserService(userRepo)
+	userService := services.NewUserService(userRepo, otpService, commProvider)
 	analyticsService := services.NewAnalyticsService(tradeResultRepo, activeUnitRepo, candleRepo)
 	portfolioService := services.NewPortfolioService(portfolioRepo, marketService, tradingAccountService, analyticsService)
 	candleService := services.NewCandleService(candleRepo)
@@ -178,7 +178,10 @@ func main() {
 	}).Methods("GET", "OPTIONS")
 
 	api.HandleFunc("/auth/register", authController.Register).Methods("POST", "OPTIONS")
+	api.HandleFunc("/auth/register/complete", authController.CompleteRegistration).Methods("POST", "OPTIONS")
 	api.HandleFunc("/auth/login", authController.Login).Methods("POST", "OPTIONS")
+	api.HandleFunc("/auth/forgot-password", authController.ForgotPassword).Methods("POST", "OPTIONS")
+	api.HandleFunc("/auth/reset-password", authController.ResetPassword).Methods("POST", "OPTIONS")
 
 	// Protected routes (require authentication)
 	protected := api.PathPrefix("").Subrouter()
@@ -211,6 +214,8 @@ func main() {
 	protected.HandleFunc("/user/profile", userController.UpdateProfile).Methods("PUT", "OPTIONS")
 	protected.HandleFunc("/user/password", userController.UpdatePassword).Methods("PUT", "OPTIONS")
 	protected.HandleFunc("/user/preferences", userController.UpdatePreferences).Methods("PUT", "OPTIONS")
+	protected.HandleFunc("/user/email/initiate", userController.InitiateEmailUpdate).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/user/email/complete", userController.CompleteEmailUpdate).Methods("POST", "OPTIONS")
 	protected.HandleFunc("/user/onboarding-status", userController.UpdateOnboardingStatus).Methods("PATCH", "OPTIONS")
 
 	// Account routes

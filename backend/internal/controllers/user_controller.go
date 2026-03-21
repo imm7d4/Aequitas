@@ -26,6 +26,16 @@ type UpdateProfileRequest struct {
 	Phone       string `json:"phone"`
 }
 
+type InitiateEmailUpdateRequest struct {
+	CurrentPassword string `json:"currentPassword"`
+	NewEmail        string `json:"newEmail"`
+}
+
+type CompleteEmailUpdateRequest struct {
+	NewEmail string `json:"newEmail"`
+	OTP      string `json:"otp"`
+}
+
 // GetProfile handles GET /api/user/profile
 func (c *UserController) GetProfile(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r)
@@ -165,4 +175,50 @@ func (c *UserController) UpdateOnboardingStatus(w http.ResponseWriter, r *http.R
 	}
 
 	utils.RespondJSON(w, http.StatusOK, nil, "Onboarding status updated successfully")
+}
+
+// InitiateEmailUpdate handles POST /api/user/email/initiate
+func (c *UserController) InitiateEmailUpdate(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var req InitiateEmailUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	err := c.userService.InitiateEmailUpdate(userID, req.CurrentPassword, req.NewEmail)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, nil, "Verification OTP sent to your new email")
+}
+
+// CompleteEmailUpdate handles POST /api/user/email/complete
+func (c *UserController) CompleteEmailUpdate(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	var req CompleteEmailUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	err := c.userService.CompleteEmailUpdate(userID, req.NewEmail, req.OTP)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, nil, "Email updated successfully")
 }

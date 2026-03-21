@@ -28,4 +28,13 @@ export const profileService = {
         const response = await api.put<APIResponse<User>>('/user/preferences', preferences);
         return response.data.data;
     },
+
+    initiateEmailUpdate: async (currentPassword: string, newEmail: string): Promise<void> => {
+        await api.post('/user/email/initiate', { currentPassword, newEmail });
+    },
+
+    completeEmailUpdate: async (newEmail: string, otp: string): Promise<User> => {
+        const response = await api.post<APIResponse<User>>('/user/email/complete', { newEmail, otp });
+        return response.data.data;
+    },
 };

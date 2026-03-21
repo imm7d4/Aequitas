@@ -20,7 +20,10 @@ interface AuthState {
     setError: (error: string | null) => void;
     initialize: () => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
-    register: (email: string, password: string) => Promise<void>;
+    initiateRegistration: (email: string, password: string) => Promise<void>;
+    completeRegistration: (email: string, password: string, otp: string) => Promise<void>;
+    forgotPassword: (email: string) => Promise<void>;
+    resetPassword: (data: any) => Promise<void>;
     logout: () => void;
 }
 
@@ -90,12 +93,50 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
     },
 
-    register: async (email, password) => {
+    initiateRegistration: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
-            await authService.register(email, password);
+            await authService.initiateRegistration(email, password);
         } catch (err: any) {
-            set({ error: err.response?.data?.message || 'Registration failed' });
+            set({ error: err.response?.data?.message || 'Registration request failed' });
+            throw err;
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    completeRegistration: async (email, password, otp) => {
+        set({ isLoading: true, error: null });
+        try {
+            const user = await authService.completeRegistration(email, password, otp);
+            // We don't automatically log in here to ensure user knows their password works
+            // But we could if desired. The requirement implies login after success.
+        } catch (err: any) {
+            set({ error: err.response?.data?.message || 'Verification failed' });
+            throw err;
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    forgotPassword: async (email) => {
+        set({ isLoading: true, error: null });
+        try {
+            await authService.forgotPassword(email);
+        } catch (err: any) {
+            set({ error: err.response?.data?.message || 'Failed to send reset email' });
+            throw err;
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    resetPassword: async (data) => {
+        set({ isLoading: true, error: null });
+        try {
+            await authService.resetPassword(data);
+        } catch (err: any) {
+            set({ error: err.response?.data?.message || 'Password reset failed' });
             throw err;
         } finally {
             set({ isLoading: false });

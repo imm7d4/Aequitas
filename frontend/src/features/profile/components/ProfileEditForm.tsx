@@ -20,11 +20,17 @@ interface ProfileEditFormProps {
 export function ProfileEditForm({ user, onSuccess, onCancel }: ProfileEditFormProps) {
     const [fullName, setFullName] = useState(user.fullName || '');
     const [displayName, setDisplayName] = useState(user.displayName || '');
+    const [email, setEmail] = useState(user.email || '');
+    const [newEmail, setNewEmail] = useState('');
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [emailOtp, setEmailOtp] = useState('');
+    const [emailUpdateStep, setEmailUpdateStep] = useState<'view' | 'confirm' | 'otp'>('view');
     const [bio, setBio] = useState(user.bio || '');
     const [avatar, setAvatar] = useState(user.avatar || '');
     const [phone, setPhone] = useState(user.phone || '');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -47,6 +53,7 @@ export function ProfileEditForm({ user, onSuccess, onCancel }: ProfileEditFormPr
         e.preventDefault();
         setIsLoading(true);
         setError(null);
+        setSuccess(null);
 
         try {
             const updatedUser = await profileService.updateProfile({
@@ -57,8 +64,50 @@ export function ProfileEditForm({ user, onSuccess, onCancel }: ProfileEditFormPr
                 phone,
             });
             onSuccess(updatedUser);
+            setSuccess('Profile updated successfully');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to update profile');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleInitiateEmailUpdate = async () => {
+        if (!newEmail || !currentPassword) {
+            setError('Both new email and current password are required');
+            return;
+        }
+        setIsLoading(true);
+        setError(null);
+        try {
+            await profileService.initiateEmailUpdate(currentPassword, newEmail);
+            setEmailUpdateStep('otp');
+            setSuccess('A verification code has been sent to your new email.');
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to initiate email update');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCompleteEmailUpdate = async () => {
+        if (!emailOtp) {
+            setError('Verification code is required');
+            return;
+        }
+        setIsLoading(true);
+        setError(null);
+        try {
+            const updatedUser = await profileService.completeEmailUpdate(newEmail, emailOtp);
+            setEmail(updatedUser.email);
+            setEmailUpdateStep('view');
+            setNewEmail('');
+            setCurrentPassword('');
+            setEmailOtp('');
+            setSuccess('Email updated successfully');
+            onSuccess(updatedUser);
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Verification failed');
         } finally {
             setIsLoading(false);
         }
@@ -137,7 +186,78 @@ export function ProfileEditForm({ user, onSuccess, onCancel }: ProfileEditFormPr
                     placeholder="Describe your trading philosophy..."
                 />
 
+                <Box sx={{ p: 2, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 2, bgcolor: 'rgba(255,255,255,0.02)' }}>
+                    <Typography variant="subtitle2" sx={{ mb: 2, color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+                        🛡 Secure Email Management
+                    </Typography>
+
+                    {emailUpdateStep === 'view' ? (
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Box>
+                                <Typography variant="caption" color="text.secondary">Current Primary Email</Typography>
+                                <Typography variant="body1">{email}</Typography>
+                            </Box>
+                            <Button variant="outlined" size="small" onClick={() => setEmailUpdateStep('confirm')}>
+                                Change Email
+                            </Button>
+                        </Box>
+                    ) : emailUpdateStep === 'confirm' ? (
+                        <Stack spacing={2}>
+                            <TextField
+                                fullWidth
+                                label="New Email Address"
+                                value={newEmail}
+                                onChange={(e) => setNewEmail(e.target.value)}
+                                size="small"
+                                required
+                            />
+                            <TextField
+                                fullWidth
+                                type="password"
+                                label="Confirm with Current Password"
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                size="small"
+                                required
+                            />
+                            <Stack direction="row" spacing={1}>
+                                <Button variant="contained" size="small" onClick={handleInitiateEmailUpdate} disabled={isLoading}>
+                                    Send Verification
+                                </Button>
+                                <Button variant="text" size="small" onClick={() => setEmailUpdateStep('view')} disabled={isLoading}>
+                                    Cancel
+                                </Button>
+                            </Stack>
+                        </Stack>
+                    ) : (
+                        <Stack spacing={2}>
+                            <Typography variant="body2" color="text.secondary">
+                                We've sent a 6-digit code to <strong>{newEmail}</strong>. Please enter it below to confirm the change.
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                label="Verification Code"
+                                value={emailOtp}
+                                onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                size="small"
+                                placeholder="123456"
+                                required
+                                autoFocus
+                            />
+                            <Stack direction="row" spacing={1}>
+                                <Button variant="contained" size="small" onClick={handleCompleteEmailUpdate} disabled={isLoading}>
+                                    Verify & Update
+                                </Button>
+                                <Button variant="text" size="small" onClick={() => setEmailUpdateStep('confirm')} disabled={isLoading}>
+                                    Back
+                                </Button>
+                            </Stack>
+                        </Stack>
+                    )}
+                </Box>
+
                 {error && <Typography color="error" variant="body2">{error}</Typography>}
+                {success && <Typography color="success.main" variant="body2">{success}</Typography>}
 
                 <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
                     <Button
