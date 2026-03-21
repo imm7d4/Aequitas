@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, IconButton, Chip, Paper } from '@mui/material';
+import { Box, Typography, IconButton, Chip, Paper, Tooltip, useTheme } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
@@ -8,6 +8,7 @@ import { Instrument } from '../types/instrument.types';
 import { MarketData } from '@/features/market/types/market.types';
 import { InstrumentIntelligence } from '../hooks/useInstrumentIntelligence';
 import { useNavigate } from 'react-router-dom';
+import { formatCurrency } from '@/shared/utils/formatters';
 
 interface InstrumentHeaderProps {
     instrument: Instrument;
@@ -31,6 +32,28 @@ export const InstrumentHeader: React.FC<InstrumentHeaderProps> = ({
     onSetAlert
 }) => {
     const navigate = useNavigate();
+    const theme = useTheme();
+
+    const tooltipSlotProps = {
+        tooltip: {
+            sx: {
+                bgcolor: 'background.paper',
+                color: 'text.primary',
+                boxShadow: theme.shadows[16],
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+                p: 1.5,
+                '& .MuiTooltip-arrow': {
+                    color: 'background.paper',
+                    '&::before': {
+                        border: '1px solid',
+                        borderColor: 'divider',
+                    },
+                },
+            }
+        }
+    };
 
     return (
         <Box sx={{ 
@@ -148,36 +171,45 @@ export const InstrumentHeader: React.FC<InstrumentHeaderProps> = ({
                         borderColor: 'divider', 
                         px: { lg: 1, xl: 2 } 
                     }}>
-                        <Box sx={{ textAlign: 'center' }}>
-                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ display: 'block', fontSize: '0.5rem' }}>RVOL</Typography>
-                            <Typography variant="caption" fontWeight={800} sx={{ fontSize: '0.68rem' }}>
-                                {intelligence.relativeVolume ? `${intelligence.relativeVolume.toFixed(2)}x` : '--'}
-                            </Typography>
-                        </Box>
-                        <Box sx={{ textAlign: 'center' }}>
-                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ display: 'block', fontSize: '0.5rem' }}>RSI (14)</Typography>
-                            <Typography variant="caption" fontWeight={800} sx={{ fontSize: '0.68rem' }} color={intelligence.rsi && (intelligence.rsi > 70 || intelligence.rsi < 30) ? 'warning.main' : 'text.primary'}>
-                                {intelligence.rsi ? intelligence.rsi.toFixed(1) : '--'}
-                            </Typography>
-                        </Box>
+                        <Tooltip title="Relative Volume - Current volume relative to the average for this time of day. Values > 1 indicate high activity." arrow slotProps={tooltipSlotProps}>
+                            <Box sx={{ textAlign: 'center', cursor: 'help' }}>
+                                <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ display: 'block', fontSize: '0.5rem' }}>RVOL</Typography>
+                                <Typography variant="caption" fontWeight={800} sx={{ fontSize: '0.68rem' }}>
+                                    {intelligence.relativeVolume ? `${intelligence.relativeVolume.toFixed(2)}x` : '--'}
+                                </Typography>
+                            </Box>
+                        </Tooltip>
+                        <Tooltip title="Relative Strength Index - Measures price momentum. >70 is overbought, <30 is oversold." arrow slotProps={tooltipSlotProps}>
+                            <Box sx={{ textAlign: 'center', cursor: 'help' }}>
+                                <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ display: 'block', fontSize: '0.5rem' }}>RSI (14)</Typography>
+                                <Typography variant="caption" fontWeight={800} sx={{ fontSize: '0.68rem' }} color={intelligence.rsi && (intelligence.rsi > 70 || intelligence.rsi < 30) ? 'warning.main' : 'text.primary'}>
+                                    {intelligence.rsi ? intelligence.rsi.toFixed(1) : '--'}
+                                </Typography>
+                            </Box>
+                        </Tooltip>
                     </Box>
  
                     {/* Advanced Sentiment Badge */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: { lg: 0.8, xl: 1.2 } }}>
-                        <Box sx={{ display: { lg: 'none', xl: 'block' } }}>
-                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ display: 'block', fontSize: '0.55rem', textAlign: 'right' }}>TREND</Typography>
-                            <Typography variant="caption" fontWeight={800} sx={{ fontSize: '0.68rem' }}>{intelligence.trend}</Typography>
-                        </Box>
-                        <Paper elevation={0} sx={{ 
-                            px: 1.2, 
-                            py: 0.3, 
-                            borderRadius: '20px', 
-                            background: intelligence.score > 70 ? 'linear-gradient(45deg, #10b981, #059669)' : intelligence.score < 30 ? 'linear-gradient(45deg, #ef4444, #dc2626)' : 'linear-gradient(45deg, #6b7280, #4b5563)',
-                            color: 'white',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                        }}>
-                            <Typography variant="caption" fontWeight={900} sx={{ letterSpacing: '0.02em', fontSize: '0.6rem' }}>{intelligence.sentiment}</Typography>
-                        </Paper>
+                        <Tooltip title="The calculated price direction based on short-term and long-term moving averages." arrow slotProps={tooltipSlotProps}>
+                            <Box sx={{ display: { lg: 'none', xl: 'block' }, cursor: 'help' }}>
+                                <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ display: 'block', fontSize: '0.55rem', textAlign: 'right' }}>TREND</Typography>
+                                <Typography variant="caption" fontWeight={800} sx={{ fontSize: '0.68rem' }}>{intelligence.trend}</Typography>
+                            </Box>
+                        </Tooltip>
+                        <Tooltip title="Aggregate market sentiment based on technical indicators and volume profile." arrow slotProps={tooltipSlotProps}>
+                            <Paper elevation={0} sx={{ 
+                                px: 1.2, 
+                                py: 0.3, 
+                                borderRadius: '20px', 
+                                background: intelligence.score > 70 ? 'linear-gradient(45deg, #10b981, #059669)' : intelligence.score < 30 ? 'linear-gradient(45deg, #ef4444, #dc2626)' : 'linear-gradient(45deg, #6b7280, #4b5563)',
+                                color: 'white',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                cursor: 'help'
+                            }}>
+                                <Typography variant="caption" fontWeight={900} sx={{ letterSpacing: '0.02em', fontSize: '0.6rem' }}>{intelligence.sentiment}</Typography>
+                            </Paper>
+                        </Tooltip>
                     </Box>
                 </Box>
 
@@ -195,7 +227,7 @@ export const InstrumentHeader: React.FC<InstrumentHeaderProps> = ({
                                 fontSize: { xs: '1.25rem', md: '1.75rem' }
                             }}
                         >
-                            ₹{ltp.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            ₹{formatCurrency(ltp, false)}
                         </Typography>
                         {marketData && (
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.5, mt: 0.5 }}>
@@ -208,41 +240,43 @@ export const InstrumentHeader: React.FC<InstrumentHeaderProps> = ({
                                     {marketData.changePct >= 0 ? '+' : ''}{marketData.changePct.toFixed(2)}%
                                 </Typography>
                                 <Typography variant="caption" color="text.disabled" fontWeight={700} sx={{ fontSize: '0.65rem' }}>
-                                    {marketData.change >= 0 ? '+' : '-'}₹{Math.abs(marketData.change).toFixed(2)}
+                                    {marketData.change >= 0 ? '+' : '-'}{formatCurrency(Math.abs(marketData.change), false)}
                                 </Typography>
                             </Box>
                         )}
                     </Box>
                     
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                        <IconButton 
-                            onClick={onSetAlert}
-                            sx={{ 
-                                border: '1px solid', 
-                                borderColor: 'divider', 
-                                borderRadius: '8px',
-                                '&:hover': { bgcolor: 'action.hover' }
-                            }}
-                            title="Set Price Alert"
-                        >
-                            <AddAlarmIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                            onClick={onWatchlistToggle}
-                            sx={{ 
-                                border: '1px solid', 
-                                borderColor: isStarred ? 'primary.main' : 'divider', 
-                                borderRadius: '8px',
-                                bgcolor: isStarred ? 'rgba(33, 150, 243, 0.08)' : 'transparent',
-                                color: isStarred ? 'primary.main' : 'inherit',
-                                '&:hover': { 
-                                    bgcolor: isStarred ? 'rgba(33, 150, 243, 0.12)' : 'action.hover'
-                                }
-                            }}
-                            title={isStarred ? "Remove from Watchlist" : "Add to Watchlist"}
-                        >
-                            {isStarred ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
-                        </IconButton>
+                        <Tooltip title="Set Price Alert" arrow slotProps={tooltipSlotProps}>
+                            <IconButton 
+                                onClick={onSetAlert}
+                                sx={{ 
+                                    border: '1px solid', 
+                                    borderColor: 'divider', 
+                                    borderRadius: '8px',
+                                    '&:hover': { bgcolor: 'action.hover' }
+                                }}
+                            >
+                                <AddAlarmIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title={isStarred ? "Remove from Watchlist" : "Add to Watchlist"} arrow slotProps={tooltipSlotProps}>
+                            <IconButton
+                                onClick={onWatchlistToggle}
+                                sx={{ 
+                                    border: '1px solid', 
+                                    borderColor: isStarred ? 'primary.main' : 'divider', 
+                                    borderRadius: '8px',
+                                    bgcolor: isStarred ? 'rgba(33, 150, 243, 0.08)' : 'transparent',
+                                    color: isStarred ? 'primary.main' : 'inherit',
+                                    '&:hover': { 
+                                        bgcolor: isStarred ? 'rgba(33, 150, 243, 0.12)' : 'action.hover'
+                                    }
+                                }}
+                            >
+                                {isStarred ? <StarIcon fontSize="small" /> : <StarBorderIcon fontSize="small" />}
+                            </IconButton>
+                        </Tooltip>
                     </Box>
                 </Box>
             </Box>

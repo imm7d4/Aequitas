@@ -231,6 +231,27 @@ export const FinanceSettings: React.FC = () => {
                                 </Box>
                             }
                             arrow
+                            slotProps={{
+                                tooltip: {
+                                    sx: {
+                                        bgcolor: 'background.paper',
+                                        color: 'text.primary',
+                                        boxShadow: theme.shadows[16],
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                        borderRadius: 2,
+                                        p: 1.5,
+                                        maxWidth: 350,
+                                        '& .MuiTooltip-arrow': {
+                                            color: 'background.paper',
+                                            '&::before': {
+                                                border: '1px solid',
+                                                borderColor: 'divider',
+                                            },
+                                        },
+                                    },
+                                },
+                            }}
                         >
                             <Box sx={{
                                 display: 'inline-flex',

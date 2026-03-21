@@ -8,11 +8,14 @@ import {
     IconButton,
     Divider,
     useTheme,
+    Tooltip,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useIndicatorStore } from '../store/indicatorStore';
+import { useNavigate } from 'react-router-dom';
 
 interface IndicatorPanelProps {
     instrumentId: string;
@@ -20,6 +23,7 @@ interface IndicatorPanelProps {
 
 export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({ instrumentId }) => {
     const theme = useTheme();
+    const navigate = useNavigate();
     const [expanded, setExpanded] = React.useState(false);
     const { getIndicators, toggleIndicator } = useIndicatorStore();
     const indicators = getIndicators(instrumentId);
@@ -140,9 +144,52 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({ instrumentId }) 
                         </Typography>
                     </Box>
                 </Box>
-                <IconButton size="small" sx={{ width: 24, height: 24, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
-                    {expanded ? <ExpandLessIcon sx={{ fontSize: 14 }} /> : <ExpandMoreIcon sx={{ fontSize: 14 }} />}
-                </IconButton>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Tooltip 
+                        title="Learn more about Technical Indicators" 
+                        arrow
+                        slotProps={{
+                            tooltip: {
+                                sx: {
+                                    bgcolor: 'background.paper',
+                                    color: 'text.primary',
+                                    boxShadow: theme.shadows[16],
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    borderRadius: 2,
+                                    p: 1.5,
+                                    '& .MuiTooltip-arrow': {
+                                        color: 'background.paper',
+                                        '&::before': {
+                                            border: '1px solid',
+                                            borderColor: 'divider',
+                                        },
+                                    },
+                                }
+                            }
+                        }}
+                    >
+                        <IconButton 
+                            size="small" 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                navigate('/education/indicators');
+                            }}
+                            sx={{ 
+                                p: 0.2, 
+                                bgcolor: 'background.paper',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                '&:hover': { bgcolor: 'primary.main', color: 'white', borderColor: 'primary.main' }
+                            }}
+                        >
+                            <InfoOutlinedIcon sx={{ fontSize: 12 }} />
+                        </IconButton>
+                    </Tooltip>
+                    <IconButton size="small" sx={{ width: 24, height: 24, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
+                        {expanded ? <ExpandLessIcon sx={{ fontSize: 14 }} /> : <ExpandMoreIcon sx={{ fontSize: 14 }} />}
+                    </IconButton>
+                </Box>
             </Box>
 
             <Collapse in={expanded}>
