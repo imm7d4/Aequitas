@@ -341,54 +341,80 @@ export const TradePanel: React.FC<TradePanelProps> = ({ instrument, ltp, initial
             }}
         >
             <Stack spacing={2}> {/* Reduced from 3 */}
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography variant="subtitle1" fontWeight={800} sx={{ letterSpacing: '-0.01em' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+                    <Typography variant="subtitle1" fontWeight={800} sx={{ letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
                         Trade {instrument.symbol}
                     </Typography>
-                    <Chip
-                        icon={<AdvancedIcon sx={{ fontSize: '14px !important' }} />}
-                        label={advancedMode ? 'Advanced' : 'Basic'}
-                        onClick={() => {
-                            setAdvancedMode(!advancedMode);
-                            if (advancedMode) {
-                                setOrderType('LIMIT');
-                            }
-                        }}
-                        size="small"
-                        sx={{ 
-                            cursor: 'pointer', 
-                            fontWeight: 700,
-                            borderRadius: '8px',
-                            bgcolor: advancedMode ? 'primary.main' : 'rgba(0,0,0,0.05)',
-                            color: advancedMode ? 'white' : 'text.primary',
-                            '&:hover': { bgcolor: advancedMode ? 'primary.dark' : 'rgba(0,0,0,0.1)' }
-                        }}
-                    />
-                </Box>
 
-                {/* Short Selling Toggle */}
-                {instrument.isShortable && (
-                    <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        p: 1.2,
-                        borderRadius: 2,
-                        bgcolor: shortMode ? alpha(theme.palette.warning.main, 0.05) : 'transparent',
-                        border: '1px solid',
-                        borderColor: shortMode ? alpha(theme.palette.warning.main, 0.2) : 'transparent'
-                    }}>
-                        <Typography variant="caption" fontWeight={700} color={shortMode ? 'warning.main' : 'text.secondary'}>
-                            Short Sell Mode
-                        </Typography>
-                        <Switch
-                            checked={shortMode}
-                            onChange={(e) => handleShortModeChange(e.target.checked)}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
+                        {instrument.isShortable && (
+                            <Stack direction="row" alignItems="center" spacing={0.5}>
+                                <Typography 
+                                    variant="caption" 
+                                    fontWeight={700} 
+                                    color={shortMode ? 'warning.main' : 'text.secondary'}
+                                    sx={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}
+                                >
+                                    {advancedMode ? 'Short' : 'Short Mode'}
+                                </Typography>
+                                <Switch
+                                    checked={shortMode}
+                                    onChange={(e) => handleShortModeChange(e.target.checked)}
+                                    size="small"
+                                    color="warning"
+                                    sx={{ 
+                                        padding: 0,
+                                        width: 32,
+                                        height: 18,
+                                        '& .MuiSwitch-switchBase': {
+                                            padding: 0,
+                                            margin: '2px',
+                                            transitionDuration: '300ms',
+                                            '&.Mui-checked': {
+                                                transform: 'translateX(14px)',
+                                                color: '#fff',
+                                                '& + .MuiSwitch-track': {
+                                                    opacity: 1,
+                                                    border: 0,
+                                                },
+                                            },
+                                        },
+                                        '& .MuiSwitch-thumb': {
+                                            boxSizing: 'border-box',
+                                            width: 14,
+                                            height: 14,
+                                        },
+                                        '& .MuiSwitch-track': {
+                                            borderRadius: 18 / 2,
+                                            backgroundColor: 'rgba(0,0,0,0.1)',
+                                            opacity: 1,
+                                        },
+                                    }}
+                                />
+                            </Stack>
+                        )}
+
+                        <Chip
+                            icon={<AdvancedIcon sx={{ fontSize: '14px !important' }} />}
+                            label={advancedMode ? 'Advanced' : 'Basic'}
+                            onClick={() => {
+                                setAdvancedMode(!advancedMode);
+                                if (advancedMode) {
+                                    setOrderType('LIMIT');
+                                }
+                            }}
                             size="small"
-                            color="warning"
+                            sx={{ 
+                                cursor: 'pointer', 
+                                fontWeight: 700,
+                                borderRadius: '8px',
+                                bgcolor: advancedMode ? 'primary.main' : 'rgba(0,0,0,0.05)',
+                                color: advancedMode ? 'white' : 'text.primary',
+                                '&:hover': { bgcolor: advancedMode ? 'primary.dark' : 'rgba(0,0,0,0.1)' }
+                            }}
                         />
                     </Box>
-                )}
+                </Box>
 
                 <ShortSellWarning
                     open={showRiskWarning}
