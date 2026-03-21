@@ -178,8 +178,7 @@ func (s *AuthService) InitiateForgotPassword(email string) error {
 		return err
 	}
 	if user == nil {
-		// Security: don't reveal if user exists
-		return nil 
+		return errors.New("No such user exists, Please register and try again!")
 	}
 
 	otp, err := s.otpService.GenerateOTP(user.ID, models.OTPPurposeForgotPassword)

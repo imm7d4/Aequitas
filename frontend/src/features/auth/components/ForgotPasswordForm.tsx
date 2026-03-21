@@ -32,6 +32,7 @@ export function ForgotPasswordForm(): JSX.Element {
     const handleSendOtp = async (e: FormEvent) => {
         e.preventDefault();
         setLocalError('');
+        setSuccessMessage('');
         if (!email) {
             setLocalError('Email is required');
             return;

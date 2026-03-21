@@ -140,12 +140,15 @@ func (c *AuthController) ForgotPassword(w http.ResponseWriter, r *http.Request) 
 
 	err := c.authService.InitiateForgotPassword(req.Email)
 	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, "Failed to send reset instructions")
+		statusCode := http.StatusInternalServerError
+		if err.Error() == "user not found" {
+			statusCode = http.StatusBadRequest
+		}
+		utils.RespondError(w, statusCode, err.Error())
 		return
 	}
 
-	// Always respond nicely for security
-	utils.RespondJSON(w, http.StatusOK, nil, "If an account exists for this email, reset instructions have been sent.")
+	utils.RespondJSON(w, http.StatusOK, nil, "Reset instructions have been sent to your email.")
 }
 
 // ResetPassword handles the final password update
