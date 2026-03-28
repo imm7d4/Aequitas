@@ -44,7 +44,7 @@ func (s *PortfolioService) GetHolding(ctx context.Context, userID, instrumentID 
 
 // GetTradingAccount returns the user's trading account (wrapper)
 func (s *PortfolioService) GetTradingAccount(ctx context.Context, userID string) (*models.TradingAccount, error) {
-	return s.accountService.GetByUserID(userID)
+	return s.accountService.GetByUserID(ctx, userID)
 }
 
 // UpdatePosition processes a trade and updates the user's holding (Average Cost or Realized P&L)
@@ -132,7 +132,7 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 		holding.TotalFees += fees
 		holding.LastUpdated = time.Now()
 
-		if err := s.accountService.UpdateRealizedPL(userID, pnl); err != nil {
+		if err := s.accountService.UpdateRealizedPL(ctx, userID, pnl); err != nil {
 			log.Printf("[Portfolio] Failed to update realized P&L: %v", err)
 		}
 
@@ -174,7 +174,7 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 		// BLOCK MARGIN LOGIC
 		// Requirement: 20% of Value
 		marginToBlock := totalTradeCost * 0.20
-		if err := s.accountService.BlockMargin(userID, marginToBlock); err != nil {
+		if err := s.accountService.BlockMargin(ctx, userID, marginToBlock); err != nil {
 			return fmt.Errorf("failed to block margin: %v", err)
 		}
 		holding.BlockedMargin += marginToBlock
@@ -209,7 +209,7 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 			log.Printf("[Portfolio] Partial close. Releasing proportional margin: %.2f (%.2f%%)", marginRelease, (float64(trade.Quantity)/preTradeQty)*100)
 		}
 
-		if err := s.accountService.ReleaseMargin(userID, marginRelease); err != nil {
+		if err := s.accountService.ReleaseMargin(ctx, userID, marginRelease); err != nil {
 			log.Printf("[Portfolio] Failed to release margin: %v", err)
 		} else {
 			holding.BlockedMargin -= marginRelease
@@ -224,7 +224,7 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 		holding.TotalFees += fees
 		holding.LastUpdated = time.Now()
 
-		if err := s.accountService.UpdateRealizedPL(userID, pnl); err != nil {
+		if err := s.accountService.UpdateRealizedPL(ctx, userID, pnl); err != nil {
 			log.Printf("[Portfolio] Failed to update P&L: %v", err)
 		}
 	}
@@ -251,7 +251,7 @@ func (s *PortfolioService) UpdatePosition(ctx context.Context, trade *models.Tra
 // CaptureSnapshot calculates current portfolio value and saves a snapshot
 func (s *PortfolioService) CaptureSnapshot(ctx context.Context, userID string) (*models.PortfolioSnapshot, error) {
 	// 1. Get Cash Balance
-	account, err := s.accountService.GetByUserID(userID)
+	account, err := s.accountService.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get account: %w", err)
 	}

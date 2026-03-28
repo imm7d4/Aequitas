@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -36,7 +37,7 @@ func (s *StopOrderService) Start() {
 		for {
 			select {
 			case <-ticker.C:
-				s.MonitorStopOrders()
+				s.MonitorStopOrders(context.Background())
 			case <-s.stopChan:
 				ticker.Stop()
 				return
@@ -53,9 +54,9 @@ func (s *StopOrderService) Stop() {
 }
 
 // MonitorStopOrders checks all PENDING stop orders for trigger conditions
-func (s *StopOrderService) MonitorStopOrders() {
+func (s *StopOrderService) MonitorStopOrders(ctx context.Context) {
 	// Fetch all PENDING stop orders
-	pendingOrders, err := s.orderRepo.FindPendingStopOrders()
+	pendingOrders, err := s.orderRepo.FindPendingStopOrders(ctx)
 	if err != nil {
 		log.Printf("Stop monitor error: failed to fetch pending orders: %v", err)
 		return
@@ -81,7 +82,7 @@ func (s *StopOrderService) MonitorStopOrders() {
 		if order.OrderType == "TRAILING_STOP" {
 			if s.UpdateTrailingStop(order, currentPrice) {
 				// Trailing stop was updated, save changes
-				if _, err := s.orderRepo.Update(order); err != nil {
+				if _, err := s.orderRepo.Update(ctx, order); err != nil {
 					log.Printf("Stop monitor error: failed to update trailing stop %s: %v", order.OrderID, err)
 				}
 			}
@@ -92,7 +93,7 @@ func (s *StopOrderService) MonitorStopOrders() {
 			log.Printf("🎯 Stop order triggered: %s (%s %s at ₹%.2f, current: ₹%.2f)",
 				order.OrderID, order.Side, order.OrderType, s.getStopPrice(order), currentPrice)
 
-			if err := s.TriggerStopOrder(order, currentPrice); err != nil {
+			if err := s.TriggerStopOrder(ctx, order, currentPrice); err != nil {
 				log.Printf("Stop monitor error: failed to trigger order %s: %v", order.OrderID, err)
 			}
 		}
@@ -197,14 +198,14 @@ func (s *StopOrderService) UpdateTrailingStop(order *models.Order, currentPrice 
 }
 
 // TriggerStopOrder converts a PENDING stop order to a MARKET or LIMIT order
-func (s *StopOrderService) TriggerStopOrder(order *models.Order, triggerPrice float64) error {
+func (s *StopOrderService) TriggerStopOrder(ctx context.Context, order *models.Order, triggerPrice float64) error {
 	// Mark original order as TRIGGERED
 	now := time.Now()
 	order.TriggeredAt = &now
 	order.TriggerPrice = &triggerPrice
 	order.Status = "TRIGGERED"
 
-	if _, err := s.orderRepo.Update(order); err != nil {
+	if _, err := s.orderRepo.Update(ctx, order); err != nil {
 		return fmt.Errorf("failed to update triggered order: %w", err)
 	}
 
@@ -248,14 +249,14 @@ func (s *StopOrderService) TriggerStopOrder(order *models.Order, triggerPrice fl
 	// NOTE: SELL orders will be rejected here until position tracking is implemented (Phase 7)
 	// This is intentional - users can place SELL stop orders, but they won't execute until
 	// we have position tracking to verify holdings
-	triggeredOrder, err := s.orderService.PlaceOrder(order.UserID.Hex(), newOrder)
+	triggeredOrder, err := s.orderService.PlaceOrder(ctx, order.UserID.Hex(), newOrder)
 	if err != nil {
 		// Order trigger failed (likely insufficient balance or no position for SELL)
 		log.Printf("❌ Stop order trigger failed: %s - %v", order.OrderID, err)
 
 		// Mark original order as REJECTED with reason
 		order.Status = "REJECTED"
-		if _, updateErr := s.orderRepo.Update(order); updateErr != nil {
+		if _, updateErr := s.orderRepo.Update(ctx, order); updateErr != nil {
 			log.Printf("Failed to mark order as rejected: %v", updateErr)
 		}
 

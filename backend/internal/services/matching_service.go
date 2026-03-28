@@ -9,6 +9,8 @@ import (
 	"aequitas/internal/config"
 	"aequitas/internal/models"
 	"aequitas/internal/repositories"
+
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type MatchingService struct {
@@ -49,7 +51,7 @@ func (s *MatchingService) Start() {
 		for {
 			select {
 			case <-ticker.C:
-				s.MatchLimitOrders()
+				s.MatchLimitOrders(context.Background())
 			case <-s.stopChan:
 				ticker.Stop()
 				return
@@ -64,7 +66,7 @@ func (s *MatchingService) Stop() {
 }
 
 // ExecuteMarketOrder performs an immediate fill for an order at current LTP
-func (s *MatchingService) ExecuteMarketOrder(order *models.Order) (*models.Trade, error) {
+func (s *MatchingService) ExecuteMarketOrder(ctx context.Context, order *models.Order) (*models.Trade, error) {
 	// 1. Get current market price
 	marketData, err := s.marketDataRepo.FindByInstrumentID(order.InstrumentID.Hex())
 	if err != nil || marketData == nil {
@@ -73,39 +75,55 @@ func (s *MatchingService) ExecuteMarketOrder(order *models.Order) (*models.Trade
 
 	executionPrice := marketData.LastPrice
 
-	// 2. Create trade record
-	trade, err := s.createTrade(order, executionPrice)
+	// Start a session for the transaction
+	session, err := s.orderRepo.GetDatabase().Client().StartSession()
 	if err != nil {
 		return nil, err
 	}
+	defer session.EndSession(ctx)
 
-	// 3. Update order status
-	order.Status = "FILLED"
-	order.FilledQuantity = order.Quantity
-	order.AvgFillPrice = executionPrice
-	now := time.Now()
-	order.FilledAt = &now
+	var trade *models.Trade
+	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+		// 2. Create trade record
+		t, err := s.createTrade(sessCtx, order, executionPrice)
+		if err != nil {
+			return nil, err
+		}
+		trade = t
 
-	_, err = s.orderRepo.Update(order)
+		// 3. Update order status
+		order.Status = "FILLED"
+		order.FilledQuantity = order.Quantity
+		order.AvgFillPrice = executionPrice
+		now := time.Now()
+		order.FilledAt = &now
+
+		_, err = s.orderRepo.Update(sessCtx, order)
+		if err != nil {
+			return nil, err
+		}
+
+		// 4. Update Finance (Settlement)
+		err = s.accountService.SettleTrade(sessCtx, order.UserID.Hex(), trade.NetValue, trade.TradeID, trade.Side)
+		if err != nil {
+			return nil, err
+		}
+
+		// 5. Update Portfolio (Holdings)
+		err = s.portfolioService.UpdatePosition(sessCtx, trade)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, nil
+	})
+
 	if err != nil {
-		log.Printf("ERROR: Matching engine failed to update order %s to FILLED: %v", order.OrderID, err)
+		log.Printf("ERROR: Market Order %s failed within transaction: %v", order.OrderID, err)
 		return nil, err
 	}
 
-	// 4. Update Finance (Settlement)
-	err = s.accountService.SettleTrade(order.UserID.Hex(), trade.NetValue, trade.TradeID, trade.Side)
-	if err != nil {
-		log.Printf("ERROR: Settlement failed for trade %s: %v", trade.TradeID, err)
-	}
-
-	// 5. Update Portfolio (Holdings)
-	err = s.portfolioService.UpdatePosition(context.Background(), trade)
-	if err != nil {
-		log.Printf("ERROR: Portfolio update failed for trade %s: %v", trade.TradeID, err)
-	}
-
-	// 6. Send Notification
-	// Run in goroutine to not block response
+	// 6. Send Notification (outside transaction)
 	go func() {
 		_ = s.notificationService.SendNotification(
 			context.Background(),
@@ -123,13 +141,13 @@ func (s *MatchingService) ExecuteMarketOrder(order *models.Order) (*models.Trade
 }
 
 // MatchLimitOrders scans for NEW limit orders and matches them against current LTP
-func (s *MatchingService) MatchLimitOrders() {
+func (s *MatchingService) MatchLimitOrders(ctx context.Context) {
 	// Use the generic FindByUserID or a specialized query in repo if needed
 	// For now, let's use a specialized query if it exists, otherwise we filter NEW orders
 
 	// We'll need a way to find all NEW LIMIT orders across all users
 	// Updating repository to support this
-	orders, err := s.orderRepo.FindNewLimitOrders()
+	orders, err := s.orderRepo.FindNewLimitOrders(ctx)
 	if err != nil {
 		log.Printf("Matching engine error: failed to fetch new limit orders: %v", err)
 		return
@@ -162,44 +180,63 @@ func (s *MatchingService) MatchLimitOrders() {
 			// If I Buy @ 1058 but Market is 1055, I should pay 1055.
 			fillPrice := executionPrice
 
-			trade, err := s.createTrade(order, fillPrice)
+			// Start session for atomic match
+			session, err := s.orderRepo.GetDatabase().Client().StartSession()
 			if err != nil {
-				log.Printf("Matching engine error: failed to create trade for %s: %v", order.OrderID, err)
+				log.Printf("Error: matching engine failed to start session: %v", err)
 				continue
 			}
 
-			order.Status = "FILLED"
-			order.FilledQuantity = order.Quantity
-			order.AvgFillPrice = fillPrice
-			now := time.Now()
-			order.FilledAt = &now
+			_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+				trade, err := s.createTrade(sessCtx, order, fillPrice)
+				if err != nil {
+					return nil, err
+				}
 
-			_, err = s.orderRepo.Update(order)
+				order.Status = "FILLED"
+				order.FilledQuantity = order.Quantity
+				order.AvgFillPrice = fillPrice
+				now := time.Now()
+				order.FilledAt = &now
+
+				_, err = s.orderRepo.Update(sessCtx, order)
+				if err != nil {
+					return nil, err
+				}
+
+				// Update Finance (Settlement)
+				settleErr := s.accountService.SettleTrade(sessCtx, order.UserID.Hex(), trade.NetValue, trade.TradeID, trade.Side)
+				if settleErr != nil {
+					return nil, settleErr
+				}
+
+				// Update Portfolio (Holdings)
+				portfolioErr := s.portfolioService.UpdatePosition(sessCtx, trade)
+				if portfolioErr != nil {
+					return nil, portfolioErr
+				}
+
+				// All good
+				return nil, nil
+			})
+
+			session.EndSession(ctx)
+
 			if err != nil {
-				log.Printf("Matching engine error: failed to update order %s to FILLED: %v", order.OrderID, err)
+				log.Printf("ERROR: Limit Order %s failed within transaction: %v", order.OrderID, err)
+				continue
 			}
 
-			// Update Finance (Settlement)
-			settleErr := s.accountService.SettleTrade(order.UserID.Hex(), trade.NetValue, trade.TradeID, trade.Side)
-			if settleErr != nil {
-				log.Printf("ERROR: Settlement failed for limit trade %s: %v", trade.TradeID, settleErr)
-			}
-
-			// Update Portfolio (Holdings)
-			portfolioErr := s.portfolioService.UpdatePosition(context.Background(), trade)
-			if portfolioErr != nil {
-				log.Printf("ERROR: Portfolio update failed for trade %s: %v", trade.TradeID, portfolioErr)
-			}
-
-			// Send Notification
+			// Send Notification (outside transaction)
+			orderToNotify := order // Capture for goroutine
 			go func() {
 				_ = s.notificationService.SendNotification(
 					context.Background(),
-					order.UserID.Hex(),
+					orderToNotify.UserID.Hex(),
 					models.NotificationTypeOrder,
 					"Order Filled",
-					fmt.Sprintf("Your LIMIT %s order for %d %s was filled at ₹%.2f", order.Side, order.Quantity, order.Symbol, fillPrice),
-					map[string]interface{}{"orderId": order.ID.Hex(), "symbol": order.Symbol},
+					fmt.Sprintf("Your LIMIT %s order for %d %s was filled at ₹%.2f", orderToNotify.Side, orderToNotify.Quantity, orderToNotify.Symbol, fillPrice),
+					map[string]interface{}{"orderId": orderToNotify.ID.Hex(), "symbol": orderToNotify.Symbol},
 					nil,
 				)
 			}()
@@ -212,17 +249,18 @@ func (s *MatchingService) MatchLimitOrders() {
 				log.Printf("IOC Order %s not filled immediately, CANCELLING", order.OrderID)
 
 				order.Status = "CANCELLED"
-				_, _ = s.orderRepo.Update(order)
+				_, _ = s.orderRepo.Update(ctx, order)
 
 				// Send Cancellation Notification
+				orderToCancel := order // Capture for goroutine
 				go func() {
 					_ = s.notificationService.SendNotification(
 						context.Background(),
-						order.UserID.Hex(),
+						orderToCancel.UserID.Hex(),
 						models.NotificationTypeOrder,
 						"IOC Order Cancelled",
-						fmt.Sprintf("Your IOC %s order for %d %s was cancelled because it could not be filled immediately.", order.Side, order.Quantity, order.Symbol),
-						map[string]interface{}{"orderId": order.ID.Hex(), "symbol": order.Symbol},
+						fmt.Sprintf("Your IOC %s order for %d %s was cancelled because it could not be filled immediately.", orderToCancel.Side, orderToCancel.Quantity, orderToCancel.Symbol),
+						map[string]interface{}{"orderId": orderToCancel.ID.Hex(), "symbol": orderToCancel.Symbol},
 						nil,
 					)
 				}()
@@ -231,7 +269,7 @@ func (s *MatchingService) MatchLimitOrders() {
 	}
 }
 
-func (s *MatchingService) createTrade(order *models.Order, price float64) (*models.Trade, error) {
+func (s *MatchingService) createTrade(ctx context.Context, order *models.Order, price float64) (*models.Trade, error) {
 	value := float64(order.Quantity) * price
 
 	// Commission: 0.05%
@@ -272,5 +310,5 @@ func (s *MatchingService) createTrade(order *models.Order, price float64) (*mode
 		ExecutedAt:   time.Now(),
 	}
 
-	return s.tradeRepo.Create(trade)
+	return s.tradeRepo.Create(ctx, trade)
 }

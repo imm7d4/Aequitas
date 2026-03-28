@@ -25,7 +25,7 @@ func (c *AccountController) GetBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	account, err := c.accountService.GetByUserID(userID)
+	account, err := c.accountService.GetByUserID(r.Context(), userID)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -52,7 +52,7 @@ func (c *AccountController) FundAccount(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	account, err := c.accountService.FundAccount(userID, req.Amount)
+	account, err := c.accountService.FundAccount(r.Context(), userID, req.Amount)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -79,7 +79,7 @@ func (c *AccountController) InitiateDeposit(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	tx, otp, err := c.accountService.InitiateDeposit(userID, req.Amount)
+	tx, otp, err := c.accountService.InitiateDeposit(r.Context(), userID, req.Amount)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
 		if err.Error() == "please update your profile with a valid phone number to receive SMS OTP" || 
@@ -121,7 +121,7 @@ func (c *AccountController) CompleteDeposit(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	account, err := c.accountService.CompleteDeposit(userID, req.TransactionID, req.OTPCode)
+	account, err := c.accountService.CompleteDeposit(r.Context(), userID, req.TransactionID, req.OTPCode)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
@@ -138,7 +138,7 @@ func (c *AccountController) GetTransactions(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	transactions, err := c.accountService.GetTransactions(userID)
+	transactions, err := c.accountService.GetTransactions(r.Context(), userID)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return

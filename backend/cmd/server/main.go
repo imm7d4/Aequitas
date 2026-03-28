@@ -89,7 +89,7 @@ func main() {
 	candleService := services.NewCandleService(candleRepo)
 	candleBuilder := services.NewCandleBuilder(candleRepo)
 	tradeService := services.NewTradeService(tradeRepo)
-	dashboardService := services.NewDashboardService(portfolioRepo, tradeRepo, tradingAccountService, marketService, marketDataRepo)
+	dashboardService := services.NewDashboardService(portfolioRepo, tradeRepo, tradingAccountService, marketService, marketDataRepo, instrumentRepo)
 
 	// Initialize WebSocket hub BEFORE NotificationService
 	wsHub := websocket.NewHub()

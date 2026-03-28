@@ -44,7 +44,7 @@ func NewOrderService(
 	}
 }
 
-func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Order, error) {
+func (s *OrderService) PlaceOrder(ctx context.Context, userID string, req models.Order) (*models.Order, error) {
 	// 1. Basic Input Validation
 	if req.Side == "" || req.OrderType == "" || req.InstrumentID.IsZero() || req.Quantity <= 0 {
 		return nil, errors.New("side, type, instrument, and quantity are mandatory fields")
@@ -161,7 +161,7 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 	}
 
 	// 7. Get Trading Account and Risk Check
-	account, err := s.tradingAccountRepo.FindByUserID(userID)
+	account, err := s.tradingAccountRepo.FindByUserID(ctx, userID)
 	if err != nil || account == nil {
 		return nil, errors.New("trading account not found")
 	}
@@ -194,7 +194,7 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 	// Specific Validation Logic
 	if req.Intent == string(models.IntentOpenLong) {
 		// Check for conflicting SHORT position
-		existingHolding, err := s.portfolioService.GetHolding(context.Background(), userID, instrument.ID.Hex())
+		existingHolding, err := s.portfolioService.GetHolding(ctx, userID, instrument.ID.Hex())
 		if err != nil && err.Error() != "holding not found" {
 			return nil, fmt.Errorf("failed to check existing position: %v", err)
 		}
@@ -206,7 +206,7 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 		}
 	} else if req.Intent == string(models.IntentOpenShort) {
 		// 1. Check for conflicting LONG position
-		existingHolding, err := s.portfolioService.GetHolding(context.Background(), userID, instrument.ID.Hex())
+		existingHolding, err := s.portfolioService.GetHolding(ctx, userID, instrument.ID.Hex())
 		if err != nil && err.Error() != "holding not found" {
 			return nil, fmt.Errorf("failed to check existing position: %v", err)
 		}
@@ -248,7 +248,7 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 		}
 	} else if req.Intent == string(models.IntentCloseShort) {
 		// Validate that we have a short position to cover
-		holding, err := s.portfolioService.GetHolding(context.Background(), userID, instrument.ID.Hex())
+		holding, err := s.portfolioService.GetHolding(ctx, userID, instrument.ID.Hex())
 		if err != nil {
 			return nil, fmt.Errorf("failed to validate holdings: %v", err)
 		}
@@ -269,7 +269,7 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 
 	} else if req.Intent == string(models.IntentCloseLong) {
 		// Standard Sell Check
-		holding, err := s.portfolioService.GetHolding(context.Background(), userID, instrument.ID.Hex())
+		holding, err := s.portfolioService.GetHolding(ctx, userID, instrument.ID.Hex())
 		if err != nil {
 			return nil, fmt.Errorf("failed to validate holdings: %v", err)
 		}
@@ -310,14 +310,14 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 	req.OrderID = fmt.Sprintf("ORD-%d", time.Now().UnixNano())
 	req.ValidatedAt = time.Now()
 
-	order, err := s.orderRepo.Create(&req)
+	order, err := s.orderRepo.Create(ctx, &req)
 	if err != nil {
 		return nil, err
 	}
 
 	// 9. Immediate Execution for MARKET orders
 	if order.OrderType == "MARKET" {
-		_, execErr := s.matchingService.ExecuteMarketOrder(order)
+		_, execErr := s.matchingService.ExecuteMarketOrder(ctx, order)
 		if execErr != nil {
 			log.Printf("ERROR: Failed to execute market order %s immediately: %v", order.OrderID, execErr)
 			// We don't return error here because the order IS saved, just execution failed (background will try later or manual)
@@ -327,12 +327,12 @@ func (s *OrderService) PlaceOrder(userID string, req models.Order) (*models.Orde
 
 	return order, nil
 }
-func (s *OrderService) GetUserOrders(userID string, filters map[string]interface{}, skip int, limit int) ([]*models.Order, int64, error) {
-	return s.orderRepo.FindByUserID(userID, filters, skip, limit)
+func (s *OrderService) GetUserOrders(ctx context.Context, userID string, filters map[string]interface{}, skip int, limit int) ([]*models.Order, int64, error) {
+	return s.orderRepo.FindByUserID(ctx, userID, filters, skip, limit)
 }
 
-func (s *OrderService) CancelOrder(userID string, orderID string) (*models.Order, error) {
-	order, err := s.orderRepo.FindByID(orderID)
+func (s *OrderService) CancelOrder(ctx context.Context, userID string, orderID string) (*models.Order, error) {
+	order, err := s.orderRepo.FindByID(ctx, orderID)
 	if err != nil || order == nil {
 		return nil, errors.New("order not found")
 	}
@@ -348,7 +348,7 @@ func (s *OrderService) CancelOrder(userID string, orderID string) (*models.Order
 	}
 
 	order.Status = "CANCELLED"
-	updatedOrder, err := s.orderRepo.Update(order)
+	updatedOrder, err := s.orderRepo.Update(ctx, order)
 	if err != nil {
 		return nil, err
 	}
@@ -369,9 +369,9 @@ func (s *OrderService) CancelOrder(userID string, orderID string) (*models.Order
 	return updatedOrder, nil
 }
 
-func (s *OrderService) ModifyOrder(userID string, orderID string, newQuantity int, newPrice *float64) (*models.Order, error) {
+func (s *OrderService) ModifyOrder(ctx context.Context, userID string, orderID string, newQuantity int, newPrice *float64) (*models.Order, error) {
 	// 1. Find and validate order
-	order, err := s.orderRepo.FindByID(orderID)
+	order, err := s.orderRepo.FindByID(ctx, orderID)
 	if err != nil || order == nil {
 		return nil, errors.New("order not found")
 	}
@@ -423,7 +423,7 @@ func (s *OrderService) ModifyOrder(userID string, orderID string, newQuantity in
 
 	// 7. Re-check balance for BUY orders
 	if order.Side == "BUY" {
-		account, err := s.tradingAccountRepo.FindByUserID(userID)
+		account, err := s.tradingAccountRepo.FindByUserID(ctx, userID)
 		if err != nil || account == nil {
 			return nil, errors.New("trading account not found")
 		}
@@ -441,7 +441,7 @@ func (s *OrderService) ModifyOrder(userID string, orderID string, newQuantity in
 	}
 	order.UpdatedAt = time.Now()
 
-	return s.orderRepo.Update(order)
+	return s.orderRepo.Update(ctx, order)
 }
 
 // validateStopOrder validates stop-specific order fields

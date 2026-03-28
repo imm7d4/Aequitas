@@ -30,11 +30,11 @@ func NewTradingAccountRepository(db *mongo.Database) *TradingAccountRepository {
 }
 
 // Create creates a new trading account
-func (r *TradingAccountRepository) Create(account *models.TradingAccount) (*models.TradingAccount, error) {
+func (r *TradingAccountRepository) Create(ctx context.Context, account *models.TradingAccount) (*models.TradingAccount, error) {
 	account.CreatedAt = time.Now()
 	account.UpdatedAt = time.Now()
 
-	result, err := r.collection.InsertOne(context.Background(), account)
+	result, err := r.collection.InsertOne(ctx, account)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (r *TradingAccountRepository) Create(account *models.TradingAccount) (*mode
 }
 
 // FindByUserID finds a trading account by user ID
-func (r *TradingAccountRepository) FindByUserID(userID string) (*models.TradingAccount, error) {
+func (r *TradingAccountRepository) FindByUserID(ctx context.Context, userID string) (*models.TradingAccount, error) {
 	objectID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (r *TradingAccountRepository) FindByUserID(userID string) (*models.TradingA
 
 	var account models.TradingAccount
 	err = r.collection.FindOne(
-		context.Background(),
+		ctx,
 		bson.M{"user_id": objectID},
 	).Decode(&account)
 
@@ -64,9 +64,9 @@ func (r *TradingAccountRepository) FindByUserID(userID string) (*models.TradingA
 }
 
 // UpdateBalance updates the balance of a trading account
-func (r *TradingAccountRepository) UpdateBalance(accountID primitive.ObjectID, newBalance float64) error {
+func (r *TradingAccountRepository) UpdateBalance(ctx context.Context, accountID primitive.ObjectID, newBalance float64) error {
 	_, err := r.collection.UpdateOne(
-		context.Background(),
+		ctx,
 		bson.M{"_id": accountID},
 		bson.M{"$set": bson.M{"balance": newBalance, "updated_at": time.Now()}},
 	)
@@ -74,10 +74,10 @@ func (r *TradingAccountRepository) UpdateBalance(accountID primitive.ObjectID, n
 }
 
 // Update updates a trading account (generic)
-func (r *TradingAccountRepository) Update(account *models.TradingAccount) (*models.TradingAccount, error) {
+func (r *TradingAccountRepository) Update(ctx context.Context, account *models.TradingAccount) (*models.TradingAccount, error) {
 	account.UpdatedAt = time.Now()
 	_, err := r.collection.UpdateOne(
-		context.Background(),
+		ctx,
 		bson.M{"_id": account.ID},
 		bson.M{"$set": account},
 	)

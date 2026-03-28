@@ -16,6 +16,7 @@ import { StatCard } from '@/features/dashboard/components/StatCard';
 import { MarketPulse } from '@/features/dashboard/components/MarketPulse';
 import { BehavioralInsights } from '@/features/dashboard/components/BehavioralInsights';
 import { TradingAnalysis } from '@/features/dashboard/components/TradingAnalysis';
+import { MarketHeatmap } from '@/features/dashboard/components/MarketHeatmap';
 import {
     dashboardService,
     DashboardSummary,
@@ -75,7 +76,7 @@ export function Dashboard(): JSX.Element {
     }
 
     const { performanceOverview, tradingAnalysis, behavioralInsights,
-        marketIntelligence, portfolioDistribution } = dashboardData;
+        marketIntelligence, portfolioDistribution, marketHeatmap } = dashboardData;
 
     return (
         <Box id="dashboard-overview" sx={{ py: 3, px: { xs: 1, md: 3 } }}>
@@ -166,6 +167,11 @@ export function Dashboard(): JSX.Element {
                     topGainers={marketIntelligence.topGainers}
                     topLosers={marketIntelligence.topLosers}
                 />
+            </Box>
+
+            {/* Market Heatmap */}
+            <Box sx={{ mb: 6 }}>
+                <MarketHeatmap data={marketHeatmap} />
             </Box>
         </Box>
     );

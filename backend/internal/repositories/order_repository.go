@@ -13,6 +13,7 @@ import (
 )
 
 type OrderRepository struct {
+	db         *mongo.Database
 	collection *mongo.Collection
 }
 
@@ -30,23 +31,23 @@ func NewOrderRepository(db *mongo.Database) *OrderRepository {
 	collection.Indexes().CreateOne(context.Background(), indexModel)
 
 	return &OrderRepository{
+		db:         db,
 		collection: collection,
 	}
 }
-
-func (r *OrderRepository) Create(order *models.Order) (*models.Order, error) {
+func (r *OrderRepository) Create(ctx context.Context, order *models.Order) (*models.Order, error) {
 	order.ID = primitive.NewObjectID()
 	order.CreatedAt = time.Now()
 	order.UpdatedAt = time.Now()
 
-	_, err := r.collection.InsertOne(context.Background(), order)
+	_, err := r.collection.InsertOne(ctx, order)
 	if err != nil {
 		return nil, err
 	}
 	return order, nil
 }
 
-func (r *OrderRepository) FindByUserID(userID string, filters map[string]interface{}, skip int, limit int) ([]*models.Order, int64, error) {
+func (r *OrderRepository) FindByUserID(ctx context.Context, userID string, filters map[string]interface{}, skip int, limit int) ([]*models.Order, int64, error) {
 	objID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return nil, 0, err
@@ -81,7 +82,7 @@ func (r *OrderRepository) FindByUserID(userID string, filters map[string]interfa
 	}
 
 	// Get total count
-	total, err := r.collection.CountDocuments(context.Background(), query)
+	total, err := r.collection.CountDocuments(ctx, query)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -92,37 +93,37 @@ func (r *OrderRepository) FindByUserID(userID string, filters map[string]interfa
 		SetSkip(int64(skip)).
 		SetLimit(int64(limit))
 
-	cursor, err := r.collection.Find(context.Background(), query, opts)
+	cursor, err := r.collection.Find(ctx, query, opts)
 	if err != nil {
 		return nil, 0, err
 	}
-	defer cursor.Close(context.Background())
+	defer cursor.Close(ctx)
 
 	var orders []*models.Order
-	if err = cursor.All(context.Background(), &orders); err != nil {
+	if err = cursor.All(ctx, &orders); err != nil {
 		return nil, 0, err
 	}
 
 	return orders, total, nil
 }
 
-func (r *OrderRepository) FindByID(id string) (*models.Order, error) {
+func (r *OrderRepository) FindByID(ctx context.Context, id string) (*models.Order, error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
 	}
 
 	var order models.Order
-	err = r.collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&order)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&order)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
 	return &order, err
 }
-func (r *OrderRepository) Update(order *models.Order) (*models.Order, error) {
+func (r *OrderRepository) Update(ctx context.Context, order *models.Order) (*models.Order, error) {
 	order.UpdatedAt = time.Now()
 	_, err := r.collection.ReplaceOne(
-		context.Background(),
+		ctx,
 		bson.M{"_id": order.ID},
 		order,
 	)
@@ -133,17 +134,17 @@ func (r *OrderRepository) Update(order *models.Order) (*models.Order, error) {
 }
 
 // FindPendingStopOrders returns all orders with PENDING status for monitoring
-func (r *OrderRepository) FindPendingStopOrders() ([]*models.Order, error) {
+func (r *OrderRepository) FindPendingStopOrders(ctx context.Context) ([]*models.Order, error) {
 	query := bson.M{"status": "PENDING"}
 
-	cursor, err := r.collection.Find(context.Background(), query)
+	cursor, err := r.collection.Find(ctx, query)
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(context.Background())
+	defer cursor.Close(ctx)
 
 	var orders []*models.Order
-	if err = cursor.All(context.Background(), &orders); err != nil {
+	if err = cursor.All(ctx, &orders); err != nil {
 		return nil, err
 	}
 
@@ -151,20 +152,20 @@ func (r *OrderRepository) FindPendingStopOrders() ([]*models.Order, error) {
 }
 
 // FindNewLimitOrders returns all orders with status NEW and type LIMIT
-func (r *OrderRepository) FindNewLimitOrders() ([]*models.Order, error) {
+func (r *OrderRepository) FindNewLimitOrders(ctx context.Context) ([]*models.Order, error) {
 	query := bson.M{
 		"status":     "NEW",
 		"order_type": "LIMIT",
 	}
 
-	cursor, err := r.collection.Find(context.Background(), query)
+	cursor, err := r.collection.Find(ctx, query)
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(context.Background())
+	defer cursor.Close(ctx)
 
 	var orders []*models.Order
-	if err = cursor.All(context.Background(), &orders); err != nil {
+	if err = cursor.All(ctx, &orders); err != nil {
 		return nil, err
 	}
 
@@ -223,4 +224,8 @@ func (r *OrderRepository) GetPendingQuantity(userID string, instrumentID string,
 		return result[0].Total, nil
 	}
 	return 0, nil
+}
+
+func (r *OrderRepository) GetDatabase() *mongo.Database {
+	return r.db
 }

@@ -80,7 +80,7 @@ func (c *OrderController) PlaceOrder(w http.ResponseWriter, r *http.Request) {
 		Intent:      req.Intent,
 	}
 
-	res, err := c.orderService.PlaceOrder(userID, order)
+	res, err := c.orderService.PlaceOrder(r.Context(), userID, order)
 	if err != nil {
 		// Map errors to appropriate status codes
 		errMsg := err.Error()
@@ -141,7 +141,7 @@ func (c *OrderController) GetOrders(w http.ResponseWriter, r *http.Request) {
 
 	skip := (page - 1) * limit
 
-	orders, total, err := c.orderService.GetUserOrders(userID, filters, skip, limit)
+	orders, total, err := c.orderService.GetUserOrders(r.Context(), userID, filters, skip, limit)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, "Failed to fetch orders")
 		return
@@ -176,7 +176,7 @@ func (c *OrderController) CancelOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err := c.orderService.CancelOrder(userID, orderID)
+	order, err := c.orderService.CancelOrder(r.Context(), userID, orderID)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
@@ -210,7 +210,7 @@ func (c *OrderController) ModifyOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err := c.orderService.ModifyOrder(userID, orderID, req.Quantity, req.Price)
+	order, err := c.orderService.ModifyOrder(r.Context(), userID, orderID, req.Quantity, req.Price)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
@@ -231,7 +231,7 @@ func (c *OrderController) GetPendingStops(w http.ResponseWriter, r *http.Request
 		"status": "PENDING",
 	}
 
-	orders, total, err := c.orderService.GetUserOrders(userID, filters, 0, 100)
+	orders, total, err := c.orderService.GetUserOrders(r.Context(), userID, filters, 0, 100)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, "Failed to fetch pending stop orders")
 		return

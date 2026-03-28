@@ -16,6 +16,7 @@ type DashboardService struct {
 	accountService *TradingAccountService
 	marketService  *MarketService
 	marketDataRepo *repositories.MarketDataRepository
+	instrumentRepo *repositories.InstrumentRepository
 }
 
 func NewDashboardService(
@@ -24,6 +25,7 @@ func NewDashboardService(
 	accountService *TradingAccountService,
 	marketService *MarketService,
 	marketDataRepo *repositories.MarketDataRepository,
+	instrumentRepo *repositories.InstrumentRepository,
 ) *DashboardService {
 	return &DashboardService{
 		portfolioRepo:  portfolioRepo,
@@ -31,6 +33,7 @@ func NewDashboardService(
 		accountService: accountService,
 		marketService:  marketService,
 		marketDataRepo: marketDataRepo,
+		instrumentRepo: instrumentRepo,
 	}
 }
 
@@ -41,6 +44,12 @@ type DashboardSummary struct {
 	BehavioralInsights    BehavioralInsights    `json:"behavioralInsights"`
 	MarketIntelligence    MarketIntelligence    `json:"marketIntelligence"`
 	PortfolioDistribution PortfolioDistribution `json:"portfolioDistribution"`
+	MarketHeatmap         []HeatmapSector       `json:"marketHeatmap"`
+}
+
+type HeatmapSector struct {
+	Name   string       `json:"name"`
+	Stocks []SmartStock `json:"stocks"`
 }
 
 type PerformanceOverview struct {
@@ -89,6 +98,7 @@ type SmartStock struct {
 	VWAPDistance string  `json:"vwapDistance"` // "Above" or "Below"
 	BreakoutFlag string  `json:"breakoutFlag"` // "Breakout", "Breakdown", or ""
 	NewsFlag     string  `json:"newsFlag"`     // Placeholder for future integration
+	Sector       string  `json:"sector"`
 }
 
 type PortfolioDistribution struct {
@@ -111,7 +121,7 @@ func (s *DashboardService) GetDashboardSummary(
 	userID string,
 ) (*DashboardSummary, error) {
 	// Get account
-	account, err := s.accountService.GetByUserID(userID)
+	account, err := s.accountService.GetByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +133,7 @@ func (s *DashboardService) GetDashboardSummary(
 	}
 
 	// Get trades
-	trades, err := s.tradeRepo.FindByUserID(userID)
+	trades, err := s.tradeRepo.FindByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -150,12 +160,19 @@ func (s *DashboardService) GetDashboardSummary(
 	// Calculate portfolio distribution
 	portfolioDist := s.calculatePortfolioDistribution(account, holdings)
 
+	// Get heatmap data
+	heatmapData, err := s.getMarketHeatmap(ctx)
+	if err != nil {
+		heatmapData = []HeatmapSector{}
+	}
+
 	return &DashboardSummary{
 		PerformanceOverview:   perfOverview,
 		TradingAnalysis:       tradingAnalysis,
 		BehavioralInsights:    behavioralInsights,
 		MarketIntelligence:    *marketIntel,
 		PortfolioDistribution: portfolioDist,
+		MarketHeatmap:         heatmapData,
 	}, nil
 }
 
@@ -634,6 +651,76 @@ func (s *DashboardService) getMarketIntelligence(
 		TopGainers: topGainers,
 		TopLosers:  topLosers,
 	}, nil
+}
+
+func (s *DashboardService) getMarketHeatmap(
+	ctx context.Context,
+) ([]HeatmapSector, error) {
+	// Get all market data
+	allData, err := s.marketDataRepo.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all instruments for sector info
+	instruments, err := s.instrumentRepo.FindAll(map[string]interface{}{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Create map for quick instrument lookup
+	instrumentMap := make(map[string]*models.Instrument)
+	for _, inst := range instruments {
+		instrumentMap[inst.ID.Hex()] = inst
+	}
+
+	// Group by sector
+	sectorMap := make(map[string][]SmartStock)
+	for _, data := range allData {
+		inst, ok := instrumentMap[data.InstrumentID.Hex()]
+		sector := "Other"
+		name := data.Symbol
+		if ok {
+			sector = inst.Sector
+			name = inst.Name
+		}
+		if sector == "" {
+			sector = "Other"
+		}
+
+		smart := s.toSmartStock(data)
+		smart.Sector = sector
+		smart.Name = name
+
+		sectorMap[sector] = append(sectorMap[sector], smart)
+	}
+
+	// Sort stocks within each sector by changePct (absolute) or just limit to top 6
+	sectors := []HeatmapSector{}
+	for sectorName, stocks := range sectorMap {
+		// Sort by change percentage (absolute) to show most active ones
+		sort.Slice(stocks, func(i, j int) bool {
+			return math.Abs(stocks[i].ChangePct) > math.Abs(stocks[j].ChangePct)
+		})
+
+		// Limit to top 6 stocks per sector to avoid congestion
+		limit := 6
+		if len(stocks) > limit {
+			stocks = stocks[:limit]
+		}
+
+		sectors = append(sectors, HeatmapSector{
+			Name:   sectorName,
+			Stocks: stocks,
+		})
+	}
+
+	// Sort sectors by name for consistency
+	sort.Slice(sectors, func(i, j int) bool {
+		return sectors[i].Name < sectors[j].Name
+	})
+
+	return sectors, nil
 }
 
 func (s *DashboardService) toSmartStock(data *models.MarketData) SmartStock {

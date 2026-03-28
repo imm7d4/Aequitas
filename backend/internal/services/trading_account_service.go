@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -37,9 +38,9 @@ func NewTradingAccountService(
 }
 
 // CreateForUser creates a trading account for a user (US-0.1.2)
-func (s *TradingAccountService) CreateForUser(userID string) (*models.TradingAccount, error) {
+func (s *TradingAccountService) CreateForUser(ctx context.Context, userID string) (*models.TradingAccount, error) {
 	// Check if account already exists
-	existing, err := s.repo.FindByUserID(userID)
+	existing, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -61,30 +62,30 @@ func (s *TradingAccountService) CreateForUser(userID string) (*models.TradingAcc
 		Status:   "ACTIVE",
 	}
 
-	return s.repo.Create(account)
+	return s.repo.Create(ctx, account)
 }
 
 // GetByUserID retrieves a trading account by user ID
-func (s *TradingAccountService) GetByUserID(userID string) (*models.TradingAccount, error) {
-	account, err := s.repo.FindByUserID(userID)
+func (s *TradingAccountService) GetByUserID(ctx context.Context, userID string) (*models.TradingAccount, error) {
+	account, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 	if account == nil {
 		// Lazily create account if it doesn't exist (US-0.1.2)
 		// This handles legacy users or registration failures
-		return s.CreateForUser(userID)
+		return s.CreateForUser(ctx, userID)
 	}
 	return account, nil
 }
 
 // InitiateDeposit starts a fund transfer by creating a PENDING transaction and sending an OTP
-func (s *TradingAccountService) InitiateDeposit(userID string, amount float64) (*models.Transaction, string, error) {
+func (s *TradingAccountService) InitiateDeposit(ctx context.Context, userID string, amount float64) (*models.Transaction, string, error) {
 	if amount <= 0 {
 		return nil, "", errors.New("amount must be greater than zero")
 	}
 
-	account, err := s.repo.FindByUserID(userID)
+	account, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		return nil, "", err
 	}
@@ -102,7 +103,7 @@ func (s *TradingAccountService) InitiateDeposit(userID string, amount float64) (
 		Status:    "PENDING",
 		Reference: "OTP_REQUIRED",
 	}
-	savedTx, err := s.txRepo.Create(tx)
+	savedTx, err := s.txRepo.Create(ctx, tx)
 	if err != nil {
 		fmt.Printf("[Deposit Error] Failed to create transaction: %v\n", err)
 		return nil, "", err
@@ -169,7 +170,7 @@ func (s *TradingAccountService) InitiateDeposit(userID string, amount float64) (
 }
 
 // CompleteDeposit finalizes a pending transaction after OTP verification
-func (s *TradingAccountService) CompleteDeposit(userID string, txID string, otpCode string) (*models.TradingAccount, error) {
+func (s *TradingAccountService) CompleteDeposit(ctx context.Context, userID string, txID string, otpCode string) (*models.TradingAccount, error) {
 	// 1. Verify OTP first
 	userObjID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -188,7 +189,7 @@ func (s *TradingAccountService) CompleteDeposit(userID string, txID string, otpC
 	}
 
 	// 2. Find the transaction
-	tx, err := s.txRepo.FindByID(txID)
+	tx, err := s.txRepo.FindByID(ctx, txID)
 	if err != nil {
 		fmt.Printf("[Deposit Complete Error] Transaction find error: %v\n", err)
 		return nil, err
@@ -199,7 +200,7 @@ func (s *TradingAccountService) CompleteDeposit(userID string, txID string, otpC
 	}
 
 	// 3. Update balance and transaction status
-	account, err := s.repo.FindByUserID(userID)
+	account, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		fmt.Printf("[Deposit Complete Error] Account find error: %v\n", err)
 		return nil, err
@@ -210,7 +211,7 @@ func (s *TradingAccountService) CompleteDeposit(userID string, txID string, otpC
 	}
 
 	newBalance := account.Balance + tx.Amount
-	err = s.repo.UpdateBalance(account.ID, newBalance)
+	err = s.repo.UpdateBalance(ctx, account.ID, newBalance)
 	if err != nil {
 		fmt.Printf("[Deposit Complete Error] Balance update error: %v\n", err)
 		return nil, err
@@ -219,7 +220,7 @@ func (s *TradingAccountService) CompleteDeposit(userID string, txID string, otpC
 	// 4. Update transaction status
 	tx.Status = "COMPLETED"
 	tx.Reference = "EMAIL_VERIFIED"
-	_ = s.txRepo.UpdateStatus(tx.ID.Hex(), "COMPLETED", tx.Reference)
+	_ = s.txRepo.UpdateStatus(ctx, tx.ID.Hex(), "COMPLETED", tx.Reference)
 
 	// Refresh local account balance for returning to UI
 	account.Balance = newBalance
@@ -227,18 +228,18 @@ func (s *TradingAccountService) CompleteDeposit(userID string, txID string, otpC
 }
 
 // FundAccount is now deprecated in favor of InitiateDeposit/CompleteDeposit
-func (s *TradingAccountService) FundAccount(userID string, amount float64) (*models.TradingAccount, error) {
+func (s *TradingAccountService) FundAccount(ctx context.Context, userID string, amount float64) (*models.TradingAccount, error) {
 	// For backward compatibility or internal use
-	tx, otp, err := s.InitiateDeposit(userID, amount)
+	tx, otp, err := s.InitiateDeposit(ctx, userID, amount)
 	if err != nil {
 		return nil, err
 	}
-	return s.CompleteDeposit(userID, tx.ID.Hex(), otp)
+	return s.CompleteDeposit(ctx, userID, tx.ID.Hex(), otp)
 }
 
 // GetTransactions retrieves the transaction history for a user
-func (s *TradingAccountService) GetTransactions(userID string) ([]*models.Transaction, error) {
-	account, err := s.repo.FindByUserID(userID)
+func (s *TradingAccountService) GetTransactions(ctx context.Context, userID string) ([]*models.Transaction, error) {
+	account, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -247,12 +248,12 @@ func (s *TradingAccountService) GetTransactions(userID string) ([]*models.Transa
 		return []*models.Transaction{}, nil
 	}
 
-	return s.txRepo.FindByAccountID(account.ID.Hex())
+	return s.txRepo.FindByAccountID(ctx, account.ID.Hex())
 }
 
 // SettleTrade updates the balance and creates a transaction for a filled trade
-func (s *TradingAccountService) SettleTrade(userID string, netAmount float64, tradeID string, side string) error {
-	account, err := s.repo.FindByUserID(userID)
+func (s *TradingAccountService) SettleTrade(ctx context.Context, userID string, netAmount float64, tradeID string, side string) error {
+	account, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -273,7 +274,7 @@ func (s *TradingAccountService) SettleTrade(userID string, netAmount float64, tr
 		return errors.New("insufficient balance for settlement")
 	}
 
-	err = s.repo.UpdateBalance(account.ID, newBalance)
+	err = s.repo.UpdateBalance(ctx, account.ID, newBalance)
 	if err != nil {
 		return err
 	}
@@ -296,14 +297,14 @@ func (s *TradingAccountService) SettleTrade(userID string, netAmount float64, tr
 		Status:    "COMPLETED",
 		Reference: fmt.Sprintf("TRADE_%s", tradeID),
 	}
-	_, _ = s.txRepo.Create(tx)
+	_, _ = s.txRepo.Create(ctx, tx)
 
 	return nil
 }
 
 // UpdateRealizedPL adds the profit/loss from a closed trade to the total realized P&L
-func (s *TradingAccountService) UpdateRealizedPL(userID string, amount float64) error {
-	account, err := s.repo.FindByUserID(userID)
+func (s *TradingAccountService) UpdateRealizedPL(ctx context.Context, userID string, amount float64) error {
+	account, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -317,13 +318,13 @@ func (s *TradingAccountService) UpdateRealizedPL(userID string, amount float64) 
 	// Using UpdateBalance conceptually or need full Update?
 	// Repo has UpdateBalance. Let's check if it has generic Update.
 	// We use repo.Update(account).
-	_, err = s.repo.Update(account)
+	_, err = s.repo.Update(ctx, account)
 	return err
 }
 
 // BlockMargin locks funds for short positions
-func (s *TradingAccountService) BlockMargin(userID string, amount float64) error {
-	account, err := s.repo.FindByUserID(userID)
+func (s *TradingAccountService) BlockMargin(ctx context.Context, userID string, amount float64) error {
+	account, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -339,13 +340,13 @@ func (s *TradingAccountService) BlockMargin(userID string, amount float64) error
 	account.BlockedMargin += amount
 	account.UpdatedAt = time.Now()
 
-	_, err = s.repo.Update(account)
+	_, err = s.repo.Update(ctx, account)
 	return err
 }
 
 // ReleaseMargin unlocks funds when short positions are covered
-func (s *TradingAccountService) ReleaseMargin(userID string, amount float64) error {
-	account, err := s.repo.FindByUserID(userID)
+func (s *TradingAccountService) ReleaseMargin(ctx context.Context, userID string, amount float64) error {
+	account, err := s.repo.FindByUserID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -364,6 +365,6 @@ func (s *TradingAccountService) ReleaseMargin(userID string, amount float64) err
 	}
 	account.UpdatedAt = time.Now()
 
-	_, err = s.repo.Update(account)
+	_, err = s.repo.Update(ctx, account)
 	return err
 }

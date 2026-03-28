@@ -25,7 +25,7 @@ func (c *TradeController) GetUserTrades(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	trades, err := c.service.GetUserTrades(userID)
+	trades, err := c.service.GetUserTrades(r.Context(), userID)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return

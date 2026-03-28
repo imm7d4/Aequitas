@@ -21,31 +21,31 @@ func NewTradeRepository(db *mongo.Database) *TradeRepository {
 	}
 }
 
-func (r *TradeRepository) Create(trade *models.Trade) (*models.Trade, error) {
+func (r *TradeRepository) Create(ctx context.Context, trade *models.Trade) (*models.Trade, error) {
 	trade.ID = primitive.NewObjectID()
 	trade.CreatedAt = time.Now()
 
-	_, err := r.collection.InsertOne(context.Background(), trade)
+	_, err := r.collection.InsertOne(ctx, trade)
 	if err != nil {
 		return nil, err
 	}
 	return trade, nil
 }
 
-func (r *TradeRepository) FindByUserID(userID string) ([]*models.Trade, error) {
+func (r *TradeRepository) FindByUserID(ctx context.Context, userID string) ([]*models.Trade, error) {
 	objID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	cursor, err := r.collection.Find(context.Background(), bson.M{"user_id": objID})
+	cursor, err := r.collection.Find(ctx, bson.M{"user_id": objID})
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(context.Background())
+	defer cursor.Close(ctx)
 
 	trades := []*models.Trade{}
-	if err = cursor.All(context.Background(), &trades); err != nil {
+	if err = cursor.All(ctx, &trades); err != nil {
 		return nil, err
 	}
 

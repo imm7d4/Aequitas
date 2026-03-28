@@ -39,6 +39,12 @@ export interface SmartStock {
     vwapDistance: string;
     breakoutFlag: string;
     newsFlag: string;
+    sector: string;
+}
+
+export interface HeatmapSector {
+    name: string;
+    stocks: SmartStock[];
 }
 
 export interface MarketIntelligence {
@@ -66,6 +72,7 @@ export interface DashboardSummary {
     behavioralInsights: BehavioralInsights;
     marketIntelligence: MarketIntelligence;
     portfolioDistribution: PortfolioDistribution;
+    marketHeatmap: HeatmapSector[];
 }
 
 export const dashboardService = {

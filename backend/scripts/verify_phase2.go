@@ -70,17 +70,32 @@ func main() {
 	log.Println("Services Initialized.")
 
 	// 2. Create Test User
-	userID := primitive.NewObjectID().Hex()
+	uOID := primitive.NewObjectID()
+	userID := uOID.Hex()
 	log.Printf("Test User ID: %s", userID)
 
+	// Create User Record via Repo
+	dummyUser := &models.User{
+		ID:        uOID,
+		Email:     fmt.Sprintf("test-%d@aequitas.com", time.Now().Unix()),
+		FullName:  "Test User",
+		Status:    "ACTIVE",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	_, err = userRepo.Create(dummyUser)
+	if err != nil {
+		log.Fatalf("Create User Failed: %v", err)
+	}
+
 	// Create Account
-	_, err = accountService.CreateForUser(userID)
+	_, err = accountService.CreateForUser(context.Background(), userID)
 	if err != nil {
 		log.Fatalf("Create Account Failed: %v", err)
 	}
 
 	// Fund Account
-	_, err = accountService.FundAccount(userID, 100000.0)
+	_, err = accountService.FundAccount(context.Background(), userID, 100000.0)
 	if err != nil {
 		log.Fatalf("Fund Failed: %v", err)
 	}
@@ -135,10 +150,10 @@ func main() {
 		ClientOrderID: fmt.Sprintf("cl-%d", time.Now().UnixNano()),
 	}
 	// Fix UserID type
-	uOID, _ := primitive.ObjectIDFromHex(userID)
+	uOID, _ = primitive.ObjectIDFromHex(userID)
 	openOrder.UserID = uOID
 
-	resOrder, err := orderService.PlaceOrder(userID, openOrder)
+	resOrder, err := orderService.PlaceOrder(context.Background(), userID, openOrder)
 	if err != nil {
 		log.Fatalf("Place OPEN_SHORT Failed: %v", err)
 	}
@@ -146,7 +161,7 @@ func main() {
 
 	// Wait for async execution? Market orders are executed synchronously in PlaceOrder (Phase 2 logic).
 	// Check Account Margin
-	acctAfter, _ := accountService.GetByUserID(userID)
+	acctAfter, _ := accountService.GetByUserID(context.Background(), userID)
 	log.Printf("Account Balance: %.2f, BlockedMargin: %.2f", acctAfter.Balance, acctAfter.BlockedMargin)
 
 	// Expected Margin: 10 * 2000 * 20% = 4000
@@ -187,14 +202,14 @@ func main() {
 		ClientOrderID: fmt.Sprintf("cl-%d-2", time.Now().UnixNano()),
 	}
 
-	resClose, err := orderService.PlaceOrder(userID, closeOrder)
+	resClose, err := orderService.PlaceOrder(context.Background(), userID, closeOrder)
 	if err != nil {
 		log.Fatalf("Place CLOSE_SHORT Failed: %v", err)
 	}
 	log.Printf("Close Order Placed: %s", resClose.OrderID)
 
 	// Check Account
-	acctFinal, _ := accountService.GetByUserID(userID)
+	acctFinal, _ := accountService.GetByUserID(context.Background(), userID)
 	log.Printf("Account Balance: %.2f, BlockedMargin: %.2f, RealizedPL: %.2f", acctFinal.Balance, acctFinal.BlockedMargin, acctFinal.RealizedPL)
 
 	// Expected:

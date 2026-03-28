@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -83,10 +84,10 @@ func (s *AuthService) CompleteRegistration(email, password, otp string) (*models
 		return nil, errors.New("invalid or expired OTP")
 	}
 
-	return s.register(email, password)
+	return s.register(context.Background(), email, password)
 }
 
-func (s *AuthService) register(email, password string) (*models.User, error) {
+func (s *AuthService) register(ctx context.Context, email, password string) (*models.User, error) {
 	// Business validation
 	if !utils.IsValidEmail(email) {
 		return nil, errors.New("invalid email format")
@@ -124,7 +125,7 @@ func (s *AuthService) register(email, password string) (*models.User, error) {
 	}
 
 	// Auto-create trading account (US-0.1.2)
-	_, err = s.tradingAccountService.CreateForUser(createdUser.ID.Hex())
+	_, err = s.tradingAccountService.CreateForUser(ctx, createdUser.ID.Hex())
 	if err != nil {
 		// Log error but don't fail registration
 		// In production, this should trigger a retry mechanism or alert
@@ -237,5 +238,5 @@ func (s *AuthService) ResetPassword(email, otp, newPassword string) error {
 	}
 
 	user.Password = hashedPassword
-	return s.userRepo.Update(user)
+	return s.userRepo.Update(user) // UserRepo still uses Background for now or add ctx there?
 }

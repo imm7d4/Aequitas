@@ -22,49 +22,49 @@ func NewTransactionRepository(db *mongo.Database) *TransactionRepository {
 	}
 }
 
-func (r *TransactionRepository) Create(tx *models.Transaction) (*models.Transaction, error) {
+func (r *TransactionRepository) Create(ctx context.Context, tx *models.Transaction) (*models.Transaction, error) {
 	tx.ID = primitive.NewObjectID()
 	tx.CreatedAt = time.Now()
-	_, err := r.collection.InsertOne(context.Background(), tx)
+	_, err := r.collection.InsertOne(ctx, tx)
 	if err != nil {
 		return nil, err
 	}
 	return tx, nil
 }
 
-func (r *TransactionRepository) FindByAccountID(accountID string) ([]*models.Transaction, error) {
+func (r *TransactionRepository) FindByAccountID(ctx context.Context, accountID string) ([]*models.Transaction, error) {
 	objID, _ := primitive.ObjectIDFromHex(accountID)
 	cursor, err := r.collection.Find(
-		context.Background(),
+		ctx,
 		bson.M{"account_id": objID},
 		options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}}).SetLimit(50),
 	)
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(context.Background())
+	defer cursor.Close(ctx)
 
 	transactions := make([]*models.Transaction, 0)
-	if err = cursor.All(context.Background(), &transactions); err != nil {
+	if err = cursor.All(ctx, &transactions); err != nil {
 		return nil, err
 	}
 	return transactions, nil
 }
 
-func (r *TransactionRepository) FindByID(id string) (*models.Transaction, error) {
+func (r *TransactionRepository) FindByID(ctx context.Context, id string) (*models.Transaction, error) {
 	objID, _ := primitive.ObjectIDFromHex(id)
 	var tx models.Transaction
-	err := r.collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&tx)
+	err := r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&tx)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
 	return &tx, err
 }
 
-func (r *TransactionRepository) UpdateStatus(id string, status string, reference string) error {
+func (r *TransactionRepository) UpdateStatus(ctx context.Context, id string, status string, reference string) error {
 	objID, _ := primitive.ObjectIDFromHex(id)
 	_, err := r.collection.UpdateOne(
-		context.Background(),
+		ctx,
 		bson.M{"_id": objID},
 		bson.M{"$set": bson.M{
 			"status":    status,
