@@ -50,10 +50,9 @@ export const useWebSocket = (url: string = getWebSocketUrl()) => {
                 if (message.type === 'notification') {
                     addNotification(message.data);
                 } else if (message.type === 'candle') {
-                    // Handle candle updates - dispatch to a market store or similar?
-                    // For now, consumers can listen to this if we expose a listener mechanism.
-                    // But this hook seems to be the singleton manager.
                     window.dispatchEvent(new CustomEvent('ws-candle', { detail: message }));
+                } else if (message.type === 'platform_metrics') {
+                    window.dispatchEvent(new CustomEvent('ws-platform_metrics', { detail: message }));
                 }
             } catch (err) {
                 console.error('WebSocket message parse error:', err);

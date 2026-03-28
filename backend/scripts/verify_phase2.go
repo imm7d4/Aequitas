@@ -47,8 +47,10 @@ func main() {
 	// Services
 	otpService := services.NewOTPService(otpRepo)
 	commProvider := services.NewBrevoProvider(cfg)
+	jitRepo := repositories.NewJITRepository(db)
+	jitService := services.NewJITService(jitRepo)
 	userRepo := repositories.NewUserRepository(db)
-	accountService := services.NewTradingAccountService(accountRepo, txRepo, userRepo, otpService, commProvider)
+	accountService := services.NewTradingAccountService(accountRepo, txRepo, userRepo, otpService, jitService, commProvider)
 	// Mock MarketService for Portfolio (Portfolio uses it for Snapshot only usually, but UpdatePosition uses generic logic)
 	// Actually PortfolioService uses MarketService for snapshots but strict UpdatePosition doesn't need external price calls if provided in Trade.
 	// But NewPortfolioService needs it. We can pass nil? No, struct expects it.

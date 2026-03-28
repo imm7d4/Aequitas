@@ -19,6 +19,11 @@ import {
     AdminPanelSettings as AdminIcon,
     Assessment as DiagnosticsIcon,
     School as EducationIcon,
+    ContactSupport as SupportIcon,
+    Security as RiskIcon,
+    AccountBalanceWallet as WalletIcon,
+    HistoryEdu as AuditIcon,
+    SettingsApplications as MarketOpsIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -39,18 +44,31 @@ export const Sidebar: React.FC = () => {
     const { track } = useTelemetry();
 
     const menuItems = [
-        { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', id: 'dashboard-nav' },
-        { text: 'Instruments', icon: <InstrumentsIcon />, path: '/instruments', id: 'market-data-nav' },
-        { text: 'Watchlists', icon: <WatchlistIcon />, path: '/watchlists', id: 'watchlists-nav' },
-        { text: 'Diagnostics', icon: <DiagnosticsIcon />, path: '/diagnostics', id: 'diagnostics-nav' },
-        { text: 'Portfolio', icon: <PortfolioIcon />, path: '/portfolio', id: 'portfolio-nav' },
-        { text: 'Orders', icon: <OrdersIcon />, path: '/orders', id: 'orders-nav' },
-        { text: 'Education', icon: <EducationIcon />, path: '/education', id: 'education-nav' },
+        // Trader Pages
+        { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard', id: 'dashboard-nav', roles: ['TRADER'] },
+        { text: 'Instruments', icon: <InstrumentsIcon />, path: '/instruments', id: 'market-data-nav', roles: ['TRADER'] },
+        { text: 'Watchlists', icon: <WatchlistIcon />, path: '/watchlists', id: 'watchlists-nav', roles: ['TRADER'] },
+        { text: 'Diagnostics', icon: <DiagnosticsIcon />, path: '/diagnostics', id: 'diagnostics-nav', roles: ['TRADER'] },
+        { text: 'Portfolio', icon: <PortfolioIcon />, path: '/portfolio', id: 'portfolio-nav', roles: ['TRADER'] },
+        { text: 'Orders', icon: <OrdersIcon />, path: '/orders', id: 'orders-nav', roles: ['TRADER'] },
+        { text: 'Education', icon: <EducationIcon />, path: '/education', id: 'education-nav', roles: ['TRADER'] },
+
+        // Admin Pages
+        { text: 'Control Center', icon: <AdminIcon />, path: '/admin/control-center', id: 'admin-cc-nav', roles: ['PLATFORM_ADMIN', 'RISK_OFFICER'] },
+        { text: 'User Administration', icon: <AdminIcon />, path: '/user-management', id: 'admin-users-nav', roles: ['PLATFORM_ADMIN'] },
+        { text: 'Wallet Management', icon: <WalletIcon />, path: '/wallet-management', id: 'wallet-mgmt-nav', roles: ['PLATFORM_ADMIN', 'SUPPORT'] },
+        { text: 'Market Ops', icon: <MarketOpsIcon />, path: '/admin/market', id: 'admin-market-nav', roles: ['PLATFORM_ADMIN'] },
+        { text: 'Audit Logs', icon: <AuditIcon />, path: '/admin/audit', id: 'admin-audit-nav', roles: ['AUDIT_ADMIN', 'PLATFORM_ADMIN'] },
+        { text: 'Risk Governance', icon: <RiskIcon />, path: '/admin/risk', id: 'admin-risk-nav', roles: ['RISK_OFFICER', 'PLATFORM_ADMIN'] },
+        { text: 'Support Ticketing', icon: <SupportIcon />, path: '/admin/tickets', id: 'admin-tickets-nav', roles: ['SUPPORT', 'PLATFORM_ADMIN'] },
     ];
 
-    if (user?.isAdmin) {
-        menuItems.push({ text: 'Admin', icon: <AdminIcon />, path: '/admin', id: 'admin-nav' });
-    }
+    const visibleMenuItems = menuItems.filter(item => {
+        if (!user) return false;
+        // Default to TRADER if no role set for backward compatibility during migration
+        const role = user.role || 'TRADER';
+        return item.roles.includes(role);
+    });
 
     return (
         <Drawer
@@ -81,7 +99,7 @@ export const Sidebar: React.FC = () => {
             <Toolbar sx={{ minHeight: '64px !important' }} />
             <Box sx={{ flexGrow: 1, overflowY: 'auto', overflowX: 'hidden', pt: 1.5 }}>
                 <List sx={{ px: 1.5 }}>
-                    {menuItems.map((item) => {
+                    {visibleMenuItems.map((item) => {
                         const isActive = location.pathname.startsWith(item.path);
                         return (
                             <ListItem key={item.text} disablePadding sx={{ display: 'block', mb: 0.75 }} id={item.id}>

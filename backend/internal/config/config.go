@@ -28,6 +28,7 @@ type Config struct {
 	BrevoAPIKey      string
 	BrevoSenderName    string
 	BrevoSenderEmail   string
+	EnableStepUpMFA    bool
 }
 
 type FeeConfig struct {
@@ -72,6 +73,7 @@ func New() *Config {
 		BrevoAPIKey:      getEnv("BREVO_API_KEY", ""),
 		BrevoSenderName:   getEnv("BREVO_SENDER_NAME", "AEQUIT"),
 		BrevoSenderEmail:  getEnv("BREVO_SENDER_EMAIL", ""),
+		EnableStepUpMFA:   getEnv("ENABLE_STEP_UP_MFA", "false") == "true",
 	}
 }
 

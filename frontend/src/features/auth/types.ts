@@ -4,6 +4,9 @@ export interface UserPreferences {
     notificationsEnabled: boolean;
 }
 
+export type AdminRole = 'PLATFORM_ADMIN' | 'AUDIT_ADMIN' | 'RISK_OFFICER' | 'COMPLIANCE_OFFICER' | 'SUPPORT';
+export type UserRole = 'TRADER' | AdminRole;
+
 export interface User {
     id: string;
     email: string;
@@ -16,6 +19,7 @@ export interface User {
     lastLoginIP?: string;
     preferences: UserPreferences;
     isAdmin: boolean;
+    role: UserRole;
     status: 'ACTIVE' | 'INACTIVE';
     createdAt: string;
     isOnboardingComplete?: boolean;

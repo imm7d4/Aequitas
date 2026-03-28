@@ -42,7 +42,7 @@ func main() {
 	collection := db.Collection("users")
 
 	filter := bson.M{"email": email}
-	update := bson.M{"$set": bson.M{"is_admin": true}}
+	update := bson.M{"$set": bson.M{"is_admin": true, "role": "PLATFORM_ADMIN"}}
 
 	result, err := collection.UpdateOne(ctx, filter, update)
 	if err != nil {

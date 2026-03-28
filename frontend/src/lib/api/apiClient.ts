@@ -34,6 +34,16 @@ api.interceptors.response.use(
             localStorage.removeItem('user');
             window.location.href = '/login';
         }
+
+        // Handle Step-Up MFA (403 Forbidden with specific message)
+        if (error.response?.status === 403 && error.response?.data?.message?.includes('Step-up MFA')) {
+            // In a real implementation:
+            // 1. Show Step-Up MFA Modal
+            // 2. On success, retry the original request
+            console.warn('Step-Up MFA required for this action');
+            // window.dispatchEvent(new CustomEvent('REQUIRE_STEP_UP_MFA', { detail: { originalRequest: error.config } }));
+        }
+
         return Promise.reject(error);
     }
 );

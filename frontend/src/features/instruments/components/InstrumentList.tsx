@@ -453,7 +453,7 @@ export const InstrumentList = () => {
                     <>
                         <CustomGrid
                             columns={columns}
-                            rows={displayInstruments}
+                            data={displayInstruments}
                             onRowClick={(row: Instrument) => navigate(`/instruments/${row.id}`)}
                             sorting={sorting}
                             onSort={(col: string) => handleSort(col as SortColumn)}

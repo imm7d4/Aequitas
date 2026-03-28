@@ -7,10 +7,19 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type ContextKey string
+
+const (
+	UserIDKey    ContextKey = "userId"
+	UserEmailKey ContextKey = "userEmail"
+	UserRoleKey  ContextKey = "userRole"
+)
+
 type Claims struct {
 	UserID  string `json:"userId"`
 	Email   string `json:"email"`
 	IsAdmin bool   `json:"isAdmin"`
+	Role    string `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -18,6 +27,7 @@ type Claims struct {
 func GenerateToken(
 	userID, email string,
 	isAdmin bool,
+	role string,
 	secret string,
 	expiryHours int,
 ) (string, error) {
@@ -29,6 +39,7 @@ func GenerateToken(
 		UserID:  userID,
 		Email:   email,
 		IsAdmin: isAdmin,
+		Role:    role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(
 				time.Now().Add(time.Hour * time.Duration(expiryHours)),

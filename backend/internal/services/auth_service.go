@@ -162,6 +162,7 @@ func (s *AuthService) Login(email, password, ipAddress string) (string, *models.
 		user.ID.Hex(),
 		user.Email,
 		user.IsAdmin,
+		user.Role,
 		s.config.JWTSecret,
 		s.config.JWTExpiryHours,
 	)

@@ -8,8 +8,15 @@ import {
     TableRow,
     TableSortLabel,
     styled,
-    alpha
+    alpha,
+    IconButton,
+    Collapse,
+    CircularProgress
 } from '@mui/material';
+import {
+    KeyboardArrowDown,
+    KeyboardArrowUp
+} from '@mui/icons-material';
 
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
     borderRadius: '16px',
@@ -57,18 +64,23 @@ const StyledTable = styled(Table)(({ theme }) => ({
     }
 }));
 
-interface Column<T> {
+export interface Column<T> {
     id: keyof T | string;
     label: string;
     align?: 'left' | 'right' | 'center';
     minWidth?: number;
     format?: (value: any, row: T) => React.ReactNode;
+    render?: (row: T) => React.ReactNode;
     sortable?: boolean;
 }
 
-interface CustomGridProps<T> {
+export interface BaseRow {
+    id: string | number;
+}
+
+interface CustomGridProps<T extends BaseRow> {
     columns: Column<T>[];
-    rows: T[];
+    data: T[];
     onRowClick?: (row: T) => void;
     sorting?: {
         column: string;
@@ -77,22 +89,43 @@ interface CustomGridProps<T> {
     onSort?: (column: string) => void;
     stickyHeader?: boolean;
     maxHeight?: string | number;
+    renderExpansion?: (row: T) => React.ReactNode;
+    initialExpanded?: (string | number)[];
+    isLoading?: boolean;
 }
 
-export function CustomGrid<T extends { id: string | number }>({
+export function CustomGrid<T extends BaseRow>({
     columns,
-    rows,
+    data: rows = [],
     onRowClick,
     sorting,
     onSort,
     stickyHeader = true,
-    maxHeight
+    maxHeight,
+    renderExpansion,
+    initialExpanded = [],
+    isLoading = false
 }: CustomGridProps<T>) {
+    const [expandedRows, setExpandedRows] = React.useState<Set<string | number>>(new Set(initialExpanded));
+
+    const toggleRow = (id: string | number, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setExpandedRows(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
+            return newSet;
+        });
+    };
     return (
         <StyledTableContainer sx={{ maxHeight }}>
             <StyledTable stickyHeader={stickyHeader} size="small">
                 <TableHead>
                     <TableRow>
+                        {renderExpansion && <TableCell sx={{ width: 40 }} />}
                         {columns.map((column) => (
                             <TableCell
                                 key={column.id.toString()}
@@ -118,24 +151,62 @@ export function CustomGrid<T extends { id: string | number }>({
                         ))}
                     </TableRow>
                 </TableHead>
-                <TableBody>
-                    {rows.map((row) => (
-                        <TableRow
-                            hover
-                            key={row.id}
-                            tabIndex={-1}
-                            onClick={() => onRowClick?.(row)}
-                            sx={{ cursor: onRowClick ? 'pointer' : 'default' }}
-                        >
-                            {columns.map((column) => {
-                                const value = (row as any)[column.id];
-                                return (
-                                    <TableCell key={column.id.toString()} align={column.align}>
-                                        {column.format ? column.format(value, row) : value}
-                                    </TableCell>
-                                );
-                            })}
+                <TableBody sx={{ position: 'relative' }}>
+                    {isLoading && (
+                        <TableRow>
+                            <TableCell colSpan={columns.length + (renderExpansion ? 1 : 0)} sx={{ height: 200, textAlign: 'center' }}>
+                                <CircularProgress size={32} />
+                            </TableCell>
                         </TableRow>
+                    )}
+                    {!isLoading && rows.length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={columns.length + (renderExpansion ? 1 : 0)} sx={{ py: 8, textAlign: 'center', color: 'text.secondary' }}>
+                                No data available
+                            </TableCell>
+                        </TableRow>
+                    )}
+                    {!isLoading && rows.map((row) => (
+                        <React.Fragment key={row.id}>
+                            <TableRow
+                                hover
+                                tabIndex={-1}
+                                onClick={() => onRowClick?.(row)}
+                                sx={{ 
+                                    cursor: onRowClick ? 'pointer' : 'default',
+                                    '& > *': renderExpansion ? { borderBottom: 'unset !important' } : {}
+                                }}
+                            >
+                                {renderExpansion && (
+                                    <TableCell>
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => toggleRow(row.id, e)}
+                                            sx={{ color: 'text.secondary' }}
+                                        >
+                                            {expandedRows.has(row.id) ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                                        </IconButton>
+                                    </TableCell>
+                                )}
+                                {columns.map((column) => {
+                                    const value = (row as any)[column.id];
+                                    return (
+                                        <TableCell key={column.id.toString()} align={column.align}>
+                                            {column.render ? column.render(row) : (column.format ? column.format(value, row) : value)}
+                                        </TableCell>
+                                    );
+                                })}
+                            </TableRow>
+                            {renderExpansion && (
+                                <TableRow sx={{ '&:hover': { backgroundColor: 'transparent !important' } }}>
+                                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={columns.length + 1}>
+                                        <Collapse in={expandedRows.has(row.id)} timeout="auto" unmountOnExit>
+                                            {renderExpansion(row)}
+                                        </Collapse>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </React.Fragment>
                     ))}
                 </TableBody>
             </StyledTable>

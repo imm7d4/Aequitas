@@ -91,6 +91,23 @@ func (r *UserRepository) Update(user *models.User) error {
 }
 
 // UpdateOnboardingStatus updates the user's onboarding status fields
+func (r *UserRepository) UpdateLastActivity(userID string) error {
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"last_activity_at": time.Now(),
+			"updated_at":      time.Now(),
+		},
+	}
+
+	_, err = r.collection.UpdateOne(context.Background(), bson.M{"_id": objectID}, update)
+	return err
+}
+
 func (r *UserRepository) UpdateOnboardingStatus(userID string, complete, skipped bool, completedAt *time.Time) error {
 	objectID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -120,4 +137,18 @@ func (r *UserRepository) UpdateOnboardingStatus(userID string, complete, skipped
 	}
 
 	return nil
+}
+
+func (r *UserRepository) FindAll(ctx context.Context) ([]*models.User, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var users []*models.User
+	if err := cursor.All(ctx, &users); err != nil {
+		return nil, err
+	}
+	return users, nil
 }

@@ -39,11 +39,13 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Authenticate
 	tokenStr := r.URL.Query().Get("token")
 	var userID string
+	var role string
 
 	if tokenStr != "" {
 		claims, err := utils.ValidateToken(tokenStr, h.JWTSecret)
 		if err == nil {
 			userID = claims.UserID
+			role = claims.Role
 		} else {
 			log.Printf("WebSocket: Invalid token: %v", err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -69,6 +71,7 @@ func (h *Handler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	client := &Client{
 		ID:            uuid.New().String(),
 		UserID:        userID,
+		Role:          role,
 		Conn:          conn,
 		Subscriptions: make(map[string]bool),
 		Send:          make(chan []byte, 256),

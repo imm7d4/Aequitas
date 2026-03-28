@@ -23,9 +23,12 @@ type User struct {
 	Avatar                string             `bson:"avatar" json:"avatar"`
 	LastLoginAt           *time.Time         `bson:"last_login_at,omitempty" json:"lastLoginAt,omitempty"`
 	LastLoginIP           string             `bson:"last_login_ip,omitempty" json:"lastLoginIP,omitempty"`
+	LastActivityAt        *time.Time         `bson:"last_activity_at,omitempty" json:"lastActivityAt,omitempty"`
 	Preferences           UserPreferences    `bson:"preferences" json:"preferences"`
 	IsAdmin               bool               `bson:"is_admin" json:"isAdmin"`
+	Role                  string             `bson:"role" json:"role"`
 	Status                string             `bson:"status" json:"status"`
+	KYCStatus             string             `bson:"kyc_status" json:"kycStatus"`
 	IsOnboardingComplete  bool               `bson:"is_onboarding_complete" json:"isOnboardingComplete"`
 	OnboardingSkipped     bool               `bson:"onboarding_skipped" json:"onboardingSkipped"`
 	OnboardingCompletedAt *time.Time         `bson:"onboarding_completed_at,omitempty" json:"onboardingCompletedAt,omitempty"`

@@ -167,3 +167,10 @@ func (c *AuthController) ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	utils.RespondJSON(w, http.StatusOK, nil, "Password reset successful! You can now log in with your new password.")
 }
+
+// StepUp handles the mock MFA verification for sensitive actions
+func (c *AuthController) StepUp(w http.ResponseWriter, r *http.Request) {
+	// In a real implementation, this would verify a TOTP code or similar.
+	// For now, we just return a success response to demonstrate the flow.
+	utils.RespondJSON(w, http.StatusOK, map[string]bool{"verified": true}, "Step-up MFA verified successfully")
+}

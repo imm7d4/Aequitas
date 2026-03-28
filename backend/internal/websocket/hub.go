@@ -14,6 +14,7 @@ const (
 	MessageTypeSubscribe   = "subscribe"
 	MessageTypeUnsubscribe = "unsubscribe"
 	MessageTypeCandle      = "candle"
+	MessageTypePlatformMetrics = "platform_metrics"
 	MessageTypeError       = "error"
 )
 
@@ -28,6 +29,7 @@ type WSMessage struct {
 type Client struct {
 	ID            string
 	UserID        string // Authenticated User ID
+	Role          string // User Role
 	Conn          *websocket.Conn
 	Subscriptions map[string]bool // instrumentID -> subscribed
 	Send          chan []byte
@@ -121,7 +123,6 @@ func (h *Hub) Run() {
 		}
 	}
 }
-
 // BroadcastToInstrument sends a message to all clients subscribed to an instrument
 func (h *Hub) BroadcastToInstrument(instrumentID string, data interface{}) {
 	message := WSMessage{
@@ -138,6 +139,35 @@ func (h *Hub) BroadcastToInstrument(instrumentID string, data interface{}) {
 	h.broadcast <- BroadcastMessage{
 		InstrumentID: instrumentID,
 		Data:         jsonData,
+	}
+}
+
+// BroadcastToAdmins sends a message to all connected clients with an admin role
+func (h *Hub) BroadcastToAdmins(data interface{}) {
+	message := WSMessage{
+		Type: MessageTypePlatformMetrics,
+		Data: data,
+	}
+
+	jsonData, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("WebSocket: Error marshaling admin broadcast: %v", err)
+		return
+	}
+
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	for client := range h.clients {
+		// Basic check: any non-TRADER role or specific admin roles
+		// For now, if role is PLATFORM_ADMIN, AUDIT_ADMIN, etc.
+		if client.Role != "" && client.Role != "TRADER" {
+			select {
+			case client.Send <- jsonData:
+			default:
+				// Skip if buffer is full
+			}
+		}
 	}
 }
 

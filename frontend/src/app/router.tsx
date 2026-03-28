@@ -24,6 +24,15 @@ import { LandingPage } from '@/features/landing/pages/LandingPage';
 import { TradeDiagnosticsPage } from '@/features/analytics/pages/TradeDiagnosticsPage';
 import EducationHub from '@/features/education/pages/EducationHub';
 import ModulePage from '@/features/education/pages/ModulePage';
+import { 
+    ControlCenter, 
+    UserManagement,
+    WalletManagement,
+    MarketOps, 
+    AuditLogs, 
+    RiskGovernance, 
+    SupportTicketing 
+} from '@/features/admin/pages/AdminPages';
 
 export function AppRoutes(): JSX.Element {
     return (
@@ -66,6 +75,15 @@ export function AppRoutes(): JSX.Element {
                         <Route path="/admin/market-hours" element={<AdminMarketHoursForm />} />
                         <Route path="/admin/manage-hours" element={<AdminManageHours />} />
                         <Route path="/admin/market-holidays" element={<AdminMarketHolidayForm />} />
+
+                        {/* Phase 12 Admin Routes */}
+                        <Route path="/admin/control-center" element={<ControlCenter />} />
+                        <Route path="/user-management" element={<UserManagement />} />
+                        <Route path="/wallet-management" element={<WalletManagement />} />
+                        <Route path="/admin/market" element={<MarketOps />} />
+                        <Route path="/admin/audit" element={<AuditLogs />} />
+                        <Route path="/admin/risk" element={<RiskGovernance />} />
+                        <Route path="/admin/tickets" element={<SupportTicketing />} />
 
                         {/* Education Routes */}
                         <Route path="/education" element={<EducationHub />} />

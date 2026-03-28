@@ -9,7 +9,7 @@ import OnboardingTour from '@/features/onboarding/components/OnboardingTour';
 import { BrowserRouter } from 'react-router-dom';
 
 function App(): JSX.Element {
-    const { initialize, isAuthenticated } = useAuth();
+    const { initialize, isAuthenticated, user } = useAuth();
 
     useEffect(() => {
         initialize();
@@ -20,7 +20,7 @@ function App(): JSX.Element {
         <Providers>
             <BrowserRouter>
                 <AppRoutes />
-                {isAuthenticated && (
+                {isAuthenticated && user?.role === 'TRADER' && (
                     <>
                         <WatchlistSelectionDialog />
                         <OnboardingTour />

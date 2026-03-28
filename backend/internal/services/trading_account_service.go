@@ -18,6 +18,7 @@ type TradingAccountService struct {
 	txRepo      *repositories.TransactionRepository
 	userRepo    *repositories.UserRepository
 	otpService  *OTPService
+	jitService  *JITService
 	commService CommunicationProvider
 }
 
@@ -26,6 +27,7 @@ func NewTradingAccountService(
 	txRepo *repositories.TransactionRepository,
 	userRepo *repositories.UserRepository,
 	otpService *OTPService,
+	jitService *JITService,
 	commService CommunicationProvider,
 ) *TradingAccountService {
 	return &TradingAccountService{
@@ -33,6 +35,7 @@ func NewTradingAccountService(
 		txRepo:      txRepo,
 		userRepo:    userRepo,
 		otpService:  otpService,
+		jitService:  jitService,
 		commService: commService,
 	}
 }
@@ -367,4 +370,52 @@ func (s *TradingAccountService) ReleaseMargin(ctx context.Context, userID string
 
 	_, err = s.repo.Update(ctx, account)
 	return err
+}
+
+// ManualAdjustment allows privileged users with active JIT to adjust balances
+func (s *TradingAccountService) ManualAdjustment(ctx context.Context, adminID string, userID string, amount float64, action string, reason string) error {
+	adminObjID, _ := primitive.ObjectIDFromHex(adminID)
+	userObjID, _ := primitive.ObjectIDFromHex(userID)
+
+	// 1. Check JIT Authorization
+	authorized, err := s.jitService.IsAuthorized(ctx, adminObjID, action, userObjID)
+	if err != nil {
+		return err
+	}
+	if !authorized {
+		return errors.New("unauthorized: active JIT session required for this action")
+	}
+
+	// 2. Perform adjustment
+	account, err := s.repo.FindByUserID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if account == nil {
+		return errors.New("trading account not found")
+	}
+
+	newBalance := account.Balance + amount
+	if newBalance < 0 {
+		return errors.New("insufficient balance for debit adjustment")
+	}
+
+	err = s.repo.UpdateBalance(ctx, account.ID, newBalance)
+	if err != nil {
+		return err
+	}
+
+	// 3. Log transaction
+	tx := &models.Transaction{
+		AccountID: account.ID,
+		UserID:    account.UserID,
+		Type:      "ADJUSTMENT",
+		Amount:    amount,
+		Currency:  account.Currency,
+		Status:    "COMPLETED",
+		Reference: fmt.Sprintf("ADMIN_%s: %s", adminID, reason),
+	}
+	_, _ = s.txRepo.Create(ctx, tx)
+
+	return nil
 }

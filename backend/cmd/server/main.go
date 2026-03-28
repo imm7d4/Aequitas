@@ -71,13 +71,16 @@ func main() {
 	tradeResultRepo := repositories.NewTradeResultRepository(db)
 	activeUnitRepo := repositories.NewActiveTradeUnitRepository(db)
 	otpRepo := repositories.NewOTPRepository(db)
+	adminConfigRepo := repositories.NewAdminConfigRepository(db)
+	jitRepo := repositories.NewJITRepository(db)
 
 	// Initialize basic services
 	otpService := services.NewOTPService(otpRepo)
+	jitService := services.NewJITService(jitRepo)
 	commProvider := services.NewBrevoProvider(cfg)
 
 	// Initialize services (Basic)
-	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo, transactionRepo, userRepo, otpService, commProvider)
+	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo, transactionRepo, userRepo, otpService, jitService, commProvider)
 	authService := services.NewAuthService(userRepo, tradingAccountService, otpService, commProvider, cfg)
 	instrumentService := services.NewInstrumentService(instrumentRepo)
 	marketService := services.NewMarketService(marketRepo, marketDataRepo)
@@ -90,6 +93,7 @@ func main() {
 	candleBuilder := services.NewCandleBuilder(candleRepo)
 	tradeService := services.NewTradeService(tradeRepo)
 	dashboardService := services.NewDashboardService(portfolioRepo, tradeRepo, tradingAccountService, marketService, marketDataRepo, instrumentRepo)
+	adminService := services.NewAdminService(db, adminConfigRepo, userRepo)
 
 	// Initialize WebSocket hub BEFORE NotificationService
 	wsHub := websocket.NewHub()
@@ -115,6 +119,18 @@ func main() {
 	pricingService := services.NewPricingService(instrumentRepo, marketDataRepo, candleRepo, candleBuilder, priceAlertService)
 	pricingService.Start()
 	defer pricingService.Stop()
+
+	// Admin Metrics Broadcast Ticker (SLA: <= 5s)
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			metrics, err := adminService.GetPlatformMetrics(context.Background())
+			if err == nil {
+				wsHub.BroadcastToAdmins(metrics)
+			}
+		}
+	}()
 
 	// Initialize candle cleanup service (runs every hour)
 	candleCleanupService := services.NewCandleCleanupService(candleRepo)
@@ -148,6 +164,8 @@ func main() {
 	telemetryController := controllers.NewTelemetryController(telemetryService)
 	userController := controllers.NewUserController(userService)
 	accountController := controllers.NewAccountController(tradingAccountService)
+	adminController := controllers.NewAdminController(adminService)
+	jitController := controllers.NewJITController(jitService)
 	orderController := controllers.NewOrderController(orderService)
 	candleController := controllers.NewCandleController(candleService)
 	tradeController := controllers.NewTradeController(tradeService)
@@ -182,10 +200,11 @@ func main() {
 	api.HandleFunc("/auth/login", authController.Login).Methods("POST", "OPTIONS")
 	api.HandleFunc("/auth/forgot-password", authController.ForgotPassword).Methods("POST", "OPTIONS")
 	api.HandleFunc("/auth/reset-password", authController.ResetPassword).Methods("POST", "OPTIONS")
+	api.HandleFunc("/auth/step-up", authController.StepUp).Methods("POST", "OPTIONS")
 
 	// Protected routes (require authentication)
 	protected := api.PathPrefix("").Subrouter()
-	protected.Use(middleware.Auth(cfg))
+	protected.Use(middleware.Auth(cfg, userRepo))
 
 	// Instrument routes (public read, admin write)
 	protected.HandleFunc("/instruments", instrumentController.GetInstruments).Methods("GET", "OPTIONS")
@@ -267,13 +286,37 @@ func main() {
 
 	// Admin instrument routes
 	admin.HandleFunc("/instruments", instrumentController.CreateInstrument).Methods("POST", "OPTIONS")
-	admin.HandleFunc("/instruments/{id}", instrumentController.UpdateInstrument).Methods("PUT", "OPTIONS")
+	
+	// Example of a route requiring Step-Up MFA (wrapped specifically)
+	admin.Handle("/instruments/{id}", 
+		middleware.StepUpMiddleware(cfg)(http.HandlerFunc(instrumentController.UpdateInstrument)),
+	).Methods("PUT", "OPTIONS")
 
 	// Admin market routes
 	admin.HandleFunc("/market/hours", marketController.CreateMarketHours).Methods("POST", "OPTIONS")
 	admin.HandleFunc("/market/hours/{exchange}", marketController.GetWeeklyHours).Methods("GET", "OPTIONS")
 	admin.HandleFunc("/market/hours/{exchange}/bulk", marketController.UpdateWeeklyHours).Methods("PUT", "OPTIONS")
 	admin.HandleFunc("/market/holidays", marketController.CreateHoliday).Methods("POST", "OPTIONS")
+
+	// Admin platform metrics
+	admin.HandleFunc("/platform/metrics", adminController.GetPlatformMetrics).Methods("GET", "OPTIONS")
+	admin.HandleFunc("/config", adminController.GetConfig).Methods("GET", "OPTIONS")
+	admin.HandleFunc("/config", adminController.UpdateConfig).Methods("PUT", "OPTIONS")
+
+	// User Administration (Separate Module, Platform Admin Only)
+	userAdmin := protected.PathPrefix("/user-management").Subrouter()
+	userAdmin.Use(middleware.RoleMiddleware("PLATFORM_ADMIN"))
+	userAdmin.HandleFunc("/users", adminController.GetUsers).Methods("GET", "OPTIONS")
+
+	// Wallet Management (Separate Module, Platform Admin & Support)
+	walletAdmin := protected.PathPrefix("/wallet-management").Subrouter()
+	walletAdmin.Use(middleware.RoleMiddleware("PLATFORM_ADMIN", "SUPPORT"))
+	walletAdmin.HandleFunc("/users", adminController.GetUsers).Methods("GET", "OPTIONS")
+
+	// JIT & Maker-Checker
+	admin.HandleFunc("/jit/request", jitController.CreateRequest).Methods("POST", "OPTIONS")
+	admin.HandleFunc("/jit/requests", jitController.GetPending).Methods("GET", "OPTIONS")
+	admin.HandleFunc("/jit/approve", jitController.Approve).Methods("POST", "OPTIONS")
 	admin.HandleFunc("/market/holidays", marketController.GetHolidays).Methods("GET", "OPTIONS")
 	admin.HandleFunc("/market/holidays/{exchange}", marketController.GetHolidays).Methods("GET", "OPTIONS")
 	admin.HandleFunc("/market/holidays/{id}", marketController.DeleteHoliday).Methods("DELETE", "OPTIONS")

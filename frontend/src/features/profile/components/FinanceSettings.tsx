@@ -370,9 +370,9 @@ export const FinanceSettings: React.FC = () => {
                 </Box>
 
                 <Box sx={{ position: 'relative' }}>
-                    <CustomGrid
+                    <CustomGrid<any>
                         columns={columns}
-                        rows={transactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
+                        data={transactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(tx => ({ ...tx, id: tx.transactionId }))}
                     />
                     <TablePagination
                         rowsPerPageOptions={[5, 10, 25]}
