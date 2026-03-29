@@ -139,7 +139,7 @@ func (s *DashboardService) GetDashboardSummary(
 	}
 
 	// Calculate performance overview
-	perfOverview := s.calculatePerformanceOverview(account, holdings)
+	perfOverview := s.calculatePerformanceOverview(ctx, account, holdings)
 
 	// Calculate trading analysis
 	tradingAnalysis := s.calculateTradingAnalysis(trades)
@@ -158,7 +158,7 @@ func (s *DashboardService) GetDashboardSummary(
 	}
 
 	// Calculate portfolio distribution
-	portfolioDist := s.calculatePortfolioDistribution(account, holdings)
+	portfolioDist := s.calculatePortfolioDistribution(ctx, account, holdings)
 
 	// Get heatmap data
 	heatmapData, err := s.getMarketHeatmap(ctx)
@@ -177,6 +177,7 @@ func (s *DashboardService) GetDashboardSummary(
 }
 
 func (s *DashboardService) calculatePerformanceOverview(
+	ctx context.Context,
 	account *models.TradingAccount,
 	holdings []models.Holding,
 ) PerformanceOverview {
@@ -196,7 +197,7 @@ func (s *DashboardService) calculatePerformanceOverview(
 	}
 
 	if len(instrumentIDs) > 0 {
-		prices, _ := s.marketService.GetBatchPrices(instrumentIDs)
+		prices, _ := s.marketService.GetBatchPrices(ctx, instrumentIDs)
 		priceMap := make(map[string]float64)
 		for _, p := range prices {
 			priceMap[p.InstrumentID.Hex()] = p.LastPrice
@@ -755,6 +756,7 @@ func (s *DashboardService) toSmartStock(data *models.MarketData) SmartStock {
 }
 
 func (s *DashboardService) calculatePortfolioDistribution(
+	ctx context.Context,
 	account *models.TradingAccount,
 	holdings []models.Holding,
 ) PortfolioDistribution {
@@ -772,7 +774,7 @@ func (s *DashboardService) calculatePortfolioDistribution(
 	}
 
 	if len(instrumentIDs) > 0 {
-		prices, _ := s.marketService.GetBatchPrices(instrumentIDs)
+		prices, _ := s.marketService.GetBatchPrices(ctx, instrumentIDs)
 		priceMap := make(map[string]float64)
 		for _, p := range prices {
 			priceMap[p.InstrumentID.Hex()] = p.LastPrice

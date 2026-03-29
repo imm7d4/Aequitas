@@ -270,7 +270,7 @@ func (s *PortfolioService) CaptureSnapshot(ctx context.Context, userID string) (
 	}
 
 	if len(instrumentIDs) > 0 {
-		prices, err := s.marketService.GetBatchPrices(instrumentIDs)
+		prices, err := s.marketService.GetBatchPrices(ctx, instrumentIDs)
 		if err != nil {
 			log.Printf("Failed to get prices for snapshot: %v", err)
 			// Decide: Fail or continue with AvgCost? Let's fail for now to ensure data quality

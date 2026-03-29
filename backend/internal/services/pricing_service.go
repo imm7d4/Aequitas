@@ -61,6 +61,9 @@ func (s *PricingService) Stop() {
 }
 
 func (s *PricingService) simulatePrices() {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	instruments, err := s.instrumentRepo.FindAll(map[string]interface{}{"status": "ACTIVE"})
 	if err != nil {
 		log.Printf("Pricing engine error: failed to fetch instruments: %v", err)
@@ -68,7 +71,7 @@ func (s *PricingService) simulatePrices() {
 	}
 
 	for _, inst := range instruments {
-		data, err := s.marketDataRepo.FindByInstrumentID(inst.ID.Hex())
+		data, err := s.marketDataRepo.FindByInstrumentID(ctx, inst.ID.Hex())
 		if err != nil {
 			log.Printf("Pricing engine error: failed to fetch market data for %s: %v", inst.Symbol, err)
 			continue
@@ -152,7 +155,7 @@ func (s *PricingService) simulatePrices() {
 			go s.priceAlertService.CheckAlerts(context.Background(), inst.ID.Hex(), data.LastPrice)
 		}
 
-		if err := s.marketDataRepo.Upsert(data); err != nil {
+		if err := s.marketDataRepo.Upsert(ctx, data); err != nil {
 			log.Printf("Pricing engine error: failed to update %s: %v", inst.Symbol, err)
 		}
 	}

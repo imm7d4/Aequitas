@@ -106,7 +106,7 @@ func (s *OrderService) PlaceOrder(ctx context.Context, userID string, req models
 	// 3. Stop Order Validation (if applicable)
 	if req.OrderType == "STOP" || req.OrderType == "STOP_LIMIT" || req.OrderType == "TRAILING_STOP" {
 		// Get current market price for validation
-		marketData, err := s.marketDataRepo.FindByInstrumentID(instrument.ID.Hex())
+		marketData, err := s.marketDataRepo.FindByInstrumentID(ctx, instrument.ID.Hex())
 		if err != nil || marketData == nil {
 			return nil, errors.New("market data unavailable for stop order validation")
 		}
@@ -143,7 +143,7 @@ func (s *OrderService) PlaceOrder(ctx context.Context, userID string, req models
 		orderPrice = *req.Price
 	} else if req.OrderType == "MARKET" {
 		// Fetch LTP for risk check
-		marketData, err := s.marketDataRepo.FindByInstrumentID(instrument.ID.Hex())
+		marketData, err := s.marketDataRepo.FindByInstrumentID(ctx, instrument.ID.Hex())
 		if err != nil || marketData == nil {
 			return nil, errors.New("market data unavailable for this instrument")
 		}
@@ -427,7 +427,7 @@ func (s *OrderService) ModifyOrder(ctx context.Context, userID string, orderID s
 		orderPrice = *newPrice
 	} else {
 		// Market orders - use current LTP for balance check
-		marketData, err := s.marketDataRepo.FindByInstrumentID(instrument.ID.Hex())
+		marketData, err := s.marketDataRepo.FindByInstrumentID(ctx, instrument.ID.Hex())
 		if err != nil || marketData == nil {
 			return nil, errors.New("market data unavailable")
 		}

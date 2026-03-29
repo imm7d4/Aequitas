@@ -137,7 +137,7 @@ func (c *MarketController) GetBatchPrices(w http.ResponseWriter, r *http.Request
 	}
 
 	ids := strings.Split(idsParam, ",")
-	prices, err := c.service.GetBatchPrices(ids)
+	prices, err := c.service.GetBatchPrices(r.Context(), ids)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return

@@ -124,11 +124,15 @@ const OnboardingTour = () => {
 
                 if (targetRoute && location.pathname !== targetRoute) {
                     // Need to navigate first
-                    setPendingIndex(nextIndex); // Pause tour
-                    navigate(targetRoute);
+                    setPendingIndex(nextIndex); // Pause tour via run prop
+                    
+                    // Small delay to ensure Joyride sees run=false before route changes
+                    // and targets are unmounted
+                    setTimeout(() => {
+                        navigate(targetRoute);
+                    }, 50);
                     return; // Don't setStepIndex yet
                 }
-            } else {
             }
 
             setStepIndex(nextIndex);

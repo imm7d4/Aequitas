@@ -70,7 +70,7 @@ func (s *StopOrderService) MonitorStopOrders(ctx context.Context) {
 
 	for _, order := range pendingOrders {
 		// Fetch current market data
-		marketData, err := s.marketDataRepo.FindByInstrumentID(order.InstrumentID.Hex())
+		marketData, err := s.marketDataRepo.FindByInstrumentID(ctx, order.InstrumentID.Hex())
 		if err != nil || marketData == nil {
 			log.Printf("Stop monitor warning: market data unavailable for %s (order %s)", order.Symbol, order.OrderID)
 			continue

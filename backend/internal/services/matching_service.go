@@ -70,8 +70,7 @@ func (s *MatchingService) Stop() {
 
 // ExecuteMarketOrder performs an immediate fill for an order at current LTP
 func (s *MatchingService) ExecuteMarketOrder(ctx context.Context, order *models.Order) (*models.Trade, error) {
-	// 1. Get current market price
-	marketData, err := s.marketDataRepo.FindByInstrumentID(order.InstrumentID.Hex())
+	marketData, err := s.marketDataRepo.FindByInstrumentID(ctx, order.InstrumentID.Hex())
 	if err != nil || marketData == nil {
 		return nil, fmt.Errorf("matching engine: market data unavailable for %s", order.Symbol)
 	}
@@ -163,7 +162,7 @@ func (s *MatchingService) MatchLimitOrders(ctx context.Context) {
 	}
 
 	for _, order := range orders {
-		marketData, err := s.marketDataRepo.FindByInstrumentID(order.InstrumentID.Hex())
+		marketData, err := s.marketDataRepo.FindByInstrumentID(ctx, order.InstrumentID.Hex())
 		if err != nil || marketData == nil {
 			continue
 		}

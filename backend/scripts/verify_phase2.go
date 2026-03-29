@@ -124,9 +124,16 @@ func main() {
 		InstrumentID: Reliance.ID,
 		Symbol:       Reliance.Symbol,
 		LastPrice:    2000.0,
+		PrevClose:    1980.0,
+		Open:         1990.0,
+		High:         2010.0,
+		Low:          1985.0,
+		Volume:       500000,
 		UpdatedAt:    time.Now(),
 	}
-	_ = mdRepo.Upsert(md)
+	if err := mdRepo.Upsert(context.Background(), md); err != nil {
+		log.Printf("Upsert MD failed: %v", err)
+	}
 	// Repo.Update usually updates by ID. MDRepo might handle it.
 	// Let's check MDRepo or just use Create.
 	// Assuming Update works or we just fail if no MD.

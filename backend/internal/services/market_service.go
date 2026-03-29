@@ -28,8 +28,8 @@ func NewMarketService(
 	}
 }
 
-func (s *MarketService) GetBatchPrices(instrumentIDs []string) ([]*models.MarketData, error) {
-	return s.marketDataRepo.FindByInstrumentIDs(instrumentIDs)
+func (s *MarketService) GetBatchPrices(ctx context.Context, instrumentIDs []string) ([]*models.MarketData, error) {
+	return s.marketDataRepo.FindByInstrumentIDs(ctx, instrumentIDs)
 }
 
 type CreateMarketHoursRequest struct {

@@ -37,10 +37,16 @@ func main() {
 	log.Println("Configuration loaded successfully")
 
 	// Connect to MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	clientOpts := options.Client().
+		ApplyURI(cfg.MongoURI).
+		SetConnectTimeout(10 * time.Second).
+		SetMaxConnIdleTime(5 * time.Minute).
+		SetServerSelectionTimeout(5 * time.Second)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoURI))
+	client, err := mongo.Connect(ctx, clientOpts)
 	if err != nil {
 		log.Fatal("Failed to connect to MongoDB:", err)
 	}
