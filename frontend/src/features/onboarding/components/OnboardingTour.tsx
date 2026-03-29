@@ -97,20 +97,24 @@ const OnboardingTour = () => {
 
         if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
             setPendingIndex(null); // Clear any pending state
-            stopTour();
-            if (status === STATUS.FINISHED) {
-                completeOnboarding();
-                if (user) {
-                    setUser({ ...user, isOnboardingComplete: true, onboardingCompletedAt: new Date().toISOString() });
+            // Small delay before unmounting via store update or navigate
+            // This prevents Joyride internal callback error 'nodeName of null'
+            setTimeout(() => {
+                stopTour();
+                if (status === STATUS.FINISHED) {
+                    completeOnboarding();
+                    if (user) {
+                        setUser({ ...user, isOnboardingComplete: true, onboardingCompletedAt: new Date().toISOString() });
+                    }
+                    // Navigate back to dashboard on finish
+                    navigate('/dashboard');
+                } else {
+                    skipOnboarding();
+                    if (user) {
+                        setUser({ ...user, isOnboardingComplete: true, onboardingSkipped: true });
+                    }
                 }
-                // Navigate back to dashboard on finish
-                navigate('/dashboard');
-            } else {
-                skipOnboarding();
-                if (user) {
-                    setUser({ ...user, isOnboardingComplete: true, onboardingSkipped: true });
-                }
-            }
+            }, 100);
         } else if ([EVENTS.STEP_AFTER, EVENTS.TARGET_NOT_FOUND].includes(type as any)) {
             const nextIndex = index + (action === 'prev' ? -1 : 1);
 
