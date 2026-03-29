@@ -27,11 +27,13 @@ interface WalletDetailModalProps {
     onClose: () => void;
 }
 
+import { formatCurrency } from '../../../shared/utils/formatters';
+
 const StatItem: React.FC<{ label: string, value: number, isCurrency?: boolean }> = ({ label, value, isCurrency = true }) => (
     <Box sx={{ p: 1.5, bgcolor: 'background.paper', borderRadius: '8px', border: '1px solid', borderColor: 'divider' }}>
         <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ display: 'block', mb: 0.5 }}>{label}</Typography>
         <Typography variant="body1" fontWeight={800} color={value < 0 ? 'error.main' : 'text.primary'}>
-            {isCurrency ? `₹${value.toLocaleString()}` : value}
+            {isCurrency ? formatCurrency(value) : value}
         </Typography>
     </Box>
 );

@@ -160,9 +160,13 @@ func (s *AdminService) GetWallets(ctx context.Context) ([]map[string]interface{}
 		userMap[users[i].ID] = users[i]
 	}
 
-	result := make([]map[string]interface{}, 0, len(accounts))
+	result := make([]map[string]interface{}, 0)
 	for _, acc := range accounts {
 		u := userMap[acc.UserID]
+		if u == nil || u.Role != models.RoleTrader {
+			continue
+		}
+
 		accMap := map[string]interface{}{
 			"id":                acc.ID.Hex(),
 			"userId":            acc.UserID.Hex(),
@@ -174,13 +178,8 @@ func (s *AdminService) GetWallets(ctx context.Context) ([]map[string]interface{}
 			"currency":          acc.Currency,
 			"status":            acc.Status,
 		}
-		if u != nil {
-			accMap["fullName"] = u.FullName
-			accMap["email"] = u.Email
-		} else {
-			accMap["fullName"] = "No Name Set"
-			accMap["email"] = ""
-		}
+		accMap["fullName"] = u.FullName
+		accMap["email"] = u.Email
 		result = append(result, accMap)
 	}
 	return result, nil

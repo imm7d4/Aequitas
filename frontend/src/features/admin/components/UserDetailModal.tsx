@@ -46,6 +46,8 @@ const InfoItem: React.FC<{ icon: React.ReactNode, label: string, value: string |
     </Box>
 );
 
+import { formatDate } from '../../../shared/utils/formatters';
+
 export const UserDetailModal: React.FC<UserDetailModalProps> = ({ open, user, onClose, onEdit, onToggleStatus }) => {
     const theme = useTheme();
     if (!user) return null;
@@ -120,8 +122,8 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({ open, user, on
                                 sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700 }} 
                             />
                         } />
-                        <InfoItem icon={<AccessTime fontSize="small" />} label="Last Activity" value={user.lastActivityAt ? new Date(user.lastActivityAt).toLocaleString() : 'Never'} />
-                        <InfoItem icon={<AccessTime fontSize="small" />} label="Signed Up" value={user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'} />
+                        <InfoItem icon={<AccessTime fontSize="small" />} label="Last Activity" value={user.lastActivityAt ? formatDate(user.lastActivityAt) : 'Never'} />
+                        <InfoItem icon={<AccessTime fontSize="small" />} label="Signed Up" value={user.createdAt ? formatDate(user.createdAt) : 'Unknown'} />
                     </Grid>
                 </Grid>
 

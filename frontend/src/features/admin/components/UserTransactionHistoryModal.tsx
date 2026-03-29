@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import { Close } from '@mui/icons-material';
 import { CustomGrid, Column, BaseRow } from '../../../shared/components/CustomGrid';
+import { formatCurrency, formatDate } from '../../../shared/utils/formatters';
 
 interface Transaction extends BaseRow {
     type: string;
@@ -56,57 +57,57 @@ export const UserTransactionHistoryModal: React.FC<UserTransactionHistoryModalPr
         .catch(() => setLoading(false));
     };
 
-    const columns: Column<Transaction>[] = [
-        {
-            id: 'type',
-            label: 'Type',
-            minWidth: 120,
-            render: (row) => (
-                <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary' }}>{row.type}</Typography>
-            )
-        },
-        {
-            id: 'amount',
-            label: 'Amount',
-            minWidth: 120,
-            align: 'right',
-            render: (row) => (
-                <Typography variant="body2" sx={{ fontWeight: 700, color: row.amount < 0 ? 'error.main' : 'success.main' }}>
-                    {row.amount < 0 ? '-' : '+'}₹{Math.abs(row.amount).toLocaleString()}
-                </Typography>
-            )
-        },
-        {
-            id: 'status',
-            label: 'Status',
-            minWidth: 120,
-            render: (row) => (
-                <Box sx={{ 
-                    px: 1, py: 0.5, borderRadius: '4px', display: 'inline-block',
-                    bgcolor: row.status === 'COMPLETED' ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.warning.main, 0.1),
-                    color: row.status === 'COMPLETED' ? 'success.main' : 'warning.main',
-                    fontSize: '11px', fontWeight: 800
-                }}>
-                    {row.status}
-                </Box>
-            )
-        },
-        {
-            id: 'reference',
-            label: 'Reference',
-            minWidth: 200,
-        },
-        {
-            id: 'createdAt',
-            label: 'Date',
-            minWidth: 150,
-            render: (row) => (
-                <Typography variant="body2" color="text.secondary">
-                    {new Date(row.createdAt).toLocaleString()}
-                </Typography>
-            )
-        }
-    ];
+const columns: Column<Transaction>[] = [
+    {
+        id: 'type',
+        label: 'Type',
+        minWidth: 120,
+        render: (row) => (
+            <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary' }}>{row.type}</Typography>
+        )
+    },
+    {
+        id: 'amount',
+        label: 'Amount',
+        minWidth: 120,
+        align: 'right',
+        render: (row) => (
+            <Typography variant="body2" sx={{ fontWeight: 700, color: row.amount < 0 ? 'error.main' : 'success.main' }}>
+                {row.amount < 0 ? '-' : '+'}{formatCurrency(Math.abs(row.amount))}
+            </Typography>
+        )
+    },
+    {
+        id: 'status',
+        label: 'Status',
+        minWidth: 120,
+        render: (row) => (
+            <Box sx={{ 
+                px: 1, py: 0.5, borderRadius: '4px', display: 'inline-block',
+                bgcolor: row.status === 'COMPLETED' ? alpha(theme.palette.success.main, 0.1) : alpha(theme.palette.warning.main, 0.1),
+                color: row.status === 'COMPLETED' ? 'success.main' : 'warning.main',
+                fontSize: '11px', fontWeight: 800
+            }}>
+                {row.status}
+            </Box>
+        )
+    },
+    {
+        id: 'reference',
+        label: 'Reference',
+        minWidth: 200,
+    },
+    {
+        id: 'createdAt',
+        label: 'Date',
+        minWidth: 150,
+        render: (row) => (
+            <Typography variant="body2" color="text.secondary">
+                {formatDate(row.createdAt)}
+            </Typography>
+        )
+    }
+];
 
     if (!user) return null;
 
