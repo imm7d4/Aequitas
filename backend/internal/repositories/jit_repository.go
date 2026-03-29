@@ -33,16 +33,28 @@ func (r *JITRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*mo
 	return &req, err
 }
 
-func (r *JITRepository) UpdateStatus(ctx context.Context, id primitive.ObjectID, checkerID primitive.ObjectID, status models.JITStatus) error {
+func (r *JITRepository) AddChecker(ctx context.Context, id primitive.ObjectID, checkerID primitive.ObjectID, status models.JITStatus) error {
 	now := time.Now()
 	update := bson.M{
 		"$set": bson.M{
-			"status":     status,
-			"checker_id": checkerID,
+			"status":      status,
 			"approved_at": &now,
+		},
+		"$addToSet": bson.M{
+			"checkers": checkerID,
 		},
 	}
 	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, update)
+	return err
+}
+
+func (r *JITRepository) IncrementUses(ctx context.Context, id primitive.ObjectID) error {
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$inc": bson.M{"current_uses": 1}})
+	return err
+}
+
+func (r *JITRepository) UpdateStatus(ctx context.Context, id primitive.ObjectID, status models.JITStatus) error {
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"status": status}})
 	return err
 }
 

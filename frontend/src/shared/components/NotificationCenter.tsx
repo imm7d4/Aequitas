@@ -20,10 +20,12 @@ import {
     MonetizationOn as MoneyIcon,
 } from '@mui/icons-material';
 import { useNotificationStore } from '../store/useNotificationStore';
+import { useNavigate } from 'react-router-dom';
 
 export const NotificationCenter: React.FC = () => {
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
     const { notifications, unreadCount, markAsRead, reset, fetchNotifications } = useNotificationStore();
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchNotifications();
@@ -54,9 +56,14 @@ export const NotificationCenter: React.FC = () => {
         }
     };
 
-    const handleNotificationClick = (id: string, isRead: boolean) => {
-        if (!isRead) {
-            markAsRead(id);
+    const handleNotificationClick = (notification: any) => {
+        if (!notification.isRead) {
+            markAsRead(notification.id);
+        }
+
+        if (notification.data?.url) {
+            navigate(notification.data.url);
+            handleClose();
         }
     };
 
@@ -140,7 +147,7 @@ export const NotificationCenter: React.FC = () => {
                                         py: 1, // Compact padding
                                         px: 2
                                     }}
-                                    onClick={() => handleNotificationClick(notification.id, notification.isRead)}
+                                    onClick={() => handleNotificationClick(notification)}
                                 >
                                     <ListItemIcon sx={{ minWidth: 32, mt: 0.5 }}>
                                         {getIcon(notification.type)}
@@ -170,7 +177,7 @@ export const NotificationCenter: React.FC = () => {
                                                                 onClick={(e) => {
                                                                     e.stopPropagation(); // Prevent triggering the row click
                                                                     // Optional: Mark as read when action is clicked?
-                                                                    handleNotificationClick(notification.id, notification.isRead);
+                                                                    handleNotificationClick(notification);
                                                                 }}
                                                                 sx={{
                                                                     fontSize: '0.7rem',

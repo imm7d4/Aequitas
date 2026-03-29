@@ -48,16 +48,18 @@ func main() {
 	otpService := services.NewOTPService(otpRepo)
 	commProvider := services.NewBrevoProvider(cfg)
 	jitRepo := repositories.NewJITRepository(db)
-	jitService := services.NewJITService(jitRepo)
+	auditService := services.NewAuditService(nil) // Mock/Nil repo for simple verification script if repo not easily available
+	jitService := services.NewJITService(jitRepo, auditService)
 	userRepo := repositories.NewUserRepository(db)
-	accountService := services.NewTradingAccountService(accountRepo, txRepo, userRepo, otpService, jitService, commProvider)
+	accountService := services.NewTradingAccountService(accountRepo, txRepo, userRepo, otpService, jitService, auditService, commProvider)
 	// Mock MarketService for Portfolio (Portfolio uses it for Snapshot only usually, but UpdatePosition uses generic logic)
 	// Actually PortfolioService uses MarketService for snapshots but strict UpdatePosition doesn't need external price calls if provided in Trade.
 	// But NewPortfolioService needs it. We can pass nil? No, struct expects it.
 	// Let's Init mocked MarketService or minimal one.
 	// MarketService needs MarketRepo + MDRepo.
 	marketRepo := repositories.NewMarketRepository(db)
-	marketService := services.NewMarketService(marketRepo, mdRepo)
+	adminConfigRepo := repositories.NewAdminConfigRepository(db)
+	marketService := services.NewMarketService(marketRepo, mdRepo, adminConfigRepo)
 
 	analyticsService := services.NewAnalyticsService(trRepo, activeUnitRepo, candleRepo)
 	portfolioService := services.NewPortfolioService(portfolioRepo, marketService, accountService, analyticsService)
@@ -66,8 +68,8 @@ func main() {
 	go wsHub.Run()
 	notifService := services.NewNotificationService(notifRepo, wsHub)
 
-	matchingService := services.NewMatchingService(cfg, orderRepo, tradeRepo, mdRepo, accountService, portfolioService, notifService)
-	orderService := services.NewOrderService(orderRepo, instrumentRepo, accountRepo, mdRepo, matchingService, portfolioService, notifService)
+	matchingService := services.NewMatchingService(cfg, orderRepo, tradeRepo, mdRepo, accountService, portfolioService, notifService, auditService)
+	orderService := services.NewOrderService(orderRepo, instrumentRepo, accountRepo, mdRepo, matchingService, portfolioService, notifService, auditService)
 
 	log.Println("Services Initialized.")
 

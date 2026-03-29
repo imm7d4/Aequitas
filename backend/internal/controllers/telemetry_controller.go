@@ -23,7 +23,7 @@ func (c *TelemetryController) IngestTelemetry(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := c.service.IngestEvents(req.Events); err != nil {
+	if err := c.service.IngestEvents(r.Context(), req.Events); err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

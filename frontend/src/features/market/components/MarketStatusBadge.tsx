@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Chip, Box, Typography, Tooltip } from '@mui/material';
+import { Box, Typography, Tooltip } from '@mui/material';
 import { useMarketStatus } from '../hooks/useMarketStatus';
+import { Loader } from '../../../shared/components/Loader';
 
 export const MarketStatusBadge = () => {
     const { marketStatus, isLoading } = useMarketStatus('NSE');
@@ -23,7 +24,11 @@ export const MarketStatusBadge = () => {
     }, []);
 
     if (isLoading || !marketStatus) {
-        return <Chip label="Loading..." size="small" variant="outlined" />;
+        return (
+            <Box sx={{ display: 'flex', alignItems: 'center', height: 24 }}>
+                <Loader size="small" />
+            </Box>
+        );
     }
 
     const getStatusLabel = () => {

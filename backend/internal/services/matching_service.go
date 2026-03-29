@@ -21,6 +21,7 @@ type MatchingService struct {
 	accountService      *TradingAccountService
 	portfolioService    *PortfolioService
 	notificationService *NotificationService
+	auditService        *AuditService
 	stopChan            chan struct{}
 }
 
@@ -32,6 +33,7 @@ func NewMatchingService(
 	accountService *TradingAccountService,
 	portfolioService *PortfolioService,
 	notificationService *NotificationService,
+	auditService *AuditService,
 ) *MatchingService {
 	return &MatchingService{
 		config:              cfg,
@@ -41,6 +43,7 @@ func NewMatchingService(
 		accountService:      accountService,
 		portfolioService:    portfolioService,
 		notificationService: notificationService,
+		auditService:        auditService,
 		stopChan:            make(chan struct{}),
 	}
 }
@@ -123,7 +126,13 @@ func (s *MatchingService) ExecuteMarketOrder(ctx context.Context, order *models.
 		return nil, err
 	}
 
-	// 6. Send Notification (outside transaction)
+	// 6. Audit Log
+	s.auditService.Log(order.UserID.Hex(), "System", "SYSTEM", "ORDER_FILLED",
+		order.ID.Hex(), "ORDER",
+		fmt.Sprintf("FILL %d %s @ ₹%.2f (Market)", order.Quantity, order.Symbol, executionPrice),
+		nil, order)
+
+	// 7. Send Notification (outside transaction)
 	go func() {
 		_ = s.notificationService.SendNotification(
 			context.Background(),
@@ -227,7 +236,13 @@ func (s *MatchingService) MatchLimitOrders(ctx context.Context) {
 				continue
 			}
 
-			// Send Notification (outside transaction)
+			// 6. Audit Log
+			s.auditService.Log(order.UserID.Hex(), "System", "SYSTEM", "ORDER_FILLED",
+				order.ID.Hex(), "ORDER",
+				fmt.Sprintf("FILL %d %s @ ₹%.2f (Limit)", order.Quantity, order.Symbol, fillPrice),
+				nil, order)
+
+			// 7. Send Notification (outside transaction)
 			orderToNotify := order // Capture for goroutine
 			go func() {
 				_ = s.notificationService.SendNotification(

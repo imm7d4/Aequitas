@@ -52,14 +52,16 @@ export const Sidebar: React.FC = () => {
         { text: 'Portfolio', icon: <PortfolioIcon />, path: '/portfolio', id: 'portfolio-nav', roles: ['TRADER'] },
         { text: 'Orders', icon: <OrdersIcon />, path: '/orders', id: 'orders-nav', roles: ['TRADER'] },
         { text: 'Education', icon: <EducationIcon />, path: '/education', id: 'education-nav', roles: ['TRADER'] },
+        { text: 'Support', icon: <SupportIcon />, path: '/support', id: 'support-nav', roles: ['TRADER'] },
 
         // Admin Pages
         { text: 'Control Center', icon: <AdminIcon />, path: '/admin/control-center', id: 'admin-cc-nav', roles: ['PLATFORM_ADMIN', 'RISK_OFFICER'] },
         { text: 'User Administration', icon: <AdminIcon />, path: '/user-management', id: 'admin-users-nav', roles: ['PLATFORM_ADMIN'] },
         { text: 'Wallet Management', icon: <WalletIcon />, path: '/wallet-management', id: 'wallet-mgmt-nav', roles: ['PLATFORM_ADMIN', 'SUPPORT'] },
         { text: 'Market Ops', icon: <MarketOpsIcon />, path: '/admin/market', id: 'admin-market-nav', roles: ['PLATFORM_ADMIN'] },
-        { text: 'Audit Logs', icon: <AuditIcon />, path: '/admin/audit', id: 'admin-audit-nav', roles: ['AUDIT_ADMIN', 'PLATFORM_ADMIN'] },
+        { text: 'Audit Logs', icon: <AuditIcon />, path: '/admin/audit', id: 'admin-audit-nav', roles: ['PLATFORM_ADMIN'] },
         { text: 'Risk Governance', icon: <RiskIcon />, path: '/admin/risk', id: 'admin-risk-nav', roles: ['RISK_OFFICER', 'PLATFORM_ADMIN'] },
+        { text: 'JIT Approvals', icon: <RiskIcon />, path: '/admin/jit', id: 'admin-jit-nav', roles: ['PLATFORM_ADMIN', 'RISK_OFFICER'] },
         { text: 'Support Ticketing', icon: <SupportIcon />, path: '/admin/tickets', id: 'admin-tickets-nav', roles: ['SUPPORT', 'PLATFORM_ADMIN'] },
     ];
 

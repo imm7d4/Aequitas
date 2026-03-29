@@ -73,19 +73,23 @@ func main() {
 	otpRepo := repositories.NewOTPRepository(db)
 	adminConfigRepo := repositories.NewAdminConfigRepository(db)
 	jitRepo := repositories.NewJITRepository(db)
+	auditLogRepo := repositories.NewAuditLogRepository(db)
+	priceAlertRepo := repositories.NewPriceAlertRepository(db)
+	supportTicketRepo := repositories.NewSupportTicketRepository(db)
 
 	// Initialize basic services
 	otpService := services.NewOTPService(otpRepo)
-	jitService := services.NewJITService(jitRepo)
+	auditService := services.NewAuditService(auditLogRepo)
+	jitService := services.NewJITService(jitRepo, auditService)
 	commProvider := services.NewBrevoProvider(cfg)
 
 	// Initialize services (Basic)
-	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo, transactionRepo, userRepo, otpService, jitService, commProvider)
-	authService := services.NewAuthService(userRepo, tradingAccountService, otpService, commProvider, cfg)
+	tradingAccountService := services.NewTradingAccountService(tradingAccountRepo, transactionRepo, userRepo, otpService, jitService, auditService, commProvider)
+	authService := services.NewAuthService(userRepo, tradingAccountService, otpService, auditService, commProvider, cfg)
 	instrumentService := services.NewInstrumentService(instrumentRepo)
-	marketService := services.NewMarketService(marketRepo, marketDataRepo)
+	marketService := services.NewMarketService(marketRepo, marketDataRepo, adminConfigRepo)
 	watchlistService := services.NewWatchlistService(watchlistRepo, instrumentRepo)
-	telemetryService := services.NewTelemetryService(telemetryRepo)
+	telemetryService := services.NewTelemetryService(telemetryRepo, auditService)
 	userService := services.NewUserService(userRepo, otpService, commProvider)
 	analyticsService := services.NewAnalyticsService(tradeResultRepo, activeUnitRepo, candleRepo)
 	portfolioService := services.NewPortfolioService(portfolioRepo, marketService, tradingAccountService, analyticsService)
@@ -93,7 +97,7 @@ func main() {
 	candleBuilder := services.NewCandleBuilder(candleRepo)
 	tradeService := services.NewTradeService(tradeRepo)
 	dashboardService := services.NewDashboardService(portfolioRepo, tradeRepo, tradingAccountService, marketService, marketDataRepo, instrumentRepo)
-	adminService := services.NewAdminService(db, adminConfigRepo, userRepo)
+	adminService := services.NewAdminService(db, adminConfigRepo, userRepo, tradeRepo, telemetryRepo, tradingAccountRepo, jitService, auditService)
 
 	// Initialize WebSocket hub BEFORE NotificationService
 	wsHub := websocket.NewHub()
@@ -101,14 +105,12 @@ func main() {
 	wsHandler := websocket.NewHandler(wsHub, cfg.JWTSecret)
 
 	notificationService := services.NewNotificationService(notificationRepo, wsHub)
-
-	// Create PriceAlertRepository (was missing in original init)
-	priceAlertRepo := repositories.NewPriceAlertRepository(db)
 	priceAlertService := services.NewPriceAlertService(priceAlertRepo, notificationService)
+	supportService := services.NewSupportService(supportTicketRepo, userRepo, auditService, notificationService)
 
 	// Initialize Complex Services (Dependent on NotificationService)
-	matchingService := services.NewMatchingService(cfg, orderRepo, tradeRepo, marketDataRepo, tradingAccountService, portfolioService, notificationService)
-	orderService := services.NewOrderService(orderRepo, instrumentRepo, tradingAccountRepo, marketDataRepo, matchingService, portfolioService, notificationService)
+	matchingService := services.NewMatchingService(cfg, orderRepo, tradeRepo, marketDataRepo, tradingAccountService, portfolioService, notificationService, auditService)
+	orderService := services.NewOrderService(orderRepo, instrumentRepo, tradingAccountRepo, marketDataRepo, matchingService, portfolioService, notificationService, auditService)
 
 	// Configure candle builder to broadcast to WS hub
 	candleBuilder.SetBroadcastFunc(func(instrumentID string, candle *models.Candle) {
@@ -164,7 +166,7 @@ func main() {
 	telemetryController := controllers.NewTelemetryController(telemetryService)
 	userController := controllers.NewUserController(userService)
 	accountController := controllers.NewAccountController(tradingAccountService)
-	adminController := controllers.NewAdminController(adminService)
+	adminController := controllers.NewAdminController(adminService, tradingAccountService)
 	jitController := controllers.NewJITController(jitService)
 	orderController := controllers.NewOrderController(orderService)
 	candleController := controllers.NewCandleController(candleService)
@@ -174,6 +176,10 @@ func main() {
 	priceAlertController := controllers.NewPriceAlertController(priceAlertService)
 	dashboardController := controllers.NewDashboardController(dashboardService)
 	analyticsController := controllers.NewAnalyticsController(analyticsService)
+	auditController := controllers.NewAuditController(auditService)
+	supportController := controllers.NewSupportController(supportService)
+	
+	abacMiddleware := middleware.NewABACMiddleware(jitService)
 
 	// Set up router
 	router := mux.NewRouter()
@@ -204,7 +210,63 @@ func main() {
 
 	// Protected routes (require authentication)
 	protected := api.PathPrefix("").Subrouter()
-	protected.Use(middleware.Auth(cfg, userRepo))
+	protected.Use(middleware.Auth(cfg, userRepo, adminConfigRepo))
+
+	// Admin routes (require Admin roles + additional ABAC for sensitive actions)
+	adminRouter := protected.PathPrefix("/admin").Subrouter()
+	adminRouter.Use(middleware.RoleMiddleware(
+		models.RolePlatformAdmin, 
+		models.RoleRiskOfficer, 
+		models.RoleSupport,
+	))
+	
+	// Direct Admin Actions (No JIT required)
+	adminRouter.HandleFunc("/users/{id}/status", adminController.UpdateUserStatus).Methods("PUT", "OPTIONS")
+	
+	// Sensitive Actions (JIT Required)
+	adminRouter.Handle("/wallet/adjust", abacMiddleware.Authorize("WALLET_ADJUSTMENT", true)(http.HandlerFunc(adminController.AdjustWallet))).Methods("POST", "OPTIONS")
+	adminRouter.Handle("/config", abacMiddleware.Authorize("CONFIG_UPDATE", true)(middleware.StepUpMiddleware(cfg)(http.HandlerFunc(adminController.UpdateConfig)))).Methods("PUT", "OPTIONS")
+	
+	// General Admin Actions
+	adminRouter.HandleFunc("/users", adminController.GetUsers).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/users", adminController.CreateUser).Methods("POST", "OPTIONS")
+	adminRouter.HandleFunc("/wallets", adminController.GetWallets).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/wallet/history", adminController.GetWalletHistory).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/config", adminController.GetConfig).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/metrics", adminController.GetPlatformMetrics).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/audit/logs", auditController.GetLogs).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/audit/justify", adminController.LogJustification).Methods("POST", "OPTIONS")
+	
+	adminRouter.HandleFunc("/jit/request", jitController.RequestAccess).Methods("POST", "OPTIONS")
+	adminRouter.HandleFunc("/jit/approvals", jitController.GetPendingRequests).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/jit/approve", jitController.ApproveRequest).Methods("POST", "OPTIONS")
+	adminRouter.HandleFunc("/jit/reject", jitController.RejectRequest).Methods("POST", "OPTIONS")
+
+	// Instrument Management
+	adminRouter.HandleFunc("/instruments", instrumentController.CreateInstrument).Methods("POST", "OPTIONS")
+	adminRouter.Handle("/instruments/{id}", middleware.StepUpMiddleware(cfg)(http.HandlerFunc(instrumentController.UpdateInstrument))).Methods("PUT", "OPTIONS")
+
+	// Market Hours & Holidays
+	adminRouter.HandleFunc("/market/hours", marketController.CreateMarketHours).Methods("POST", "OPTIONS")
+	adminRouter.HandleFunc("/market/hours/{exchange}", marketController.GetWeeklyHours).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/market/hours/{exchange}/bulk", marketController.UpdateWeeklyHours).Methods("PUT", "OPTIONS")
+	adminRouter.HandleFunc("/market/holidays", marketController.CreateHoliday).Methods("POST", "OPTIONS")
+	adminRouter.HandleFunc("/market/holidays", marketController.GetHolidays).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/market/holidays/{exchange}", marketController.GetHolidays).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/market/holidays/{id}", marketController.DeleteHoliday).Methods("DELETE", "OPTIONS")
+
+	// Support Ticketing (Admin Inbox)
+	adminRouter.HandleFunc("/tickets", supportController.GetTickets).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/tickets/{id}", supportController.GetTicketByID).Methods("GET", "OPTIONS")
+	adminRouter.HandleFunc("/tickets/{id}/status", supportController.UpdateStatus).Methods("PUT", "OPTIONS")
+	adminRouter.HandleFunc("/tickets/{id}/comments", supportController.AddComment).Methods("POST", "OPTIONS")
+	
+	// Public Protected Routes
+	protected.HandleFunc("/auth/logout", authController.Logout).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/tickets", supportController.CreateTicket).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/tickets/my", supportController.GetMyTickets).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/tickets/{id}", supportController.GetTicketByID).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/tickets/{id}/comments", supportController.AddComment).Methods("POST", "OPTIONS")
 
 	// Instrument routes (public read, admin write)
 	protected.HandleFunc("/instruments", instrumentController.GetInstruments).Methods("GET", "OPTIONS")
@@ -280,46 +342,16 @@ func main() {
 
 	// Documentation routes (public - no auth required)
 
-	// Admin routes (require admin role)
-	admin := protected.PathPrefix("/admin").Subrouter()
-	admin.Use(middleware.AdminMiddleware)
+	// Logout
+	protected.HandleFunc("/auth/logout", authController.Logout).Methods("POST", "OPTIONS")
 
-	// Admin instrument routes
-	admin.HandleFunc("/instruments", instrumentController.CreateInstrument).Methods("POST", "OPTIONS")
-	
-	// Example of a route requiring Step-Up MFA (wrapped specifically)
-	admin.Handle("/instruments/{id}", 
-		middleware.StepUpMiddleware(cfg)(http.HandlerFunc(instrumentController.UpdateInstrument)),
-	).Methods("PUT", "OPTIONS")
+	// Price Alert routes
+	protected.HandleFunc("/alerts", priceAlertController.GetAlerts).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/alerts", priceAlertController.CreateAlert).Methods("POST", "OPTIONS")
+	protected.HandleFunc("/alerts/{id}", priceAlertController.CancelAlert).Methods("DELETE", "OPTIONS")
 
-	// Admin market routes
-	admin.HandleFunc("/market/hours", marketController.CreateMarketHours).Methods("POST", "OPTIONS")
-	admin.HandleFunc("/market/hours/{exchange}", marketController.GetWeeklyHours).Methods("GET", "OPTIONS")
-	admin.HandleFunc("/market/hours/{exchange}/bulk", marketController.UpdateWeeklyHours).Methods("PUT", "OPTIONS")
-	admin.HandleFunc("/market/holidays", marketController.CreateHoliday).Methods("POST", "OPTIONS")
-
-	// Admin platform metrics
-	admin.HandleFunc("/platform/metrics", adminController.GetPlatformMetrics).Methods("GET", "OPTIONS")
-	admin.HandleFunc("/config", adminController.GetConfig).Methods("GET", "OPTIONS")
-	admin.HandleFunc("/config", adminController.UpdateConfig).Methods("PUT", "OPTIONS")
-
-	// User Administration (Separate Module, Platform Admin Only)
-	userAdmin := protected.PathPrefix("/user-management").Subrouter()
-	userAdmin.Use(middleware.RoleMiddleware("PLATFORM_ADMIN"))
-	userAdmin.HandleFunc("/users", adminController.GetUsers).Methods("GET", "OPTIONS")
-
-	// Wallet Management (Separate Module, Platform Admin & Support)
-	walletAdmin := protected.PathPrefix("/wallet-management").Subrouter()
-	walletAdmin.Use(middleware.RoleMiddleware("PLATFORM_ADMIN", "SUPPORT"))
-	walletAdmin.HandleFunc("/users", adminController.GetUsers).Methods("GET", "OPTIONS")
-
-	// JIT & Maker-Checker
-	admin.HandleFunc("/jit/request", jitController.CreateRequest).Methods("POST", "OPTIONS")
-	admin.HandleFunc("/jit/requests", jitController.GetPending).Methods("GET", "OPTIONS")
-	admin.HandleFunc("/jit/approve", jitController.Approve).Methods("POST", "OPTIONS")
-	admin.HandleFunc("/market/holidays", marketController.GetHolidays).Methods("GET", "OPTIONS")
-	admin.HandleFunc("/market/holidays/{exchange}", marketController.GetHolidays).Methods("GET", "OPTIONS")
-	admin.HandleFunc("/market/holidays/{id}", marketController.DeleteHoliday).Methods("DELETE", "OPTIONS")
+	// Dashboard routes
+	protected.HandleFunc("/dashboard/summary", dashboardController.GetSummary).Methods("GET", "OPTIONS")
 
 	// Start server
 	port := os.Getenv("PORT")

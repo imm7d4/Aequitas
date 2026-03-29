@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth';
+import { Loader } from './Loader';
 
 interface ProtectedRouteProps {
     children: JSX.Element;
@@ -10,7 +11,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps): JSX.Element {
 
     // Show nothing while checking authentication status
     if (isLoading) {
-        return <div>Loading...</div>;
+        return <Loader fullScreen message="Authenticating..." />;
     }
 
     if (!isAuthenticated) {

@@ -143,8 +143,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
     },
 
-    logout: () => {
-        authService.logout();
+    logout: async () => {
+        await authService.logout();
         // Reset feature stores
         useInstrumentStore.getState().reset();
         useWatchlistStore.getState().reset();

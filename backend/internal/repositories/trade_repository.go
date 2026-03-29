@@ -71,3 +71,8 @@ func (r *TradeRepository) FindByOrderID(orderID string) ([]*models.Trade, error)
 
 	return trades, nil
 }
+func (r *TradeRepository) CountRecent(ctx context.Context, duration time.Duration) (int64, error) {
+	since := time.Now().Add(-duration)
+	count, err := r.collection.CountDocuments(ctx, bson.M{"created_at": bson.M{"$gte": since}})
+	return count, err
+}

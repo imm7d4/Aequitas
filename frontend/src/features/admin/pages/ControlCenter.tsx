@@ -130,15 +130,7 @@ export const ControlCenter: React.FC = () => {
     };
 
     return (
-        <Box sx={{ p: 4, bgcolor: '#f8f9fa', minHeight: '100vh' }}>
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" sx={{ fontWeight: 800, color: '#1a1a1a', mb: 1 }}>
-                    Platform Control Center
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    Real-time operational health and executive KPIs (SLA: ≤ 5s)
-                </Typography>
-            </Box>
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
             <Grid container spacing={4}>
                 <Grid item xs={12} md={4}>

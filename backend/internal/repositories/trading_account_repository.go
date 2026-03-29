@@ -105,3 +105,16 @@ func (r *TradingAccountRepository) FindAccountsWithPositions() ([]*models.Tradin
 	}
 	return accounts, nil
 }
+func (r *TradingAccountRepository) FindAll(ctx context.Context) ([]models.TradingAccount, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var accounts []models.TradingAccount
+	if err := cursor.All(ctx, &accounts); err != nil {
+		return nil, err
+	}
+	return accounts, nil
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Box, Button, Paper, Grid, Alert } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -12,6 +12,7 @@ import { usePrevious } from '@/shared/hooks/usePrevious';
 import { useDocumentTitle } from '@/shared/hooks/useDocumentTitle';
 import { useStockChart } from '@/features/market/hooks/useStockChart';
 import { useInstrumentIntelligence } from '../hooks/useInstrumentIntelligence';
+import { useTelemetry } from '@/shared/services/telemetry/TelemetryProvider';
 
 // Components
 import { SetAlertModal } from '@/features/alerts/components/SetAlertModal';
@@ -55,6 +56,9 @@ export function InstrumentDetail() {
     const { fetchHoldings } = usePortfolioStore();
     const isStarred = instrument ? watchlists.some(w => w.instrumentIds.includes(instrument.id)) : false;
 
+    const { track } = useTelemetry();
+    const hasTrackedRef = useRef<string | null>(null);
+
     useEffect(() => {
         const fetchInstrument = async () => {
             if (!id) return;
@@ -62,6 +66,22 @@ export function InstrumentDetail() {
             try {
                 const data = await instrumentService.getInstrumentById(id);
                 setInstrument(data);
+
+                // Track visit with specific symbol - guard against duplicates
+                if (hasTrackedRef.current !== id) {
+                    track({
+                        event_name: 'PAGE_VISIT',
+                        event_version: 'v1',
+                        classification: 'USER_ACTION',
+                        description: `Instrument Details: ${data.symbol}`,
+                        properties: {
+                            to: location.pathname,
+                            page_name: `Instrument Details: ${data.symbol}`,
+                            symbol: data.symbol
+                        }
+                    });
+                    hasTrackedRef.current = id || null;
+                }
             } catch (err: any) {
                 setError(err.response?.data?.message || 'Failed to fetch instrument details');
             } finally {
@@ -71,7 +91,7 @@ export function InstrumentDetail() {
         fetchInstrument();
         fetchWatchlists();
         fetchHoldings();
-    }, [id, fetchWatchlists, fetchHoldings]);
+    }, [id, fetchWatchlists, fetchHoldings, track, location.pathname]);
 
     // Page Title
     const movementArrow = marketData && marketData.change >= 0 ? '▲' : '▼';
@@ -95,7 +115,7 @@ export function InstrumentDetail() {
 
     return (
         <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pb: 8 }}>
-            <InstrumentHeader 
+            <InstrumentHeader
                 instrument={instrument} marketData={marketData} ltp={ltp} tickColor={tickColor}
                 intelligence={intelligence} isStarred={isStarred}
                 onWatchlistToggle={handleWatchlistToggle} onSetAlert={() => setIsAlertModalOpen(true)}

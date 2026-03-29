@@ -139,6 +139,24 @@ func (r *UserRepository) UpdateOnboardingStatus(userID string, complete, skipped
 	return nil
 }
 
+func (r *UserRepository) UpdateStatus(ctx context.Context, userID string, status string, sessionVersion int64) error {
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"status":          status,
+			"session_version": sessionVersion,
+			"updated_at":      time.Now(),
+		},
+	}
+
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objectID}, update)
+	return err
+}
+
 func (r *UserRepository) FindAll(ctx context.Context) ([]*models.User, error) {
 	cursor, err := r.collection.Find(ctx, bson.M{})
 	if err != nil {

@@ -26,7 +26,7 @@ func StepUpMiddleware(cfg *config.Config) func(http.Handler) http.Handler {
 			
 			// Let's assume the auth middleware or a prior step has validated the step-up
 			// and placed it in the context.
-			verified, ok := r.Context().Value(StepUpVerifiedKey).(bool)
+			verified, ok := r.Context().Value(utils.StepUpVerifiedKey).(bool)
 			if !ok || !verified {
 				// Also check for a mock header for easier testing/integration before full MFA is ready
 				if r.Header.Get("X-Step-Up-Verified") == "true" {

@@ -26,9 +26,15 @@ export const authService = {
         return response.data.data;
     },
 
-    logout(): void {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+    async logout(): Promise<void> {
+        try {
+            await api.post('/auth/logout');
+        } catch (error) {
+            console.error('Logout tracking failed:', error);
+        } finally {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+        }
     },
 
     async forgotPassword(email: string): Promise<void> {

@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"aequitas/internal/middleware"
 	"aequitas/internal/services"
 	"aequitas/internal/utils"
 	"encoding/json"
@@ -43,7 +42,7 @@ func (c *InstrumentController) GetInstruments(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	isAdmin, _ := r.Context().Value(middleware.IsAdminKey).(bool)
+	isAdmin, _ := r.Context().Value(utils.IsAdminKey).(bool)
 
 	instruments, err := c.service.GetInstruments(isAdmin)
 	if err != nil {

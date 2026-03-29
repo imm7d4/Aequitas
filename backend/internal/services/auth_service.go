@@ -17,6 +17,7 @@ type AuthService struct {
 	userRepo              *repositories.UserRepository
 	tradingAccountService *TradingAccountService
 	otpService            *OTPService
+	auditService          *AuditService
 	commService           CommunicationProvider
 	config                *config.Config
 }
@@ -25,6 +26,7 @@ func NewAuthService(
 	userRepo *repositories.UserRepository,
 	tradingAccountService *TradingAccountService,
 	otpService *OTPService,
+	auditService *AuditService,
 	commService CommunicationProvider,
 	config *config.Config,
 ) *AuthService {
@@ -32,6 +34,7 @@ func NewAuthService(
 		userRepo:              userRepo,
 		tradingAccountService: tradingAccountService,
 		otpService:            otpService,
+		auditService:          auditService,
 		commService:           commService,
 		config:                config,
 	}
@@ -127,10 +130,11 @@ func (s *AuthService) register(ctx context.Context, email, password string) (*mo
 	// Auto-create trading account (US-0.1.2)
 	_, err = s.tradingAccountService.CreateForUser(ctx, createdUser.ID.Hex())
 	if err != nil {
-		// Log error but don't fail registration
-		// In production, this should trigger a retry mechanism or alert
 		return nil, errors.New("failed to create trading account")
 	}
+
+	s.auditService.Log(createdUser.ID.Hex(), createdUser.Email, "USER", "USER_REGISTERED",
+		createdUser.ID.Hex(), "USER", "New user registered", nil, createdUser)
 
 	return createdUser, nil
 }
@@ -161,6 +165,7 @@ func (s *AuthService) Login(email, password, ipAddress string) (string, *models.
 	token, err := utils.GenerateToken(
 		user.ID.Hex(),
 		user.Email,
+		user.FullName,
 		user.IsAdmin,
 		user.Role,
 		s.config.JWTSecret,
@@ -170,7 +175,15 @@ func (s *AuthService) Login(email, password, ipAddress string) (string, *models.
 		return "", nil, errors.New("failed to generate token")
 	}
 
+	s.auditService.Log(user.ID.Hex(), user.FullName, user.Role, "USER_LOGIN",
+		user.ID.Hex(), "USER", fmt.Sprintf("Authorized via IP: %s", ipAddress), nil, user)
+
 	return token, user, nil
+}
+
+// Logout logs the user logout event in the forensic ledger
+func (s *AuthService) Logout(ctx context.Context) {
+	s.auditService.LogFromContext(ctx, "USER_LOGOUT", "", "USER", "Session Terminated", nil, nil)
 }
 
 // InitiateForgotPassword sends a reset link/OTP to the registered email
@@ -239,5 +252,10 @@ func (s *AuthService) ResetPassword(email, otp, newPassword string) error {
 	}
 
 	user.Password = hashedPassword
-	return s.userRepo.Update(user) // UserRepo still uses Background for now or add ctx there?
+	err = s.userRepo.Update(user)
+	if err == nil {
+		s.auditService.Log(user.ID.Hex(), user.Email, user.Role, "PASSWORD_RESET",
+			user.ID.Hex(), "USER", "User password reset successfully", nil, nil)
+	}
+	return err
 }

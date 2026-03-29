@@ -30,8 +30,10 @@ type User struct {
 	Status                string             `bson:"status" json:"status"`
 	KYCStatus             string             `bson:"kyc_status" json:"kycStatus"`
 	IsOnboardingComplete  bool               `bson:"is_onboarding_complete" json:"isOnboardingComplete"`
+	IsTestAccount         bool               `bson:"is_test_account" json:"isTestAccount"` // For Gated Maintenance access (US-12.3)
 	OnboardingSkipped     bool               `bson:"onboarding_skipped" json:"onboardingSkipped"`
 	OnboardingCompletedAt *time.Time         `bson:"onboarding_completed_at,omitempty" json:"onboardingCompletedAt,omitempty"`
+	SessionVersion        int                `bson:"session_version" json:"sessionVersion"` // US-12.5
 	CreatedAt             time.Time          `bson:"created_at" json:"createdAt"`
 	UpdatedAt             time.Time          `bson:"updated_at" json:"updatedAt"`
 }

@@ -3,9 +3,11 @@ package repositories
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"aequitas/internal/models"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -35,4 +37,22 @@ func (r *TelemetryRepository) BatchInsert(events []models.TelemetryEvent) error 
 	}
 
 	return nil
+}
+func (r *TelemetryRepository) CountUniqueUsers(ctx context.Context, duration time.Duration) (int64, error) {
+	since := time.Now().Add(-duration)
+	values, err := r.collection.Distinct(ctx, "user_id", bson.M{"timestamp": bson.M{"$gte": since}})
+	if err != nil {
+		return 0, err
+	}
+	return int64(len(values)), nil
+}
+
+func (r *TelemetryRepository) CountActiveSessions(ctx context.Context, duration time.Duration) (int64, error) {
+	since := time.Now().Add(-duration)
+	// Unique sessions with activity in last 'duration' minutes
+	values, err := r.collection.Distinct(ctx, "session_id", bson.M{"timestamp": bson.M{"$gte": since}})
+	if err != nil {
+		return 0, err
+	}
+	return int64(len(values)), nil
 }

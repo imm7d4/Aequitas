@@ -125,6 +125,12 @@ func (c *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, response, "Login successful")
 }
 
+// Logout handles user session termination for forensic tracking
+func (c *AuthController) Logout(w http.ResponseWriter, r *http.Request) {
+	c.authService.Logout(r.Context())
+	utils.RespondJSON(w, http.StatusOK, nil, "Logged out successfully")
+}
+
 // ForgotPassword handles sending a reset OTP
 func (c *AuthController) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	var req ForgotPasswordRequest

@@ -14,12 +14,13 @@ import (
 )
 
 type TradingAccountService struct {
-	repo        *repositories.TradingAccountRepository
-	txRepo      *repositories.TransactionRepository
-	userRepo    *repositories.UserRepository
-	otpService  *OTPService
-	jitService  *JITService
-	commService CommunicationProvider
+	repo         *repositories.TradingAccountRepository
+	txRepo       *repositories.TransactionRepository
+	userRepo     *repositories.UserRepository
+	otpService   *OTPService
+	jitService   *JITService
+	auditService *AuditService
+	commService  CommunicationProvider
 }
 
 func NewTradingAccountService(
@@ -28,15 +29,17 @@ func NewTradingAccountService(
 	userRepo *repositories.UserRepository,
 	otpService *OTPService,
 	jitService *JITService,
+	auditService *AuditService,
 	commService CommunicationProvider,
 ) *TradingAccountService {
 	return &TradingAccountService{
-		repo:        repo,
-		txRepo:      txRepo,
-		userRepo:    userRepo,
-		otpService:  otpService,
-		jitService:  jitService,
-		commService: commService,
+		repo:         repo,
+		txRepo:       txRepo,
+		userRepo:     userRepo,
+		otpService:   otpService,
+		jitService:   jitService,
+		auditService: auditService,
+		commService:  commService,
 	}
 }
 
@@ -169,6 +172,10 @@ func (s *TradingAccountService) InitiateDeposit(ctx context.Context, userID stri
 		return nil, "", fmt.Errorf("failed to send email: %v", err)
 	}
 
+	s.auditService.LogFromContext(ctx, "DEPOSIT_INITIATED", savedTx.ID.Hex(), "TRANSACTION",
+		fmt.Sprintf("WALLET +₹%.2f (Pending)", amount),
+		nil, savedTx)
+
 	return savedTx, otp, nil
 }
 
@@ -224,6 +231,11 @@ func (s *TradingAccountService) CompleteDeposit(ctx context.Context, userID stri
 	tx.Status = "COMPLETED"
 	tx.Reference = "EMAIL_VERIFIED"
 	_ = s.txRepo.UpdateStatus(ctx, tx.ID.Hex(), "COMPLETED", tx.Reference)
+
+	// 5. Audit Log
+	s.auditService.LogFromContext(ctx, "DEPOSIT_COMPLETED", tx.ID.Hex(), "TRANSACTION",
+		fmt.Sprintf("WALLET +₹%.2f (Verified)", tx.Amount),
+		nil, tx)
 
 	// Refresh local account balance for returning to UI
 	account.Balance = newBalance
@@ -301,6 +313,11 @@ func (s *TradingAccountService) SettleTrade(ctx context.Context, userID string, 
 		Reference: fmt.Sprintf("TRADE_%s", tradeID),
 	}
 	_, _ = s.txRepo.Create(ctx, tx)
+
+	// 4. Audit Log
+	s.auditService.LogFromContext(ctx, "TRADE_SETTLED", tradeID, "TRADE",
+		fmt.Sprintf("SETTLE %s: ₹%.2f (%s)", side, netAmount, tradeID),
+		nil, tx)
 
 	return nil
 }

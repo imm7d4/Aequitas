@@ -16,7 +16,9 @@ type TelemetryEvent struct {
 	SessionID      string             `bson:"session_id" json:"session_id"`
 	CorrelationID  string             `bson:"correlation_id" json:"correlation_id"`
 	Route          string             `bson:"route" json:"route"`
-	Metadata       map[string]interface{} `bson:"metadata" json:"metadata"`
+	Description    string             `bson:"description,omitempty" json:"description,omitempty"`
+	Properties     map[string]interface{} `bson:"properties,omitempty" json:"properties,omitempty"`
+	Metadata       map[string]interface{} `bson:"metadata,omitempty" json:"metadata,omitempty"`
 }
 
 type TelemetryBatchRequest struct {

@@ -31,8 +31,10 @@ import {
     MarketOps, 
     AuditLogs, 
     RiskGovernance, 
-    SupportTicketing 
+    SupportTicketing,
+    JITApprovalQueue
 } from '@/features/admin/pages/AdminPages';
+import { SupportHub } from '@/features/support/pages/SupportHub';
 
 export function AppRoutes(): JSX.Element {
     return (
@@ -83,11 +85,14 @@ export function AppRoutes(): JSX.Element {
                         <Route path="/admin/market" element={<MarketOps />} />
                         <Route path="/admin/audit" element={<AuditLogs />} />
                         <Route path="/admin/risk" element={<RiskGovernance />} />
+                        <Route path="/admin/jit" element={<JITApprovalQueue />} />
                         <Route path="/admin/tickets" element={<SupportTicketing />} />
 
                         {/* Education Routes */}
                         <Route path="/education" element={<EducationHub />} />
                         <Route path="/education/:moduleId" element={<ModulePage />} />
+
+                        <Route path="/support" element={<SupportHub />} />
 
 
                     </Route>

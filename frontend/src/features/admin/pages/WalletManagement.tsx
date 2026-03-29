@@ -1,124 +1,168 @@
 import React, { useState, useEffect } from 'react';
 import { 
-    Box, Typography, Paper, Table, TableBody, TableCell, 
-    TableContainer, TableHead, TableRow, IconButton,
-    Button, Dialog, DialogTitle, DialogContent, TextField, DialogActions
+    Box, Typography, TextField, InputAdornment, IconButton
 } from '@mui/material';
-import { AccountBalanceWallet, History } from '@mui/icons-material';
+import { Search as SearchIcon, Edit as EditIcon, History as HistoryIcon } from '@mui/icons-material';
+import { CustomGrid, Column, BaseRow } from '../../../shared/components/CustomGrid';
+import { WalletDetailModal } from '../components/WalletDetailModal';
+import { UserTransactionHistoryModal } from '../components/UserTransactionHistoryModal';
 
-interface User {
-    id: string;
+interface TradingAccount extends BaseRow {
+    userId: string;
     fullName: string;
     email: string;
+    balance: number;
+    freeCash: number;
+    blockedMargin: number;
+    status: string;
 }
 
 export const WalletManagement: React.FC = () => {
-    const [users, setUsers] = useState<User[]>([]);
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
-    const [adjustmentOpen, setAdjustmentOpen] = useState(false);
-    const [adjustmentAmount, setAdjustmentAmount] = useState('');
-    const [adjustmentReason, setAdjustmentReason] = useState('');
+    const [accounts, setAccounts] = useState<TradingAccount[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedAccount, setSelectedAccount] = useState<TradingAccount | null>(null);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(25);
 
     useEffect(() => {
-        // We reuse the user list for now, but in a real app this might be a wallet-specific view
-        fetch(`${import.meta.env.VITE_API_URL}/user-administration/users`, {
+        fetchAccounts();
+    }, []);
+
+    const fetchAccounts = () => {
+        setLoading(true);
+        fetch(`${import.meta.env.VITE_API_URL}/admin/wallets`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
         .then(res => res.json())
-        .then(data => setUsers(data.data || []))
-        .catch(console.error);
-    }, []);
-
-    const handleRequestJIT = () => {
-        if (!selectedUser) return;
-        
-        fetch(`${import.meta.env.VITE_API_URL}/admin/jit/request`, {
-            method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                action: 'WALLET_ADJUSTMENT',
-                resourceId: selectedUser.id,
-                amount: parseFloat(adjustmentAmount),
-                reason: adjustmentReason,
-                duration: 15
-            })
+        .then(data => {
+            const mapped = (data.data || []).map((acc: any) => ({
+                ...acc,
+                id: acc.id || acc._id
+            }));
+            setAccounts(mapped);
+            setLoading(false);
         })
-        .then(() => {
-            alert('JIT Request submitted to SuperAdmin for approval.');
-            setAdjustmentOpen(false);
-        })
-        .catch(console.error);
+        .catch(err => {
+            console.error(err);
+            setLoading(false);
+        });
     };
 
-    return (
-        <Box sx={{ p: 4 }}>
-            <Paper sx={{ p: 4, borderRadius: '20px', border: '1px solid #eee' }}>
-                <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Wallet Management</Typography>
-                
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>User Name</TableCell>
-                                <TableCell>Email</TableCell>
-                                <TableCell align="right">Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {users.map((user) => (
-                                <TableRow key={user.id}>
-                                    <TableCell>{user.fullName}</TableCell>
-                                    <TableCell>{user.email}</TableCell>
-                                    <TableCell align="right">
-                                        <IconButton size="small" title="Audit History"><History /></IconButton>
-                                        <IconButton 
-                                            size="small" 
-                                            color="primary" 
-                                            title="Adjust Wallet"
-                                            onClick={() => { setSelectedUser(user); setAdjustmentOpen(true); }}
-                                        >
-                                            <AccountBalanceWallet />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Paper>
+    const columns: Column<TradingAccount>[] = [
+        {
+            id: 'fullName',
+            label: 'User Name',
+            minWidth: 250,
+            render: (row) => (
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>{row.fullName || 'No Name Set'}</Typography>
+            )
+        },
+        {
+            id: 'email',
+            label: 'Email',
+            minWidth: 350,
+        },
+        {
+            id: 'actions',
+            label: 'Actions',
+            align: 'right',
+            minWidth: 120,
+            render: (row) => (
+                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                    <IconButton 
+                        size="small" 
+                        color="primary" 
+                        title="Edit Wallet"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedAccount(row);
+                            setIsDetailOpen(true);
+                        }}
+                    >
+                        <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton 
+                        size="small" 
+                        title="Transaction History"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedAccount(row);
+                            setIsHistoryOpen(true);
+                        }}
+                    >
+                        <HistoryIcon fontSize="small" />
+                    </IconButton>
+                </Box>
+            )
+        }
+    ];
 
-            <Dialog open={adjustmentOpen} onClose={() => setAdjustmentOpen(false)}>
-                <DialogTitle>Request Wallet Adjustment</DialogTitle>
-                <DialogContent>
-                    <Typography variant="body2" sx={{ mb: 2 }}>
-                        Adjusting balance for <b>{selectedUser?.fullName}</b>. 
-                        This requires SuperAdmin approval via Maker-Checker.
-                    </Typography>
-                    <TextField
-                        fullWidth
-                        label="Amount (Negative for Debit)"
-                        type="number"
-                        value={adjustmentAmount}
-                        onChange={(e) => setAdjustmentAmount(e.target.value)}
-                        sx={{ mb: 2 }}
+    const filteredAccounts = accounts.filter(acc => 
+        (acc.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (acc.email || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+        <Box sx={{ 
+            height: '100%', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            overflow: 'hidden',
+            px: 3,
+            pt: 2
+        }}>
+            <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Typography sx={{ fontSize: '20px', fontWeight: 800, color: 'text.primary', letterSpacing: -0.5, whiteSpace: 'nowrap' }}>
+                    Wallet Management
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                    <TextField 
+                        size="small"
+                        placeholder="Search wallets..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon sx={{ color: 'text.disabled', fontSize: 18 }} />
+                                </InputAdornment>
+                            ),
+                            sx: { borderRadius: '6px', bgcolor: '#fff', width: 220 }
+                        }}
                     />
-                    <TextField
-                        fullWidth
-                        label="Reason for Adjustment"
-                        multiline
-                        rows={3}
-                        value={adjustmentReason}
-                        onChange={(e) => setAdjustmentReason(e.target.value)}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setAdjustmentOpen(false)}>Cancel</Button>
-                    <Button onClick={handleRequestJIT} variant="contained" color="primary">Request Approval</Button>
-                </DialogActions>
-            </Dialog>
+                </Box>
+            </Box>
+
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+                <CustomGrid
+                    columns={columns}
+                    data={filteredAccounts}
+                    isLoading={loading}
+                    maxHeight="100%"
+                    pagination={{
+                        page,
+                        rowsPerPage,
+                        totalCount: filteredAccounts.length,
+                        onPageChange: setPage,
+                        onRowsPerPageChange: setRowsPerPage
+                    }}
+                />
+            </Box>
+
+            <WalletDetailModal 
+                open={isDetailOpen}
+                account={selectedAccount}
+                onClose={() => setIsDetailOpen(false)}
+            />
+
+            <UserTransactionHistoryModal
+                open={isHistoryOpen}
+                user={selectedAccount ? { id: selectedAccount.userId, fullName: selectedAccount.fullName, email: selectedAccount.email } : null}
+                onClose={() => setIsHistoryOpen(false)}
+            />
         </Box>
     );
 };

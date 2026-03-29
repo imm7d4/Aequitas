@@ -10,7 +10,7 @@ import (
 func RoleMiddleware(allowedRoles ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			role, ok := r.Context().Value(UserRoleKey).(string)
+			role, ok := r.Context().Value(utils.UserRoleKey).(string)
 			if !ok || role == "" {
 				utils.RespondError(w, http.StatusForbidden, "Forbidden: No role found")
 				return

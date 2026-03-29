@@ -7,25 +7,19 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type ContextKey string
-
-const (
-	UserIDKey    ContextKey = "userId"
-	UserEmailKey ContextKey = "userEmail"
-	UserRoleKey  ContextKey = "userRole"
-)
 
 type Claims struct {
-	UserID  string `json:"userId"`
-	Email   string `json:"email"`
-	IsAdmin bool   `json:"isAdmin"`
-	Role    string `json:"role"`
+	UserID   string `json:"userId"`
+	Email    string `json:"email"`
+	FullName string `json:"fullName"`
+	IsAdmin  bool   `json:"isAdmin"`
+	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken creates a JWT token for a user
 func GenerateToken(
-	userID, email string,
+	userID, email, fullName string,
 	isAdmin bool,
 	role string,
 	secret string,
@@ -36,10 +30,11 @@ func GenerateToken(
 	}
 
 	claims := Claims{
-		UserID:  userID,
-		Email:   email,
-		IsAdmin: isAdmin,
-		Role:    role,
+		UserID:   userID,
+		Email:    email,
+		FullName: fullName,
+		IsAdmin:  isAdmin,
+		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(
 				time.Now().Add(time.Hour * time.Duration(expiryHours)),

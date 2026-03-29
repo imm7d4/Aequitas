@@ -11,7 +11,8 @@ import {
     alpha,
     IconButton,
     Collapse,
-    CircularProgress
+    CircularProgress,
+    TablePagination
 } from '@mui/material';
 import {
     KeyboardArrowDown,
@@ -92,6 +93,14 @@ interface CustomGridProps<T extends BaseRow> {
     renderExpansion?: (row: T) => React.ReactNode;
     initialExpanded?: (string | number)[];
     isLoading?: boolean;
+    pagination?: {
+        page: number;
+        rowsPerPage: number;
+        totalCount: number;
+        onPageChange: (newPage: number) => void;
+        onRowsPerPageChange: (newRowsPerPage: number) => void;
+    };
+    stickyPagination?: boolean;
 }
 
 export function CustomGrid<T extends BaseRow>({
@@ -104,9 +113,22 @@ export function CustomGrid<T extends BaseRow>({
     maxHeight,
     renderExpansion,
     initialExpanded = [],
-    isLoading = false
+    isLoading = false,
+    pagination,
+    stickyPagination = true
 }: CustomGridProps<T>) {
     const [expandedRows, setExpandedRows] = React.useState<Set<string | number>>(new Set(initialExpanded));
+
+    const displayRows = React.useMemo(() => {
+        if (!pagination) return rows;
+        // If external pagination is used but rows are passed as a whole, slice them
+        // If rows.length === totalCount, we assume client-side slicing
+        if (rows.length > pagination.rowsPerPage && rows.length >= pagination.totalCount) {
+            const start = pagination.page * pagination.rowsPerPage;
+            return rows.slice(start, start + pagination.rowsPerPage);
+        }
+        return rows;
+    }, [rows, pagination]);
 
     const toggleRow = (id: string | number, e: React.MouseEvent) => {
         e.stopPropagation();
@@ -166,7 +188,7 @@ export function CustomGrid<T extends BaseRow>({
                             </TableCell>
                         </TableRow>
                     )}
-                    {!isLoading && rows.map((row) => (
+                    {!isLoading && displayRows.map((row) => (
                         <React.Fragment key={row.id}>
                             <TableRow
                                 hover
@@ -210,6 +232,27 @@ export function CustomGrid<T extends BaseRow>({
                     ))}
                 </TableBody>
             </StyledTable>
+            {pagination && (
+                <TablePagination
+                    component="div"
+                    count={pagination.totalCount}
+                    page={pagination.page}
+                    onPageChange={(_, page) => pagination.onPageChange(page)}
+                    rowsPerPage={pagination.rowsPerPage}
+                    onRowsPerPageChange={(e) => pagination.onRowsPerPageChange(parseInt(e.target.value, 10))}
+                    rowsPerPageOptions={[10, 25, 50, 100]}
+                    sx={{
+                        borderTop: '1px solid',
+                        borderColor: 'divider',
+                        bgcolor: (theme) => theme.palette.background.paper,
+                        ...(stickyPagination && {
+                            position: 'sticky',
+                            bottom: 0,
+                            zIndex: 2,
+                        })
+                    }}
+                />
+            )}
         </StyledTableContainer>
     );
 }

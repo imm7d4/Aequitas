@@ -1,6 +1,7 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { useEducationModule } from '../hooks/useEducation';
+import { useTelemetry } from '@/shared/services/telemetry/TelemetryProvider';
 import { getCustomModule } from '../components/modules/ModuleRegistry';
 import ScrollToTop from '../components/ScrollToTop';
 import './ModulePage.css';
@@ -8,6 +9,26 @@ import './ModulePage.css';
 const ModulePage: React.FC = () => {
     const { moduleId } = useParams<{ moduleId: string }>();
     const { module, loading, error } = useEducationModule(moduleId || null);
+    const { track } = useTelemetry();
+    const location = useLocation();
+    const hasTrackedRef = React.useRef<string | null>(null);
+
+    React.useEffect(() => {
+        if (module && hasTrackedRef.current !== moduleId) {
+            track({
+                event_name: 'PAGE_VISIT',
+                event_version: 'v1',
+                classification: 'USER_ACTION',
+                description: `Education Module: ${module.title}`,
+                properties: {
+                    to: location.pathname,
+                    page_name: `Education Module: ${module.title}`,
+                    module_id: moduleId
+                }
+            });
+            hasTrackedRef.current = moduleId || null;
+        }
+    }, [module, track, location.pathname, moduleId]);
 
     // Check for custom component
     const CustomComponent = getCustomModule(moduleId || null);

@@ -25,6 +25,8 @@ type AdminConfig struct {
 	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	AlertThresholds   []ThresholdConfig  `bson:"alert_thresholds" json:"alertThresholds"`
 	MaintenanceMode   bool               `bson:"maintenance_mode" json:"maintenanceMode"`
+	IsGlobalHalt      bool               `bson:"is_global_halt" json:"isGlobalHalt"`      // Safety Halt (US-12.3)
+	HaltReason        string             `bson:"halt_reason" json:"haltReason"`
 	UpdatedBy         primitive.ObjectID `bson:"updated_by" json:"updatedBy"`
 	UpdatedAt         time.Time          `bson:"updated_at" json:"updatedAt"`
 }

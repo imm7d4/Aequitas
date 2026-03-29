@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth';
+import { Loader } from './Loader';
 
 interface PublicRouteProps {
     children: ReactNode;
@@ -15,7 +16,7 @@ export function PublicRoute({ children }: PublicRouteProps): JSX.Element {
 
     // Show nothing while checking authentication status
     if (isLoading) {
-        return <div>Loading...</div>;
+        return <Loader fullScreen message="Preparing your session..." />;
     }
 
     if (isAuthenticated) {

@@ -7,6 +7,8 @@ export interface TelemetryEvent {
     event_version: string;
     classification: EventClassification;
     severity?: Severity;
+    description?: string;
+    properties?: Record<string, any>;
     metadata?: Record<string, any>;
 }
 

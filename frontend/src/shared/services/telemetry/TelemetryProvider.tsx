@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { telemetryService } from './telemetryService';
 
@@ -20,6 +20,37 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return id;
     }, [location.pathname]);
 
+    const getPageName = (path: string) => {
+        if (path === '/') return 'Landing Page';
+        if (path === '/dashboard') return 'Trading Dashboard';
+        if (path === '/portfolio') return 'Portfolio View';
+        if (path === '/diagnostics') return 'Trade Diagnostics';
+        if (path === '/watchlists') return 'Watchlists';
+        if (path === '/orders') return 'Order History';
+        if (path === '/instruments') return 'Market Instruments';
+        if (path === '/profile') return 'System Profile';
+        if (path === '/admin') return 'Admin Portal';
+        if (path === '/admin/instruments/new') return 'New Instrument Config';
+        if (path === '/admin/market-hours') return 'Market Hours Mgmt';
+        if (path === '/admin/manage-hours') return 'Schedule Management';
+        if (path === '/admin/market-holidays') return 'Market Holidays';
+        if (path === '/admin/control-center') return 'Platform Control Center';
+        if (path === '/user-management') return 'User Management';
+        if (path === '/wallet-management') return 'Wallet Management';
+        if (path === '/admin/market') return 'Market Operations';
+        if (path === '/admin/audit') return 'Forensic Audit Logs';
+        if (path === '/admin/risk') return 'Risk Governance';
+        if (path === '/admin/tickets') return 'Helpdesk Tickets';
+        if (path === '/education') return 'Education Hub';
+        
+        if (path.startsWith('/instruments/')) return 'Instrument Details';
+        if (path.startsWith('/education/')) return 'Education Module';
+        if (path.startsWith('/admin/instruments/edit/')) return 'Edit Instrument';
+
+        // Strip leading slash for others
+        return path.startsWith('/') ? path.substring(1) : path;
+    };
+
     useEffect(() => {
         const startTime = window.performance.now();
         const currentPath = location.pathname;
@@ -27,13 +58,26 @@ export const TelemetryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
         // Only track route change if there's an actual transition
         if (currentPath !== previousPath || !correlationId) {
+            // Skip paths that require dynamic data (will be tracked by components for specificity)
+            if (currentPath.startsWith('/instruments/') && currentPath !== '/instruments') {
+                prevLocationRef.current = currentPath;
+                return;
+            }
+            if (currentPath.startsWith('/education/') && currentPath !== '/education') {
+                prevLocationRef.current = currentPath;
+                return;
+            }
+
+            const pageName = getPageName(currentPath);
             telemetryService.track({
-                event_name: 'navigation.route_change',
+                event_name: 'PAGE_VISIT',
                 event_version: 'v1',
-                classification: 'SYSTEM_EVENT',
-                metadata: {
+                classification: 'USER_ACTION',
+                description: pageName,
+                properties: {
                     from: previousPath,
                     to: currentPath,
+                    page_name: pageName
                 }
             });
             prevLocationRef.current = currentPath;
@@ -65,8 +109,12 @@ export const useTelemetry = () => {
         throw new Error('useTelemetry must be used within a TelemetryProvider');
     }
 
-    return {
-        track: telemetryService.track.bind(telemetryService),
+    const track = useCallback((event: any) => {
+        telemetryService.track(event);
+    }, []);
+
+    return useMemo(() => ({
+        track,
         correlationId: context.correlationId,
-    };
+    }), [track, context.correlationId]);
 };

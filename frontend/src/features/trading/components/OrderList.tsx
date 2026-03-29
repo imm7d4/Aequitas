@@ -6,7 +6,6 @@ import {
     Box,
     alpha,
     useTheme,
-    CircularProgress,
     Dialog,
     DialogTitle,
     DialogContent,
@@ -33,6 +32,7 @@ import { OrderTypeBadge } from './OrderTypeBadge';
 import { IntentBadge } from './IntentBadge';
 import { Trade, tradeService } from '../services/tradeService';
 import { CustomGrid } from '../../../shared/components/CustomGrid';
+import { Loader } from '../../../shared/components/Loader';
 
 interface OrderListProps {
     orders: OrderResponse[];
@@ -205,7 +205,7 @@ export const OrderList: React.FC<OrderListProps> = ({
     if (isLoading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 8 }}>
-                <CircularProgress />
+                <Loader message="Loading your orders..." />
             </Box>
         );
     }
@@ -408,7 +408,7 @@ export const OrderList: React.FC<OrderListProps> = ({
                                     </Box>
                                 </Box>
                             ) : (
-                                <Typography variant="body2" color="text.secondary">Loading...</Typography>
+                                <Loader size="small" />
                             )}
                         </Paper>
                     </Grid>
@@ -473,7 +473,7 @@ export const OrderList: React.FC<OrderListProps> = ({
                                 )}
                                 {tradesLoading[order.id] && (
                                     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
-                                        <CircularProgress size={16} />
+                                        <Loader size="small" />
                                     </Box>
                                 )}
                             </Paper>

@@ -22,6 +22,7 @@ type OrderService struct {
 	matchingService     *MatchingService
 	portfolioService    *PortfolioService
 	notificationService *NotificationService
+	auditService        *AuditService
 }
 
 func NewOrderService(
@@ -32,6 +33,7 @@ func NewOrderService(
 	matchingService *MatchingService,
 	portfolioService *PortfolioService,
 	notificationService *NotificationService,
+	auditService *AuditService,
 ) *OrderService {
 	return &OrderService{
 		orderRepo:           orderRepo,
@@ -41,6 +43,7 @@ func NewOrderService(
 		matchingService:     matchingService,
 		portfolioService:    portfolioService,
 		notificationService: notificationService,
+		auditService:        auditService,
 	}
 }
 
@@ -325,6 +328,11 @@ func (s *OrderService) PlaceOrder(ctx context.Context, userID string, req models
 		}
 	}
 
+	// 10. Audit Log
+	s.auditService.LogFromContext(ctx, "ORDER_PLACED", order.ID.Hex(), "ORDER",
+		fmt.Sprintf("%s %s %d %s", order.OrderType, order.Side, order.Quantity, order.Symbol),
+		nil, order)
+
 	return order, nil
 }
 func (s *OrderService) GetUserOrders(ctx context.Context, userID string, filters map[string]interface{}, skip int, limit int) ([]*models.Order, int64, error) {
@@ -365,6 +373,11 @@ func (s *OrderService) CancelOrder(ctx context.Context, userID string, orderID s
 			nil,
 		)
 	}()
+
+	// 3. Audit Log
+	s.auditService.LogFromContext(ctx, "ORDER_CANCELLED", updatedOrder.ID.Hex(), "ORDER",
+		fmt.Sprintf("CANCEL %s: %s (%s)", updatedOrder.Side, updatedOrder.OrderID, updatedOrder.Symbol),
+		order, updatedOrder)
 
 	return updatedOrder, nil
 }

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -12,15 +13,18 @@ import (
 type MarketService struct {
 	repo           *repositories.MarketRepository
 	marketDataRepo *repositories.MarketDataRepository
+	adminRepo      *repositories.AdminConfigRepository
 }
 
 func NewMarketService(
 	repo *repositories.MarketRepository,
 	marketDataRepo *repositories.MarketDataRepository,
+	adminRepo *repositories.AdminConfigRepository,
 ) *MarketService {
 	return &MarketService{
 		repo:           repo,
 		marketDataRepo: marketDataRepo,
+		adminRepo:      adminRepo,
 	}
 }
 
@@ -149,6 +153,12 @@ func (s *MarketService) GetMarketStatus(
 }
 
 func (s *MarketService) ValidateTradingTime(exchange string) error {
+	// 1. Check Global Halt (US-12.3)
+	config, err := s.adminRepo.GetConfig(context.Background())
+	if err == nil && config.IsGlobalHalt {
+		return fmt.Errorf("MARKET_HALTED: %s", config.HaltReason)
+	}
+
 	isOpen, status, err := s.IsMarketOpen(exchange)
 	if err != nil {
 		return err

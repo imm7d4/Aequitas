@@ -4,7 +4,7 @@ export interface UserPreferences {
     notificationsEnabled: boolean;
 }
 
-export type AdminRole = 'PLATFORM_ADMIN' | 'AUDIT_ADMIN' | 'RISK_OFFICER' | 'COMPLIANCE_OFFICER' | 'SUPPORT';
+export type AdminRole = 'PLATFORM_ADMIN' | 'RISK_OFFICER' | 'COMPLIANCE_OFFICER' | 'SUPPORT';
 export type UserRole = 'TRADER' | AdminRole;
 
 export interface User {

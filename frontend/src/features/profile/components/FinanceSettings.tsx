@@ -10,7 +10,6 @@ import {
     Divider,
     alpha,
     useTheme,
-    CircularProgress,
     Chip,
     TextField,
     Dialog,
@@ -30,6 +29,7 @@ import { accountService, TradingAccount, Transaction } from '../services/account
 import { tradeService, Trade as TradeModel } from '../../trading/services/tradeService';
 import { CustomGrid } from '../../../shared/components/CustomGrid';
 import { formatCurrency, formatDate } from '../../../shared/utils/formatters';
+import { Loader } from '../../../shared/components/Loader';
 
 export const FinanceSettings: React.FC = () => {
     const [account, setAccount] = useState<TradingAccount | null>(null);
@@ -224,8 +224,7 @@ export const FinanceSettings: React.FC = () => {
                                         </Box>
                                     ) : (
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <CircularProgress size={10} color="primary" />
-                                            <Typography variant="caption" color="text.secondary" fontSize="0.7rem">Loading...</Typography>
+                                            <Loader size="small" />
                                         </Box>
                                     )}
                                 </Box>
@@ -321,7 +320,7 @@ export const FinanceSettings: React.FC = () => {
     if (isLoading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                <CircularProgress />
+                <Loader message="Fetching financial data..." />
             </Box>
         );
     }
@@ -372,7 +371,7 @@ export const FinanceSettings: React.FC = () => {
                 <Box sx={{ position: 'relative' }}>
                     <CustomGrid<any>
                         columns={columns}
-                        data={transactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(tx => ({ ...tx, id: tx.transactionId }))}
+                        data={transactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
                     />
                     <TablePagination
                         rowsPerPageOptions={[5, 10, 25]}
@@ -471,7 +470,7 @@ export const FinanceSettings: React.FC = () => {
                             disabled={isFunding}
                             sx={{ px: 4, borderRadius: 1.5 }}
                         >
-                            {isFunding ? <CircularProgress size={24} color="inherit" /> : 'Send OTP'}
+                            {isFunding ? <Loader size="small" color="inherit" /> : 'Send OTP'}
                         </Button>
                     ) : (
                         <Button
@@ -480,7 +479,7 @@ export const FinanceSettings: React.FC = () => {
                             disabled={isFunding || otpCode.length < 6}
                             sx={{ px: 4, borderRadius: 1.5 }}
                         >
-                            {isFunding ? <CircularProgress size={24} color="inherit" /> : 'Complete Deposit'}
+                            {isFunding ? <Loader size="small" color="inherit" /> : 'Complete Deposit'}
                         </Button>
                     )}
                 </DialogActions>
