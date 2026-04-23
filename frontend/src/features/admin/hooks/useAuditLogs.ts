@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { adminService, AuditLog } from '../services/adminService';
 
+const FILTER_ALL = 'ALL';
+
 export const useAuditLogs = () => {
     const [logs, setLogs] = useState<AuditLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterAction, setFilterAction] = useState('ALL');
+    const [filterAction, setFilterAction] = useState(FILTER_ALL);
     const [unmaskedLogs, setUnmaskedLogs] = useState<Set<string>>(new Set());
 
     useEffect(() => {
@@ -45,7 +47,8 @@ export const useAuditLogs = () => {
             const matchesSearch = log.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
                                  log.actor_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                  log.action.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesAction = filterAction === 'ALL' || log.action === filterAction;
+            const matchesAction = filterAction === FILTER_ALL || log.action === filterAction;
+            return matchesSearch && matchesAction;
         });
     }, [logs, searchTerm, filterAction]);
 

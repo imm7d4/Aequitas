@@ -1,5 +1,13 @@
 import { api } from '@/lib/api/apiClient';
-import { APIResponse } from '@/shared/types';
+import { APIResponse } from '@/features/auth/types';
+import { Severity } from '@/shared/constants/AppConstants';
+
+export const JIT_ACTION = {
+    HALT_MARKET: 'HALT_MARKET',
+    RESUME_MARKET: 'RESUME_MARKET',
+    WITHDRAW_FUNDS: 'WITHDRAW_FUNDS',
+    UPDATE_LIMITS: 'UPDATE_LIMITS',
+} as const;
 
 export interface AuditLog {
     id: string;
@@ -28,7 +36,7 @@ export interface PlatformMetrics {
 export interface Threshold {
     metricName: string;
     value: number;
-    severity: 'INFO' | 'WARNING' | 'CRITICAL';
+    severity: Severity;
     isEnabled: boolean;
 }
 

@@ -15,17 +15,21 @@ import { OrderConfigurationSection } from './OrderConfigurationSection';
 import { TradeReceiptSection } from './TradeReceiptSection';
 import { useTradePanel } from '../hooks/useTradePanel';
 import { formatCurrency } from '../../../shared/utils/formatters';
+import { 
+    ORDER_SIDE, ORDER_TYPE,
+    OrderSide, TradingIntent
+} from '@/shared/constants/AppConstants';
 
 interface TradePanelProps {
     instrument: Instrument;
     ltp: number;
-    initialSide?: 'BUY' | 'SELL';
+    initialSide?: OrderSide;
     initialQuantity?: number;
-    initialIntent?: 'OPEN_LONG' | 'OPEN_SHORT' | 'CLOSE_LONG' | 'CLOSE_SHORT';
+    initialIntent?: TradingIntent;
 }
 
 export const TradePanel: React.FC<TradePanelProps> = ({ 
-    instrument, ltp, initialSide = 'BUY', initialQuantity, initialIntent 
+    instrument, ltp, initialSide = ORDER_SIDE.BUY, initialQuantity, initialIntent 
 }) => {
     const theme = useTheme();
     const trade = useTradePanel(instrument, ltp, initialSide, initialQuantity, initialIntent);
@@ -49,8 +53,8 @@ export const TradePanel: React.FC<TradePanelProps> = ({
     };
 
     const liveInterpretation = useMemo(() => {
-        if (trade.orderType === 'MARKET') return `Executes immediately at ~${formatCurrency(ltp)}`;
-        if (trade.orderType === 'LIMIT') {
+        if (trade.orderType === ORDER_TYPE.MARKET) return `Executes immediately at ~${formatCurrency(ltp)}`;
+        if (trade.orderType === ORDER_TYPE.LIMIT) {
             const p = parseFloat(trade.price);
             return isNaN(p) ? null : `Executes when price reaches ${formatCurrency(p)} or better`;
         }
@@ -82,13 +86,13 @@ export const TradePanel: React.FC<TradePanelProps> = ({
 
                 <ToggleButtonGroup
                     fullWidth value={trade.side} exclusive
-                    onChange={(_, v) => v && trade.setSide(v)}
+                    onChange={(_, v) => v && trade.setSide(v as OrderSide)}
                     sx={{ p: 0.5, bgcolor: 'rgba(0,0,0,0.03)', borderRadius: '12px', border: 'none' }}
                 >
-                    <ToggleButton value="BUY" sx={{ '&.Mui-selected': { bgcolor: 'success.main', color: 'white' } }}>
+                    <ToggleButton value={ORDER_SIDE.BUY} sx={{ '&.Mui-selected': { bgcolor: 'success.main', color: 'white' } }}>
                         <BuyIcon sx={{ mr: 1, fontSize: 18 }} /> {trade.shortMode ? 'COVER' : 'BUY'}
                     </ToggleButton>
-                    <ToggleButton value="SELL" sx={{ '&.Mui-selected': { bgcolor: 'error.main', color: 'white' } }}>
+                    <ToggleButton value={ORDER_SIDE.SELL} sx={{ '&.Mui-selected': { bgcolor: 'error.main', color: 'white' } }}>
                         <SellIcon sx={{ mr: 1, fontSize: 18 }} /> {trade.shortMode ? 'SHORT' : 'SELL'}
                     </ToggleButton>
                 </ToggleButtonGroup>
@@ -122,12 +126,12 @@ export const TradePanel: React.FC<TradePanelProps> = ({
                     <Box>
                         <Button
                             fullWidth variant="contained" size="large"
-                            color={trade.side === 'BUY' ? 'success' : 'error'}
+                            color={trade.side === ORDER_SIDE.BUY ? 'success' : 'error'}
                             disabled={!isValid || trade.isLoading}
                             onClick={trade.handlePlaceOrder}
                             sx={{
                                 py: 1.4, fontWeight: 900, borderRadius: '12px',
-                                boxShadow: `0 6px 12px ${alpha(trade.side === 'BUY' ? theme.palette.success.main : theme.palette.error.main, 0.2)}`
+                                boxShadow: `0 6px 12px ${alpha(trade.side === ORDER_SIDE.BUY ? theme.palette.success.main : theme.palette.error.main, 0.2)}`
                             }}
                         >
                             {trade.isLoading ? <CircularProgress size={24} color="inherit" /> : `${trade.side} ${instrument.symbol}`}

@@ -1,15 +1,19 @@
+import { 
+    Exchange, InstrumentType, InstrumentStatus
+} from '@/shared/constants/AppConstants';
+
 export interface Instrument {
     id: string;
     symbol: string;
     name: string;
     isin: string;
-    exchange: 'NSE' | 'BSE';
-    type: 'STOCK' | 'ETF' | 'BOND' | 'MUTUAL_FUND';
+    exchange: Exchange;
+    type: InstrumentType;
     sector: string;
     lotSize: number;
     tickSize: number;
     isShortable?: boolean;
-    status: 'ACTIVE' | 'SUSPENDED' | 'DELISTED';
+    status: InstrumentStatus;
     listingDate: Date;
     createdAt: Date;
     updatedAt: Date;

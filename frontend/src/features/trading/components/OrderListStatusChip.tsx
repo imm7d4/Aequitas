@@ -6,6 +6,7 @@ import {
     Cancel as CancelIcon,
     Error as ErrorIcon,
 } from '@mui/icons-material';
+import { ORDER_STATUS } from '@/shared/constants/AppConstants';
 
 interface OrderListStatusChipProps {
     status: string;
@@ -16,7 +17,7 @@ export const OrderListStatusChip: React.FC<OrderListStatusChipProps> = ({ status
 
     switch (status.toUpperCase()) {
         case 'NEW':
-        case 'PENDING':
+        case ORDER_STATUS.PENDING:
             return (
                 <Chip
                     icon={<PendingIcon sx={{ fontSize: '16px !important' }} />}
@@ -31,7 +32,7 @@ export const OrderListStatusChip: React.FC<OrderListStatusChipProps> = ({ status
                     }}
                 />
             );
-        case 'FILLED':
+        case ORDER_STATUS.FILLED:
             return (
                 <Chip
                     icon={<SuccessIcon sx={{ fontSize: '16px !important' }} />}
@@ -46,7 +47,7 @@ export const OrderListStatusChip: React.FC<OrderListStatusChipProps> = ({ status
                     }}
                 />
             );
-        case 'CANCELLED':
+        case ORDER_STATUS.CANCELLED:
             return (
                 <Chip
                     icon={<CancelIcon sx={{ fontSize: '16px !important' }} />}
@@ -59,7 +60,7 @@ export const OrderListStatusChip: React.FC<OrderListStatusChipProps> = ({ status
                     }}
                 />
             );
-        case 'REJECTED':
+        case ORDER_STATUS.REJECTED:
             return (
                 <Chip
                     icon={<ErrorIcon sx={{ fontSize: '16px !important' }} />}
