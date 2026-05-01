@@ -1,22 +1,24 @@
 import { api } from '@/lib/api/apiClient';
 import { APIResponse } from '@/features/auth/types';
+import { 
+    OrderSide, OrderType, TrailType, TradingIntent
+} from '@/shared/constants/AppConstants';
 
 export interface OrderRequest {
     instrumentId: string;
-    side: 'BUY' | 'SELL';
-    orderType: 'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT' | 'TRAILING_STOP';
+    side: OrderSide;
+    orderType: OrderType;
     quantity: number;
     price?: number;
     clientOrderId: string;
-    clientOrderId: string;
     symbol: string;
-    intent?: 'OPEN_LONG' | 'OPEN_SHORT' | 'CLOSE_LONG' | 'CLOSE_SHORT';
+    intent?: TradingIntent;
 
     // Stop Order Fields
     stopPrice?: number;
     limitPrice?: number;
     trailAmount?: number;
-    trailType?: 'ABSOLUTE' | 'PERCENTAGE';
+    trailType?: TrailType;
 }
 
 export interface OrderResponse {
@@ -25,8 +27,8 @@ export interface OrderResponse {
     instrumentId: string;
     symbol: string;
     intent?: string;
-    side: 'BUY' | 'SELL';
-    orderType: 'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT' | 'TRAILING_STOP';
+    side: OrderSide;
+    orderType: OrderType;
     quantity: number;
     price?: number;
     status: string;
@@ -37,7 +39,7 @@ export interface OrderResponse {
     stopPrice?: number;
     limitPrice?: number;
     trailAmount?: number;
-    trailType?: 'PERCENTAGE' | 'ABSOLUTE';
+    trailType?: TrailType;
     highestPrice?: number;
     lowestPrice?: number;
     currentStopPrice?: number;

@@ -4,6 +4,7 @@ import {
     Button, TextField, MenuItem, Stack, Typography, Alert
 } from '@mui/material';
 import { Base64ImagePicker } from './Base64ImagePicker';
+import { TICKET_CATEGORY, TicketCategory } from '@/shared/constants/AppConstants';
 
 interface RaiseTicketModalProps {
     open: boolean;
@@ -13,7 +14,7 @@ interface RaiseTicketModalProps {
 
 export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({ open, onClose, onSuccess }) => {
     const [subject, setSubject] = useState('');
-    const [category, setCategory] = useState('TECHNICAL');
+    const [category, setCategory] = useState<TicketCategory>(TICKET_CATEGORY.TECHNICAL);
     const [description, setDescription] = useState('');
     const [attachments, setAttachments] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
@@ -55,7 +56,7 @@ export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({ open, onClos
 
     const reset = () => {
         setSubject('');
-        setCategory('TECHNICAL');
+        setCategory(TICKET_CATEGORY.TECHNICAL);
         setDescription('');
         setAttachments([]);
         setLoading(false);
@@ -82,13 +83,13 @@ export const RaiseTicketModal: React.FC<RaiseTicketModalProps> = ({ open, onClos
                         fullWidth
                         size="small"
                         value={category}
-                        onChange={(e) => setCategory(e.target.value)}
+                        onChange={(e) => setCategory(e.target.value as TicketCategory)}
                     >
-                        <MenuItem value="TECHNICAL">Technical Issue</MenuItem>
-                        <MenuItem value="WALLET">Wallet & Payments</MenuItem>
-                        <MenuItem value="TRADING">Trading & Orders</MenuItem>
-                        <MenuItem value="ACCOUNT">Account & Profile</MenuItem>
-                        <MenuItem value="OTHERS">Others</MenuItem>
+                        <MenuItem value={TICKET_CATEGORY.TECHNICAL}>Technical Issue</MenuItem>
+                        <MenuItem value={TICKET_CATEGORY.WALLET}>Wallet & Payments</MenuItem>
+                        <MenuItem value={TICKET_CATEGORY.TRADING}>Trading & Orders</MenuItem>
+                        <MenuItem value={TICKET_CATEGORY.ACCOUNT}>Account & Profile</MenuItem>
+                        <MenuItem value={TICKET_CATEGORY.OTHERS}>Others</MenuItem>
                     </TextField>
                     <TextField
                         label="Description"

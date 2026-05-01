@@ -1,4 +1,5 @@
 import { api } from '@/lib/api/apiClient';
+import { PositionType, MarginStatus } from '@/shared/constants/AppConstants';
 
 export interface Holding {
     id: string;
@@ -9,10 +10,10 @@ export interface Holding {
     totalCost: number;
     realizedPL: number;
     lastUpdated: string;
-    positionType: 'LONG' | 'SHORT';
+    positionType: PositionType;
     blockedMargin: number;
     initialMargin: number;
-    marginStatus: 'OK' | 'CALL' | 'CRITICAL' | 'LIQUIDATED';
+    marginStatus: MarginStatus;
 }
 
 export interface ShortRiskExposure {
