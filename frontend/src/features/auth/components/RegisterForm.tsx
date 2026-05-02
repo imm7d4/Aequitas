@@ -98,11 +98,11 @@ export function RegisterForm(): JSX.Element {
                 <div className={styles.authBranding}>
                     <div className={styles.brandingContent}>
                         <h1 className={styles.brandingTitle}>
-                            Trade Like <br /> 
+                            Trade Like <br />
                             <span style={{ color: 'var(--accent-cyan)' }}>A Pro.</span>
                         </h1>
                         <p className={styles.brandingSubtitle}>
-                            Stop being the liquidity for someone else's bot. 
+                            Stop being the liquidity for someone else's bot.
                             Join the Aequitas revolution today.
                         </p>
                         <div className={styles.featureList}>
@@ -129,8 +129,8 @@ export function RegisterForm(): JSX.Element {
                             <span className={styles.systemTag}>ACCOUNT SETUP</span>
                             <h2 className={styles.formTitle}>{step === 'form' ? 'Get Started' : 'Verify Account'}</h2>
                             <p className={styles.formSubtitle}>
-                                {step === 'form' 
-                                    ? 'Create your institutional trading account'
+                                {step === 'form'
+                                    ? ''
                                     : 'Enter the 6-digit code sent to your email'}
                             </p>
                         </div>
@@ -221,8 +221,8 @@ export function RegisterForm(): JSX.Element {
                                         style={{ textAlign: 'center', letterSpacing: '8px', fontSize: '24px' }}
                                     />
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
-                                        <button 
-                                            type="button" 
+                                        <button
+                                            type="button"
                                             onClick={() => setStep('form')}
                                             className={styles.footerLink}
                                             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
@@ -232,8 +232,8 @@ export function RegisterForm(): JSX.Element {
                                         {timer > 0 ? (
                                             <span className={styles.footerLink}>Resend in {timer}s</span>
                                         ) : (
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={handleResend}
                                                 className={styles.footerLink}
                                                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--accent-cyan)' }}
@@ -250,8 +250,8 @@ export function RegisterForm(): JSX.Element {
                                 className={styles.submitButton}
                                 disabled={isLoading}
                             >
-                                {isLoading 
-                                    ? (step === 'form' ? 'Preparing...' : 'Verifying...') 
+                                {isLoading
+                                    ? (step === 'form' ? 'Preparing...' : 'Verifying...')
                                     : (step === 'form' ? 'Create Account' : 'Verify & Complete')}
                             </button>
                         </form>

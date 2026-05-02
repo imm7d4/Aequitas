@@ -54,25 +54,25 @@ export function LoginForm(): JSX.Element {
                 <div className={styles.authBranding}>
                     <div className={styles.brandingContent}>
                         <h1 className={styles.brandingTitle}>
-                            Unlock Your <br /> 
-                            <span style={{ color: 'var(--accent-cyan)' }}>Edge.</span>
+                            Execution, <br /> 
+                            <span style={{ color: 'var(--accent-cyan)' }}>Refined.</span>
                         </h1>
                         <p className={styles.brandingSubtitle}>
-                            Stop settling for retail-grade lag. Master the 
-                            markets with professional hardware execution.
+                            Move beyond retail-grade systems. <br />
+                            Operate with infrastructure designed for precision under real market conditions.
                         </p>
                         <div className={styles.featureList}>
                             <div className={styles.featureItem}>
                                 <div className={styles.featureIcon}>01</div>
-                                <span className={styles.featureText}>Instant Pro-Grade Execution</span>
+                                <span className={styles.featureText}>Consistent Low-Latency Execution</span>
                             </div>
                             <div className={styles.featureItem}>
                                 <div className={styles.featureIcon}>02</div>
-                                <span className={styles.featureText}>Advanced Trade Diagnostics</span>
+                                <span className={styles.featureText}>Granular Trade Visibility</span>
                             </div>
                             <div className={styles.featureItem}>
                                 <div className={styles.featureIcon}>03</div>
-                                <span className={styles.featureText}>100% Transparent Market Logic</span>
+                                <span className={styles.featureText}>Verifiable Order Handling</span>
                             </div>
                         </div>
                     </div>

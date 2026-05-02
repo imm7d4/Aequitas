@@ -10,44 +10,42 @@ export function LandingFooter(): JSX.Element {
                 <div className={styles.footerBrand}>
                     <span className={styles.footerHeading}>AEQUITAS CORE</span>
                     <p className={styles.footerBrandText}>
-                        Next-generation deterministic trading infrastructure. 
-                        Engineered for institutional capital and sub-nanosecond 
-                        market intelligence.
+                        Execution Infrastructure. <br />
+                        No Abstraction Layers.
                     </p>
                 </div>
 
                 <div className={styles.footerNav}>
-                    <span className={styles.footerHeading}>NAVIGATION</span>
-                    <Link to="/login" className={styles.footerNavLink}>TERMINAL ACCESS</Link>
-                    <Link to="/register" className={styles.footerNavLink}>NODE REGISTRATION</Link>
-                    <a href="#features" className={styles.footerNavLink}>INFRASTRUCTURE</a>
+                    <span className={styles.footerHeading}>SYSTEM_METRICS</span>
+                    <div className={styles.footerNavLink}>SYSTEM_VERSION: 2.0.4</div>
+                    <div className={styles.footerNavLink}>ARCHITECTURE: DETERMINISTIC EXECUTION CORE</div>
                 </div>
 
                 <div className={styles.footerSystemInfo}>
                     <span className={styles.footerHeading}>SYSTEM STATUS</span>
                     <div className={styles.statusIndicator}>
                         <div className={styles.statusDot} />
-                        <span>MAINNET-STABLE // ONLINE</span>
+                        <span>MAINNET: ONLINE</span>
                     </div>
-                    <span>UPTIME: 99.9999%</span>
-                    <span>NODE_ID: AEQ-GLB-01</span>
-                    <span>REGION: GLOBAL_MESH</span>
+                    <span>UPTIME: 99.999% (rolling)</span>
+                    <span>REGION: Distributed execution mesh</span>
+                    <span>NODE: AEQ-GLB-01</span>
                 </div>
             </div>
 
             <div className={styles.footerBottom}>
                 <div className={styles.footerLegal}>
-                    © {currentYear} AEQUITAS. SYSTEM_V2.0.4 // ALL RIGHTS RESERVED.
+                    © {currentYear} AEQUITAS
                 </div>
 
                 <div className={styles.footerEngineer}>
-                    ARCHITECT: <a 
+                    Architect: <a 
                         href="https://www.linkedin.com/in/im7d4/" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className={styles.engineerLink}
                     >
-                        DHARMESH MENARIA
+                        Dharmesh Menaria
                     </a>
                 </div>
 
@@ -55,8 +53,8 @@ export function LandingFooter(): JSX.Element {
                     <a href="https://github.com/imm7d4" target="_blank" rel="noopener noreferrer" className={styles.footerSocialLink}>
                         GITHUB
                     </a>
-                    <a href="https://www.linkedin.com/in/im7d4/" target="_blank" rel="noopener noreferrer" className={styles.footerSocialLink}>
-                        LINKEDIN
+                    <a href="https://x.com/imm7d4" target="_blank" rel="noopener noreferrer" className={styles.footerSocialLink}>
+                        X (TWITTER)
                     </a>
                 </div>
             </div>

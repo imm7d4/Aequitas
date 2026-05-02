@@ -24,7 +24,7 @@ export function LandingPage(): JSX.Element {
 
     const containerVariants: any = {
         hidden: { opacity: 0 },
-        visible: { 
+        visible: {
             opacity: 1,
             transition: { staggerChildren: 0.1, delayChildren: 0.3 }
         }
@@ -32,9 +32,9 @@ export function LandingPage(): JSX.Element {
 
     const itemVariants: any = {
         hidden: { opacity: 0, y: 30, filter: 'blur(10px)' },
-        visible: { 
-            opacity: 1, 
-            y: 0, 
+        visible: {
+            opacity: 1,
+            y: 0,
             filter: 'blur(0px)',
             transition: { duration: 0.8, ease: "easeOut" }
         }
@@ -44,56 +44,55 @@ export function LandingPage(): JSX.Element {
         <div className={styles.landingWrapper}>
             <LandingHeader />
             <MarketEngineScene />
-            
+
             {/* Scroll Progress Bar */}
             <motion.div className={styles.progressBar} style={{ scaleX }} />
 
             <main className={styles.contentOverlay}>
-                
+
                 {/* 1. HERO */}
                 <section className={styles.fullSection}>
-                    <motion.div 
+                    <motion.div
                         className={styles.heroContent}
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true }}
                         variants={containerVariants}
                     >
-                        <motion.span className={styles.tagline} variants={itemVariants}>
-                            PROFESSIONAL EDGE // INDIVIDUAL POWER
-                        </motion.span>
                         <motion.h1 className={styles.glitchTitle} variants={itemVariants}>
-                            AEQUITAS: <br />
-                            <span className={styles.cyanText}>THE RETAIL REVOLUTION</span>
+                            AEQUITAS
                         </motion.h1>
+                        <motion.span className={styles.tagline} variants={itemVariants}>
+                            Deterministic Market Infrastructure for Individual Traders
+                        </motion.span>
                         <motion.p className={styles.heroSubtext} variants={itemVariants}>
-                            Unlock the sub-nanosecond edge once reserved for banks. 
-                            Our FPGA-powered core eliminates the "Unfair Advantage" 
-                            of big institutions, giving you the fastest foundation 
-                            to master the global markets.
+                            Access institutional-grade execution architecture designed for consistency, transparency, and control.
                         </motion.p>
                         <motion.div className={styles.heroActions} variants={itemVariants}>
                             <Link to="/register">
-                                <motion.button 
+                                <motion.button
                                     className={styles.primaryBtn}
                                     whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(0, 240, 255, 0.6)" }}
                                     whileTap={{ scale: 0.95 }}
                                 >
-                                    GET STARTED
+                                    REQUEST ACCESS
                                 </motion.button>
                             </Link>
                             <div className={styles.specGrid}>
                                 {[
-                                    { val: "INSTANT", label: "EXECUTION" },
-                                    { val: "0.0ns", label: "JITTER" },
-                                    { val: "PRO", label: "TOOLS" }
+                                    { val: "NSE + BSE", label: "READY", isLive: true },
+                                    { val: "0", label: "HIDDEN FEES" },
+                                    { val: "PRO", label: "EXECUTION" }
                                 ].map((spec, i) => (
                                     <motion.div 
                                         key={i} 
                                         className={styles.specItem}
                                         variants={itemVariants}
                                     >
-                                        <span className={styles.specValue}>{spec.val}</span>
+                                        <div className={styles.specValueContainer}>
+                                            {spec.isLive && <div className={styles.liveDot} />}
+                                            <span className={styles.specValue}>{spec.val}</span>
+                                        </div>
                                         <span className={styles.specLabel}>{spec.label}</span>
                                     </motion.div>
                                 ))}
@@ -102,26 +101,24 @@ export function LandingPage(): JSX.Element {
                     </motion.div>
                 </section>
 
-                {/* 2. ARCHITECTURE */}
+                {/* 2. PHILOSOPHY / AMBIGUITY */}
                 <section className={styles.fullSection}>
-                    <motion.div 
+                    <motion.div
                         className={styles.sideContent}
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ amount: 0.5 }}
                         variants={containerVariants}
                     >
-                        <motion.h2 className={styles.sectionTitle} variants={itemVariants}>YOUR UNFAIR ADVANTAGE</motion.h2>
+                        <motion.h2 className={styles.sectionTitle} variants={itemVariants}>EXECUTION, WITHOUT AMBIGUITY</motion.h2>
                         <motion.div className={styles.brutalistCard} variants={itemVariants} whileHover={{ x: 20 }}>
-                            <h3>High-Performance Core</h3>
+                            <h3>The Trading Core</h3>
                             <p>
-                                Why settle for retail-grade lag? Aequitas brings 
-                                low-latency FPGA hardware to your fingertips. 
-                                Execute trades at the speed of light and stop being 
-                                the liquidity for someone else's bot.
+                                Aequitas is a low-latency trading core engineered to reduce execution uncertainty.
+                                Every order follows a defined, observable path — from submission to fill.
                             </p>
-                            <ul className={styles.featureList}>
-                                {["Pro-Grade Order Execution", "Real-Time Trade Diagnostics", "Hardware-Accelerated Speed"].map((f, i) => (
+                            <ul className={styles.featureList} style={{ color: 'var(--accent-cyan)', fontStyle: 'italic', marginTop: '2rem' }}>
+                                {["No hidden prioritization", "No opaque routing logic", "No behavioral guesswork"].map((f, i) => (
                                     <motion.li key={i} variants={itemVariants}>{f}</motion.li>
                                 ))}
                             </ul>
@@ -129,66 +126,138 @@ export function LandingPage(): JSX.Element {
                     </motion.div>
                 </section>
 
-                {/* 3. GOVERNANCE */}
-                <section className={styles.fullSection}>
-                    <motion.div 
+                {/* 3. CORE CAPABILITIES */}
+                <section className={styles.fullSection} style={{ justifyContent: 'flex-end' }}>
+                    <motion.div
                         className={styles.sideContentRight}
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ amount: 0.5 }}
                         variants={containerVariants}
                     >
-                        <motion.h2 className={styles.sectionTitle} variants={itemVariants}>FAIRNESS BY DESIGN</motion.h2>
-                        <motion.div className={styles.brutalistCard} variants={itemVariants} whileHover={{ x: -20 }}>
-                            <h3 className={styles.goldText}>Anti-Frontrunning Engine</h3>
-                            <p>
-                                We've eliminated the edge of predatory algos. 
-                                Aequitas ensures that your orders are processed 
-                                with strict FIFO logic. No hidden queues, no 
-                                preferential treatment. Just pure trading.
-                            </p>
-                            <div className={styles.techMetrics}>
-                                <span>STATUS: 100% TRANSPARENT</span>
-                                <span>LOGIC: STOCHASTIC-FAIR</span>
-                            </div>
-                        </motion.div>
+                        <motion.h2 className={styles.sectionTitle} variants={itemVariants}>CORE CAPABILITIES</motion.h2>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                            <motion.div className={styles.brutalistCard} variants={itemVariants} whileHover={{ x: -20 }}>
+                                <h3 className={styles.goldText}>Deterministic Execution Engine</h3>
+                                <p>Orders are processed using strict sequencing logic with bounded latency variance.</p>
+                                <div className={styles.techMetrics}>
+                                    <span>FIFO ORDER HANDLING</span>
+                                    <span>PREDICTABLE TIMING</span>
+                                </div>
+                            </motion.div>
+
+                            <motion.div className={styles.brutalistCard} variants={itemVariants} whileHover={{ x: -20 }}>
+                                <h3 className={styles.goldText}>Latency Architecture</h3>
+                                <p>Built for consistency under load, not theoretical peak speed. Microsecond-level execution pipeline.</p>
+                                <div className={styles.techMetrics}>
+                                    <span>STABLE JITTER ENVELOPE</span>
+                                    <span>HARDWARE-ACCELERATED</span>
+                                </div>
+                            </motion.div>
+                        </div>
                     </motion.div>
                 </section>
 
-                {/* 4. RISK */}
+                {/* 4. MARKET STRUCTURE & RISK */}
                 <section className={styles.fullSection}>
-                    <motion.div 
+                    <motion.div
                         className={styles.sideContent}
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ amount: 0.5 }}
                         variants={containerVariants}
                     >
-                        <motion.h2 className={styles.sectionTitle} variants={itemVariants}>SMART CONTROLS</motion.h2>
-                        <motion.div className={styles.brutalistCard} variants={itemVariants} whileHover={{ x: 20 }}>
-                            <h3>Protect Your Alpha</h3>
-                            <p>
-                                Trade with confidence using advanced risk tools. 
-                                Set millisecond-precision stop losses and exposure 
-                                limits that are hard-coded into the execution path.
-                            </p>
-                            <div className={styles.statsRow}>
-                                <div className={styles.statMini}>
-                                    <strong>SMART</strong>
-                                    <span>Risk Gates</span>
+                        <motion.h2 className={styles.sectionTitle} variants={itemVariants}>MARKET & RISK</motion.h2>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                            <motion.div className={styles.brutalistCard} variants={itemVariants} whileHover={{ x: 20 }}>
+                                <h3>Market Structure Alignment</h3>
+                                <p>Designed to operate within real-world market constraints — not abstract around them.</p>
+                                <div className={styles.techMetrics}>
+                                    <span>STANDARD ROUTING</span>
+                                    <span>NO INTERNALIZATION</span>
                                 </div>
-                                <div className={styles.statMini}>
-                                    <strong>&lt;1μs</strong>
-                                    <span>Protection</span>
+                            </motion.div>
+
+                            <motion.div className={styles.brutalistCard} variants={itemVariants} whileHover={{ x: 20 }}>
+                                <h3>Risk Controls at Execution Layer</h3>
+                                <p>Risk is enforced at the point of action, not after exposure. Pre-trade validation gates.</p>
+                                <div className={styles.techMetrics}>
+                                    <span>DETERMINISTIC STOPS</span>
+                                    <span>POSITION CONSTRAINTS</span>
                                 </div>
-                            </div>
-                        </motion.div>
+                            </motion.div>
+                        </div>
                     </motion.div>
                 </section>
 
-                {/* 5. CTA */}
+                {/* 5. SYSTEM PHILOSOPHY */}
+                <section className={styles.fullSection} style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
+                    <motion.div
+                        className={styles.ctaCenter}
+                        initial="hidden"
+                        whileInView="visible"
+                        variants={containerVariants}
+                    >
+                        <motion.h2 className={styles.sectionTitle} variants={itemVariants} style={{ fontSize: '1.2rem', color: '#666' }}>SYSTEM PHILOSOPHY</motion.h2>
+                        <motion.p className={styles.finalTitle} variants={itemVariants} style={{ fontSize: '2.5rem', marginTop: '1rem' }}>
+                            Institutional systems optimize for <span className={styles.cyanText}>control</span>.
+                        </motion.p>
+                        <motion.p className={styles.ctaSubtext} variants={itemVariants} style={{ maxWidth: '800px' }}>
+                            Most retail platforms optimize for accessibility. Aequitas is built on the latter.
+                            You are not interacting with a simplified interface layered over opaque systems.
+                            You are interacting with the system itself.
+                        </motion.p>
+                    </motion.div>
+                </section>
+
+                {/* 6. WHO THIS IS FOR */}
                 <section className={styles.fullSection}>
-                    <motion.div 
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', width: '100%', maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
+                        <motion.div
+                            initial="hidden"
+                            whileInView="visible"
+                            variants={containerVariants}
+                        >
+                            <h2 className={styles.sectionTitle}>WHO THIS IS FOR</h2>
+                            <ul className={styles.featureList} style={{ marginTop: '2rem' }}>
+                                {[
+                                    "Traders requiring consistent execution behavior",
+                                    "Systematic participants sensitive to latency variance",
+                                    "Individuals transitioning from retail to structured trading"
+                                ].map((item, i) => (
+                                    <motion.li key={i} variants={itemVariants}>{item}</motion.li>
+                                ))}
+                            </ul>
+                        </motion.div>
+
+                        <motion.div
+                            initial="hidden"
+                            whileInView="visible"
+                            variants={containerVariants}
+                        >
+                            <h2 className={styles.sectionTitle}>WHAT THIS IS NOT</h2>
+                            <ul className={styles.featureList} style={{ marginTop: '2rem', opacity: 0.6 }}>
+                                {[
+                                    "Not a zero-latency claim",
+                                    "Not a predictive trading system",
+                                    "Not a strategy provider"
+                                ].map((item, i) => (
+                                    <motion.li key={i} variants={itemVariants}>{item}</motion.li>
+                                ))}
+                            </ul>
+                            <p style={{ marginTop: '2rem', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8rem', color: 'var(--accent-cyan)' }}>
+                                Aequitas does not generate alpha. <br />
+                                It preserves the integrity of your execution.
+                            </p>
+                        </motion.div>
+                    </div>
+                </section>
+
+                {/* 7. CTA */}
+                <section className={styles.fullSection}>
+                    <motion.div
                         className={styles.ctaCenter}
                         initial="hidden"
                         whileInView="visible"
@@ -196,20 +265,22 @@ export function LandingPage(): JSX.Element {
                     >
                         <motion.h2 className={styles.finalTitle} variants={itemVariants}>READY TO TRADE?</motion.h2>
                         <motion.p className={styles.ctaSubtext} variants={itemVariants}>
-                            Stop settling for slow execution. 
-                            Unlock your professional edge with Aequitas.
+                            Aequitas is currently available via controlled onboarding.
                         </motion.p>
                         <motion.div className={styles.ctaButtonGroup} variants={itemVariants}>
                             <Link to="/register">
-                                <motion.button 
+                                <motion.button
                                     className={styles.massiveBtn}
                                     whileHover={{ scale: 1.1, backgroundColor: "#fff", color: "#000" }}
                                     whileTap={{ scale: 0.9 }}
                                 >
-                                    GET STARTED
+                                    REQUEST ACCESS
                                 </motion.button>
                             </Link>
                         </motion.div>
+                        <p style={{ marginTop: '4rem', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.7rem', color: '#444' }}>
+                            AEQUITAS CORE // EXECUTION INFRASTRUCTURE. NO ABSTRACTION LAYERS.
+                        </p>
                     </motion.div>
                 </section>
 
