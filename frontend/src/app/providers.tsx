@@ -1,30 +1,78 @@
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { ReactNode } from 'react';
+import { ThemeProvider, createTheme, CssBaseline, PaletteMode } from '@mui/material';
+import { ReactNode, createContext, useContext, useMemo, useState, useEffect } from 'react';
 
-const theme = createTheme({
+// Theme persistence key
+const THEME_STORAGE_KEY = 'aequitas-theme-mode';
+
+interface ColorModeContextType {
+    toggleColorMode: () => void;
+    mode: PaletteMode;
+}
+
+export const ColorModeContext = createContext<ColorModeContextType>({
+    toggleColorMode: () => {},
+    mode: 'light',
+});
+
+export const useColorMode = () => useContext(ColorModeContext);
+
+const getDesignTokens = (mode: PaletteMode) => ({
     palette: {
-        mode: 'light',
-        primary: {
-            main: '#0f172a', // Slate 900
-            light: '#334155',
-            dark: '#020617',
-        },
-        secondary: {
-            main: '#3b82f6', // Blue 500
-        },
+        mode,
+        ...(mode === 'light'
+            ? {
+                // Light mode palette
+                primary: {
+                    main: '#0f172a',
+                    light: '#334155',
+                    dark: '#020617',
+                },
+                secondary: {
+                    main: '#3b82f6',
+                },
+                background: {
+                    default: '#f8fafc',
+                    paper: '#ffffff',
+                },
+                divider: 'rgba(0, 0, 0, 0.06)',
+            }
+            : {
+                // Banker Dark palette
+                primary: {
+                    main: '#00F0FF', // Electric Cyan
+                    light: '#66f5ff',
+                    dark: '#00a3ad',
+                },
+                secondary: {
+                    main: '#D4AF37', // Muted Gold
+                },
+                background: {
+                    default: '#050505', // Obsidian
+                    paper: '#0a0a0a',
+                },
+                text: {
+                    primary: '#FFFFFF',
+                    secondary: 'rgba(255, 255, 255, 0.6)',
+                },
+                divider: 'rgba(255, 255, 255, 0.1)',
+            }),
         success: {
-            main: '#10b981', // Emerald 500
-            light: '#d1fae5',
+            main: '#10b981',
+            light: mode === 'light' ? '#d1fae5' : 'rgba(16, 185, 129, 0.2)',
+            '50': mode === 'light' ? '#ecfdf5' : 'rgba(16, 185, 129, 0.1)',
+            '100': mode === 'light' ? '#d1fae5' : 'rgba(16, 185, 129, 0.15)',
         },
         error: {
-            main: '#ef4444', // Red 500
-            light: '#fee2e2',
+            main: '#ef4444',
+            light: mode === 'light' ? '#fee2e2' : 'rgba(239, 68, 68, 0.2)',
+            '50': mode === 'light' ? '#fef2f2' : 'rgba(239, 68, 68, 0.1)',
+            '100': mode === 'light' ? '#fee2e2' : 'rgba(239, 68, 68, 0.15)',
         },
-        background: {
-            default: '#f8fafc', // Slate 50
-            paper: '#ffffff',
-        },
-        divider: 'rgba(0, 0, 0, 0.06)',
+        primary: {
+            main: mode === 'light' ? '#0f172a' : '#00F0FF',
+            '50': mode === 'light' ? '#f8fafc' : 'rgba(0, 240, 255, 0.1)',
+            '100': mode === 'light' ? '#f1f5f9' : 'rgba(0, 240, 255, 0.15)',
+        }
     },
     typography: {
         fontFamily: '"Inter", "Outfit", "Roboto", sans-serif',
@@ -49,8 +97,9 @@ const theme = createTheme({
             styleOverrides: {
                 root: {
                     boxShadow: 'none',
+                    borderRadius: 12,
                     '&:hover': {
-                        boxShadow: 'none',
+                        boxShadow: mode === 'dark' ? '0 0 15px rgba(0, 240, 255, 0.3)' : 'none',
                     },
                 },
             },
@@ -59,6 +108,7 @@ const theme = createTheme({
             styleOverrides: {
                 root: {
                     backgroundImage: 'none',
+                    border: mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
                 },
             },
         },
@@ -66,7 +116,7 @@ const theme = createTheme({
             styleOverrides: {
                 '*': {
                     scrollbarWidth: 'thin',
-                    scrollbarColor: '#cbd5e1 transparent',
+                    scrollbarColor: mode === 'light' ? '#cbd5e1 transparent' : '#333 transparent',
                 },
                 '*::-webkit-scrollbar': {
                     width: '6px',
@@ -76,14 +126,32 @@ const theme = createTheme({
                     background: 'transparent',
                 },
                 '*::-webkit-scrollbar-thumb': {
-                    backgroundColor: '#cbd5e1',
+                    backgroundColor: mode === 'light' ? '#cbd5e1' : '#333',
                     borderRadius: '20px',
                     '&:hover': {
-                        backgroundColor: '#94a3b8',
+                        backgroundColor: mode === 'light' ? '#94a3b8' : '#00F0FF',
                     },
                 },
                 'body': {
-                    backgroundColor: '#f8fafc',
+                    transition: 'background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    backgroundColor: mode === 'light' ? '#f8fafc' : '#050505',
+                    color: mode === 'light' ? '#0f172a' : '#ffffff',
+                    overflowX: 'hidden',
+                },
+                '.MuiPaper-root': {
+                    transition: 'background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                },
+                '.MuiButton-root': {
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                },
+                '.MuiTypography-root': {
+                    transition: 'color 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                },
+                '.MuiSvgIcon-root': {
+                    transition: 'color 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                },
+                '.MuiDivider-root': {
+                    transition: 'border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                 }
             },
         },
@@ -95,10 +163,33 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps): JSX.Element {
+    const [mode, setMode] = useState<PaletteMode>(() => {
+        const savedMode = localStorage.getItem(THEME_STORAGE_KEY);
+        return (savedMode as PaletteMode) || 'light';
+    });
+
+    const colorMode = useMemo(
+        () => ({
+            toggleColorMode: () => {
+                setMode((prevMode) => {
+                    const newMode = prevMode === 'light' ? 'dark' : 'light';
+                    localStorage.setItem(THEME_STORAGE_KEY, newMode);
+                    return newMode;
+                });
+            },
+            mode,
+        }),
+        [mode]
+    );
+
+    const theme = useMemo(() => createTheme(getDesignTokens(mode) as any), [mode]);
+
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {children}
-        </ThemeProvider>
+        <ColorModeContext.Provider value={colorMode}>
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                {children}
+            </ThemeProvider>
+        </ColorModeContext.Provider>
     );
 }

@@ -11,7 +11,12 @@ export const Layout: React.FC = () => {
     useWebSocket(); // Initialize WebSocket connection
 
     return (
-        <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+        <Box sx={{ 
+            display: 'flex', 
+            minHeight: '100vh', 
+            bgcolor: 'background.default',
+            transition: 'background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}>
             <Header />
             <Sidebar />
             <Box

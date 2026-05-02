@@ -11,11 +11,11 @@
     gap: 1.5rem;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--divider);
 }
 
 .back-link {
-    color: #1976d2;
+    color: var(--primary-main);
     text-decoration: none;
     font-size: 0.9rem;
     white-space: nowrap;
@@ -44,7 +44,7 @@
 
 .badge-inline {
     padding: 0.2rem 0.6rem;
-    background: #1976d2;
+    background: var(--primary-main);
     color: white;
     border-radius: 3px;
     text-transform: capitalize;
@@ -53,9 +53,9 @@
 
 /* Dense Content Layout */
 .module-content-dense {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
+    background: var(--bg-paper);
+    border: 1px solid var(--divider);
+    border-radius: 12px;
     padding: 1.5rem;
 }
 
@@ -66,8 +66,8 @@
 .section-subtitle {
     font-size: 1.3rem;
     margin: 0 0 0.75rem 0;
-    color: #1976d2;
-    border-bottom: 1px solid var(--border-color);
+    color: var(--primary-main);
+    border-bottom: 1px solid var(--divider);
     padding-bottom: 0.3rem;
 }
 
@@ -100,15 +100,16 @@
 
 .concept-item {
     padding: 0.75rem;
-    background: var(--bg-tertiary);
-    border-left: 2px solid #1976d2;
+    background: var(--bg-default);
+    border-left: 2px solid var(--primary-main);
     border-radius: 4px;
     font-size: 0.9rem;
     line-height: 1.5;
+    color: var(--text-primary);
 }
 
 .concept-item strong {
-    color: #1976d2;
+    color: var(--primary-main);
 }
 
 .inline-example {
@@ -122,7 +123,7 @@
 .info-block {
     margin: 0.5rem 0;
     padding: 0.6rem;
-    background: var(--bg-tertiary);
+    background: var(--bg-default);
     border-radius: 4px;
     font-size: 0.9rem;
     line-height: 1.5;
@@ -133,11 +134,11 @@
 }
 
 .info-block.guarantee {
-    border-left: 3px solid #4caf50;
+    border-left: 3px solid var(--success-main);
 }
 
 .info-block.guarantee strong {
-    color: #4caf50;
+    color: var(--success-main);
 }
 
 .impact-text,
@@ -151,7 +152,7 @@
 .compact-tips {
     margin: 1rem 0;
     padding: 0.75rem;
-    background: var(--bg-tertiary);
+    background: var(--bg-default);
     border-radius: 4px;
 }
 
@@ -170,14 +171,15 @@
     margin-bottom: 0.25rem;
     font-size: 0.9rem;
     line-height: 1.4;
+    color: var(--text-secondary);
 }
 
 /* Important Rule */
 .important-rule {
     margin: 1rem 0;
     padding: 0.75rem;
-    background: #fff3e0;
-    border-left: 3px solid #ff9800;
+    background: var(--warning-light);
+    border-left: 3px solid var(--warning-main);
     border-radius: 4px;
     font-size: 0.9rem;
     line-height: 1.5;
@@ -196,7 +198,7 @@
     display: flex;
     gap: 1rem;
     padding: 0.75rem;
-    background: var(--bg-tertiary);
+    background: var(--bg-default);
     border-radius: 4px;
 }
 
@@ -207,7 +209,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #1976d2;
+    background: var(--primary-main);
     color: white;
     border-radius: 50%;
     font-weight: bold;
@@ -240,7 +242,7 @@
     display: inline-block;
     margin-left: 0.5rem;
     padding: 0.15rem 0.4rem;
-    background: #1976d2;
+    background: var(--primary-main);
     color: white;
     border-radius: 3px;
     font-size: 0.75rem;
@@ -250,15 +252,15 @@
 .takeaways-compact {
     margin-top: 2rem;
     padding: 1rem;
-    background: var(--bg-tertiary);
-    border: 2px solid #1976d2;
+    background: var(--bg-default);
+    border: 2px solid var(--primary-main);
     border-radius: 6px;
 }
 
 .takeaways-compact h3 {
     margin: 0 0 0.75rem 0;
     font-size: 1.1rem;
-    color: #1976d2;
+    color: var(--primary-main);
 }
 
 .takeaways-compact ul {
@@ -270,6 +272,7 @@
     margin-bottom: 0.5rem;
     line-height: 1.5;
     font-size: 0.9rem;
+    color: var(--text-primary);
 }
 
 /* Loading & Error */
@@ -281,7 +284,7 @@
 }
 
 .error {
-    color: #f44336;
+    color: var(--error-main);
 }
 
 /* Responsive */

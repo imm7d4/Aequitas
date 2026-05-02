@@ -15,6 +15,9 @@ import { BrandLogo } from './header/BrandLogo';
 import { GlobalSearch } from './header/GlobalSearch';
 import { UserProfile } from './header/UserProfile';
 
+import { Theme } from '@mui/material/styles';
+import { ThemeToggle } from './ThemeToggle';
+
 export const Header: React.FC = () => {
     const { toggleSidebar, isSidebarOpen } = useLayoutStore();
     const sidebarWidth = isSidebarOpen ? 240 : 72;
@@ -24,11 +27,15 @@ export const Header: React.FC = () => {
             position="fixed"
             elevation={0}
             sx={{
-                zIndex: (theme) => theme.zIndex.drawer + 1,
-                bgcolor: '#F9FAFB',
+                zIndex: (theme: Theme) => theme.zIndex.drawer + 1,
+                bgcolor: 'background.paper',
                 color: 'text.primary',
                 height: 64,
                 justifyContent: 'center',
+                transition: (theme: Theme) => theme.transitions.create(['width', 'margin'], {
+                    easing: theme.transitions.easing.sharp,
+                    duration: theme.transitions.duration.leavingScreen,
+                }),
                 // Dynamic border that starts AFTER the sidebar
                 '&::after': {
                     content: '""',
@@ -37,8 +44,8 @@ export const Header: React.FC = () => {
                     right: 0,
                     left: `${sidebarWidth}px`,
                     height: '1px',
-                    bgcolor: 'rgba(0, 0, 0, 0.08)', // Divider color
-                    transition: (theme) => theme.transitions.create('left', {
+                    bgcolor: 'divider',
+                    transition: (theme: Theme) => theme.transitions.create('left', {
                         easing: theme.transitions.easing.easeInOut,
                         duration: theme.transitions.duration.standard,
                     }),
@@ -50,13 +57,13 @@ export const Header: React.FC = () => {
                     height: 64,
                     display: 'grid',
                     gridTemplateColumns: 'min-content 1fr min-content',
-                    px: { xs: 1.5, sm: 2, md: 3 }, // More breathable on desktop
+                    px: { xs: 1.5, sm: 2, md: 3 },
                     gap: { xs: 1, sm: 2, md: 3 },
                     minHeight: '64px !important',
                 }}
             >
                 {/* Left Section: Hamburger + Logo */}
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' } as const}>
                     <IconButton
                         size="large"
                         edge="start"
@@ -93,6 +100,8 @@ export const Header: React.FC = () => {
                         justifyContent: 'flex-end'
                     }}
                 >
+                    <ThemeToggle />
+
                     <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
                         <MarketStatusBadge />
                     </Box>

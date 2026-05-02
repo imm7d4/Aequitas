@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
     Box, Paper, ToggleButtonGroup, ToggleButton,
     Button, Stack, CircularProgress, Tooltip,
-    Snackbar, Alert, useTheme, alpha, Typography
+    Snackbar, Alert, useTheme, alpha, Typography, Theme
 } from '@mui/material';
 import {
     TrendingUp as BuyIcon,
@@ -20,6 +20,8 @@ import {
     OrderSide, TradingIntent
 } from '@/shared/constants/AppConstants';
 
+import { TradeSideSelection } from './TradeSideSelection';
+
 interface TradePanelProps {
     instrument: Instrument;
     ltp: number;
@@ -34,23 +36,22 @@ export const TradePanel: React.FC<TradePanelProps> = ({
     const theme = useTheme();
     const trade = useTradePanel(instrument, ltp, initialSide, initialQuantity, initialIntent);
 
-    // Short Selling Risk Warning
     const [showRiskWarning, setShowRiskWarning] = useState(false);
     const [riskAccepted, setRiskAccepted] = useState(() => localStorage.getItem('shortSellRiskAccepted') === 'true');
 
-    const handleShortModeChange = (enabled: boolean) => {
+    const handleShortModeChange = useCallback((enabled: boolean) => {
         if (enabled && !riskAccepted) setShowRiskWarning(true);
         else trade.setShortMode(enabled);
-    };
+    }, [riskAccepted, trade]);
 
-    const handleRiskAccept = (accepted: boolean) => {
+    const handleRiskAccept = useCallback((accepted: boolean) => {
         setShowRiskWarning(false);
         if (accepted) {
             setRiskAccepted(true);
             localStorage.setItem('shortSellRiskAccepted', 'true');
             trade.setShortMode(true);
         }
-    };
+    }, [trade]);
 
     const liveInterpretation = useMemo(() => {
         if (trade.orderType === ORDER_TYPE.MARKET) return `Executes immediately at ~${formatCurrency(ltp)}`;
@@ -66,12 +67,11 @@ export const TradePanel: React.FC<TradePanelProps> = ({
         return !isNaN(qty) && qty > 0 && qty % instrument.lotSize === 0;
     }, [trade.quantity, instrument.lotSize]);
 
+    const isBuy = trade.side === ORDER_SIDE.BUY;
+    const accentColor = isBuy ? theme.palette.success.main : theme.palette.error.main;
+
     return (
-        <Paper id="trade-panel" elevation={0} sx={{
-            p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 3,
-            background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(12px)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.04)'
-        }}>
+        <Paper id="trade-panel" elevation={0} sx={getPanelStyles(theme)}>
             <Stack spacing={2}>
                 <TradePanelHeader 
                     symbol={instrument.symbol}
@@ -84,25 +84,28 @@ export const TradePanel: React.FC<TradePanelProps> = ({
 
                 <ShortSellWarning open={showRiskWarning} onClose={handleRiskAccept} />
 
-                <ToggleButtonGroup
-                    fullWidth value={trade.side} exclusive
-                    onChange={(_, v) => v && trade.setSide(v as OrderSide)}
-                    sx={{ p: 0.5, bgcolor: 'rgba(0,0,0,0.03)', borderRadius: '12px', border: 'none' }}
-                >
-                    <ToggleButton value={ORDER_SIDE.BUY} sx={{ '&.Mui-selected': { bgcolor: 'success.main', color: 'white' } }}>
-                        <BuyIcon sx={{ mr: 1, fontSize: 18 }} /> {trade.shortMode ? 'COVER' : 'BUY'}
-                    </ToggleButton>
-                    <ToggleButton value={ORDER_SIDE.SELL} sx={{ '&.Mui-selected': { bgcolor: 'error.main', color: 'white' } }}>
-                        <SellIcon sx={{ mr: 1, fontSize: 18 }} /> {trade.shortMode ? 'SHORT' : 'SELL'}
-                    </ToggleButton>
-                </ToggleButtonGroup>
+                <TradeSideSelection 
+                    side={trade.side} 
+                    shortMode={trade.shortMode} 
+                    onSideChange={trade.setSide} 
+                    theme={theme} 
+                />
 
                 <Box>
-                    <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ mb: 1, display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={700} sx={SECTION_HEADER_STYLES}>
                         Order Configuration
                     </Typography>
                     <OrderConfigurationSection 
-                        {...trade}
+                        side={trade.side}
+                        orderType={trade.orderType}
+                        quantity={trade.quantity}
+                        price={trade.price}
+                        stopPrice={trade.stopPrice}
+                        limitPrice={trade.limitPrice}
+                        trailAmount={trade.trailAmount}
+                        trailType={trade.trailType}
+                        validity={trade.validity}
+                        advancedMode={trade.advancedMode}
                         onOrderTypeChange={trade.setOrderType}
                         onQuantityChange={trade.setQuantity}
                         onPriceChange={trade.setPrice}
@@ -126,12 +129,12 @@ export const TradePanel: React.FC<TradePanelProps> = ({
                     <Box>
                         <Button
                             fullWidth variant="contained" size="large"
-                            color={trade.side === ORDER_SIDE.BUY ? 'success' : 'error'}
+                            color={isBuy ? 'success' : 'error'}
                             disabled={!isValid || trade.isLoading}
                             onClick={trade.handlePlaceOrder}
                             sx={{
                                 py: 1.4, fontWeight: 900, borderRadius: '12px',
-                                boxShadow: `0 6px 12px ${alpha(trade.side === ORDER_SIDE.BUY ? theme.palette.success.main : theme.palette.error.main, 0.2)}`
+                                boxShadow: `0 6px 12px ${alpha(accentColor, 0.2)}`
                             }}
                         >
                             {trade.isLoading ? <CircularProgress size={24} color="inherit" /> : `${trade.side} ${instrument.symbol}`}
@@ -153,3 +156,13 @@ export const TradePanel: React.FC<TradePanelProps> = ({
         </Paper>
     );
 };
+
+const getPanelStyles = (theme: Theme) => ({
+    p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 3,
+    background: theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.6)' : alpha(theme.palette.background.paper, 0.8),
+    backdropFilter: 'blur(12px)',
+    boxShadow: theme.palette.mode === 'light' ? '0 8px 32px rgba(0,0,0,0.04)' : '0 8px 32px rgba(0,0,0,0.4)'
+});
+
+const SECTION_HEADER_STYLES = { mb: 1, display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' } as const;
+

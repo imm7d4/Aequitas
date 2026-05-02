@@ -5,7 +5,7 @@ import { useOnboardingStore } from '../store/onboardingStore';
 import { getTourSteps, tourStyles } from '../config/tourConfig';
 import { useInstrumentStore } from '@/features/instruments/store/instrumentStore';
 import { useInstruments } from '@/features/instruments/hooks/useInstruments';
-import { useTheme } from '@mui/material';
+import { useTheme, alpha } from '@mui/material';
 import { useAuth } from '@/features/auth';
 import { TourTooltip } from './TourTooltip';
 
@@ -147,16 +147,24 @@ const OnboardingTour = () => {
             textColor: theme.palette.text.primary,
             backgroundColor: theme.palette.background.paper,
             arrowColor: theme.palette.background.paper,
-            zIndex: 10000,
+            zIndex: 99999, // Ensure it covers fixed headers/sidebars
         },
         overlay: {
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backgroundColor: theme.palette.mode === 'dark' 
+                ? 'rgba(0, 0, 0, 0.7)' // More transparent to see context
+                : 'rgba(0, 0, 0, 0.4)',
         },
         spotlight: {
             borderRadius: 8,
+            backgroundColor: 'transparent',
+            border: theme.palette.mode === 'dark' 
+                ? `2px solid ${theme.palette.primary.main}` 
+                : 'none',
+            boxShadow: theme.palette.mode === 'dark' 
+                ? `0 0 15px ${alpha(theme.palette.primary.main, 0.4)}` // Neon glow
+                : 'none',
         }
     };
-
     return (
         <ReactJoyride
             steps={steps}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Stack, Switch, Chip } from '@mui/material';
+import { Box, Typography, Stack, Switch, Chip, useTheme } from '@mui/material';
 import { Settings as AdvancedIcon } from '@mui/icons-material';
 
 interface TradePanelHeaderProps {
@@ -14,6 +14,7 @@ interface TradePanelHeaderProps {
 export const TradePanelHeader: React.FC<TradePanelHeaderProps> = ({
     symbol, isShortable, shortMode, onShortModeChange, advancedMode, onAdvancedModeToggle
 }) => {
+    const theme = useTheme();
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
             <Typography variant="subtitle1" fontWeight={800} sx={{ letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
@@ -49,7 +50,7 @@ export const TradePanelHeader: React.FC<TradePanelHeaderProps> = ({
                         cursor: 'pointer',
                         fontWeight: 700,
                         borderRadius: '8px',
-                        bgcolor: advancedMode ? 'primary.main' : 'rgba(0,0,0,0.05)',
+                        bgcolor: advancedMode ? 'primary.main' : (theme.palette.mode === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)'),
                         color: advancedMode ? 'white' : 'text.primary'
                     }}
                 />
