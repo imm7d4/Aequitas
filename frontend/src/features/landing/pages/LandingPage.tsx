@@ -60,16 +60,17 @@ export function LandingPage(): JSX.Element {
                         variants={containerVariants}
                     >
                         <motion.span className={styles.tagline} variants={itemVariants}>
-                            INSTITUTIONAL LIQUIDITY // QUANT-DRIVEN EXECUTION
+                            PROFESSIONAL EDGE // INDIVIDUAL POWER
                         </motion.span>
                         <motion.h1 className={styles.glitchTitle} variants={itemVariants}>
                             AEQUITAS: <br />
-                            <span className={styles.cyanText}>DETERMINISTIC CAPITAL</span>
+                            <span className={styles.cyanText}>THE RETAIL REVOLUTION</span>
                         </motion.h1>
                         <motion.p className={styles.heroSubtext} variants={itemVariants}>
-                            The premier bridge between global institutional capital and sub-nanosecond execution. 
-                            Our FPGA-powered core eliminates toxic order flow, providing a fair, 
-                            zero-jitter foundation for high-frequency liquidity providers.
+                            Unlock the sub-nanosecond edge once reserved for banks. 
+                            Our FPGA-powered core eliminates the "Unfair Advantage" 
+                            of big institutions, giving you the fastest foundation 
+                            to master the global markets.
                         </motion.p>
                         <motion.div className={styles.heroActions} variants={itemVariants}>
                             <Link to="/register">
@@ -83,9 +84,9 @@ export function LandingPage(): JSX.Element {
                             </Link>
                             <div className={styles.specGrid}>
                                 {[
-                                    { val: "<500ns", label: "LATENCY" },
-                                    { val: "1.2M+", label: "TPS" },
-                                    { val: "0.0ns", label: "JITTER" }
+                                    { val: "INSTANT", label: "EXECUTION" },
+                                    { val: "0.0ns", label: "JITTER" },
+                                    { val: "PRO", label: "TOOLS" }
                                 ].map((spec, i) => (
                                     <motion.div 
                                         key={i} 
@@ -110,16 +111,17 @@ export function LandingPage(): JSX.Element {
                         viewport={{ amount: 0.5 }}
                         variants={containerVariants}
                     >
-                        <motion.h2 className={styles.sectionTitle} variants={itemVariants}>CORE ARCHITECTURE</motion.h2>
+                        <motion.h2 className={styles.sectionTitle} variants={itemVariants}>YOUR UNFAIR ADVANTAGE</motion.h2>
                         <motion.div className={styles.brutalistCard} variants={itemVariants} whileHover={{ x: 20 }}>
-                            <h3>Hardware-First Execution</h3>
+                            <h3>High-Performance Core</h3>
                             <p>
-                                Traditional software-based matching engines suffer from "micro-burst" 
-                                jitter. Aequitas executes on custom FPGA arrays, ensuring that every 
-                                order is processed with mathematical certainty.
+                                Why settle for retail-grade lag? Aequitas brings 
+                                low-latency FPGA hardware to your fingertips. 
+                                Execute trades at the speed of light and stop being 
+                                the liquidity for someone else's bot.
                             </p>
                             <ul className={styles.featureList}>
-                                {["Direct Market Access (DMA)", "Colocation-Ready Interface", "Sub-Nanosecond Time-Stamping"].map((f, i) => (
+                                {["Pro-Grade Order Execution", "Real-Time Trade Diagnostics", "Hardware-Accelerated Speed"].map((f, i) => (
                                     <motion.li key={i} variants={itemVariants}>{f}</motion.li>
                                 ))}
                             </ul>
@@ -136,17 +138,18 @@ export function LandingPage(): JSX.Element {
                         viewport={{ amount: 0.5 }}
                         variants={containerVariants}
                     >
-                        <motion.h2 className={styles.sectionTitle} variants={itemVariants}>GOVERNANCE & FAIRNESS</motion.h2>
+                        <motion.h2 className={styles.sectionTitle} variants={itemVariants}>FAIRNESS BY DESIGN</motion.h2>
                         <motion.div className={styles.brutalistCard} variants={itemVariants} whileHover={{ x: -20 }}>
                             <h3 className={styles.goldText}>Anti-Frontrunning Engine</h3>
                             <p>
-                                True to our name (Aequitas = Fairness), our engine uses a 
-                                deterministic queueing protocol that eliminates toxic order-flow 
-                                and predatory latency arbitrage.
+                                We've eliminated the edge of predatory algos. 
+                                Aequitas ensures that your orders are processed 
+                                with strict FIFO logic. No hidden queues, no 
+                                preferential treatment. Just pure trading.
                             </p>
                             <div className={styles.techMetrics}>
-                                <span>PROTOCOL: AEQ-DET-v1</span>
-                                <span>AUDIT: REAL-TIME</span>
+                                <span>STATUS: 100% TRANSPARENT</span>
+                                <span>LOGIC: STOCHASTIC-FAIR</span>
                             </div>
                         </motion.div>
                     </motion.div>
@@ -161,22 +164,22 @@ export function LandingPage(): JSX.Element {
                         viewport={{ amount: 0.5 }}
                         variants={containerVariants}
                     >
-                        <motion.h2 className={styles.sectionTitle} variants={itemVariants}>RISK INFRASTRUCTURE</motion.h2>
+                        <motion.h2 className={styles.sectionTitle} variants={itemVariants}>SMART CONTROLS</motion.h2>
                         <motion.div className={styles.brutalistCard} variants={itemVariants} whileHover={{ x: 20 }}>
-                            <h3>Institutional Risk Controls</h3>
+                            <h3>Protect Your Alpha</h3>
                             <p>
-                                Manage your exposure with millisecond-precision risk gates. 
-                                Our JIT (Just-In-Time) approval queue ensures that high-value 
-                                trades are secure without sacrificing performance.
+                                Trade with confidence using advanced risk tools. 
+                                Set millisecond-precision stop losses and exposure 
+                                limits that are hard-coded into the execution path.
                             </p>
                             <div className={styles.statsRow}>
                                 <div className={styles.statMini}>
-                                    <strong>100+</strong>
-                                    <span>Risk Checks</span>
+                                    <strong>SMART</strong>
+                                    <span>Risk Gates</span>
                                 </div>
                                 <div className={styles.statMini}>
                                     <strong>&lt;1μs</strong>
-                                    <span>Gate Latency</span>
+                                    <span>Protection</span>
                                 </div>
                             </div>
                         </motion.div>
@@ -191,10 +194,10 @@ export function LandingPage(): JSX.Element {
                         whileInView="visible"
                         variants={containerVariants}
                     >
-                        <motion.h2 className={styles.finalTitle} variants={itemVariants}>READY TO EVOLVE?</motion.h2>
+                        <motion.h2 className={styles.finalTitle} variants={itemVariants}>READY TO TRADE?</motion.h2>
                         <motion.p className={styles.ctaSubtext} variants={itemVariants}>
-                            Join the next generation of financial infrastructure. 
-                            Secure your seat in the deterministic future.
+                            Stop settling for slow execution. 
+                            Unlock your professional edge with Aequitas.
                         </motion.p>
                         <motion.div className={styles.ctaButtonGroup} variants={itemVariants}>
                             <Link to="/register">

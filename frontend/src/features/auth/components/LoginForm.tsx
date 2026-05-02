@@ -1,11 +1,9 @@
 import { useState, FormEvent, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { healthService } from '@/services/healthService';
-import { BrandLogo } from '../../../shared/components/header/BrandLogo';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import styles from '../styles/Auth.module.css';
-import { useLocation } from 'react-router-dom';
 
 export function LoginForm(): JSX.Element {
     const [email, setEmail] = useState<string>('');
@@ -26,7 +24,6 @@ export function LoginForm(): JSX.Element {
         e.preventDefault();
         setLocalError('');
 
-        // Client-side validation
         if (!email || !password) {
             setLocalError('Email and password are required');
             return;
@@ -44,81 +41,86 @@ export function LoginForm(): JSX.Element {
 
     return (
         <div className={styles.authContainer}>
+            <div className={styles.authBackground}>
+                <div className={styles.authGrid} />
+            </div>
+
             <Link to="/" className={styles.backLink}>
                 ← Back to Home
             </Link>
 
             <div className={styles.authContent}>
-                {/* Left Side - Branding */}
+                {/* Left Side - Branding Content */}
                 <div className={styles.authBranding}>
                     <div className={styles.brandingContent}>
-                        <div className={styles.brandingLogo}>
-                            <BrandLogo />
-                        </div>
                         <h1 className={styles.brandingTitle}>
-                            Welcome Back to Aequitas
+                            Unlock Your <br /> 
+                            <span style={{ color: 'var(--accent-cyan)' }}>Edge.</span>
                         </h1>
                         <p className={styles.brandingSubtitle}>
-                            Access your trading account and continue your journey towards fair and deterministic trading.
+                            Stop settling for retail-grade lag. Master the 
+                            markets with professional hardware execution.
                         </p>
-                        <div className={styles.brandingFeatures}>
-                            <div className={styles.brandingFeature}>
-                                <div className={styles.featureIcon}>✓</div>
-                                <span>Real-time market data</span>
+                        <div className={styles.featureList}>
+                            <div className={styles.featureItem}>
+                                <div className={styles.featureIcon}>01</div>
+                                <span className={styles.featureText}>Instant Pro-Grade Execution</span>
                             </div>
-                            <div className={styles.brandingFeature}>
-                                <div className={styles.featureIcon}>✓</div>
-                                <span>Lightning-fast execution</span>
+                            <div className={styles.featureItem}>
+                                <div className={styles.featureIcon}>02</div>
+                                <span className={styles.featureText}>Advanced Trade Diagnostics</span>
                             </div>
-                            <div className={styles.brandingFeature}>
-                                <div className={styles.featureIcon}>✓</div>
-                                <span>Bank-grade security</span>
+                            <div className={styles.featureItem}>
+                                <div className={styles.featureIcon}>03</div>
+                                <span className={styles.featureText}>100% Transparent Market Logic</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Right Side - Form */}
+                {/* Right Side - Form Card */}
                 <div className={styles.authFormSection}>
                     <div className={styles.authFormCard}>
                         <div className={styles.formHeader}>
-                            <h2 className={styles.formTitle}>Sign In</h2>
+                            <span className={styles.systemTag}>SECURE ACCESS</span>
+                            <h2 className={styles.formTitle}>Welcome Back</h2>
                             <p className={styles.formSubtitle}>
-                                Enter your credentials to access your account
+                                Sign in to your Aequitas account
                             </p>
                         </div>
 
                         {displayError && (
-                            <div className={`${styles.alert} ${styles.alertError}`}>
-                                <span>⚠</span>
+                            <div className={styles.alert}>
                                 <span>{displayError}</span>
                             </div>
                         )}
 
                         {successMessage && !displayError && (
-                            <div className={`${styles.alert} ${styles.alertSuccess}`} style={{ marginBottom: '20px', padding: '12px', background: 'rgba(76, 175, 80, 0.1)', color: '#4caf50', borderRadius: '8px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span>✓</span>
+                            <div className={styles.alert} style={{ borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' }}>
                                 <span>{successMessage}</span>
                             </div>
                         )}
 
                         <form onSubmit={handleSubmit} className={styles.authForm}>
                             <div className={styles.formGroup}>
+                                <label htmlFor="email" className={styles.formLabel}>
+                                    Email Address
+                                </label>
                                 <input
                                     type="email"
                                     id="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     className={styles.formInput}
-                                    placeholder=" "
+                                    placeholder="name@company.com"
                                     required
                                 />
-                                <label htmlFor="email" className={styles.formLabel}>
-                                    Email Address
-                                </label>
                             </div>
 
                             <div className={styles.formGroup}>
+                                <label htmlFor="password" className={styles.formLabel}>
+                                    Password
+                                </label>
                                 <div style={{ position: 'relative' }}>
                                     <input
                                         type={showPassword ? "text" : "password"}
@@ -126,13 +128,10 @@ export function LoginForm(): JSX.Element {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         className={styles.formInput}
-                                        placeholder=" "
+                                        style={{ width: '100%', paddingRight: '45px' }}
+                                        placeholder="••••••••"
                                         required
-                                        style={{ paddingRight: '40px' }}
                                     />
-                                    <label htmlFor="password" className={styles.formLabel}>
-                                        Password
-                                    </label>
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
@@ -144,21 +143,18 @@ export function LoginForm(): JSX.Element {
                                             background: 'none',
                                             border: 'none',
                                             cursor: 'pointer',
-                                            color: 'rgba(255, 255, 255, 0.7)',
+                                            color: '#555',
                                             display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            padding: '4px',
-                                            zIndex: 10
+                                            padding: '4px'
                                         }}
                                     >
-                                        {showPassword ? <VisibilityOff sx={{ fontSize: 20 }} /> : <Visibility sx={{ fontSize: 20 }} />}
+                                        {showPassword ? <VisibilityOff sx={{ fontSize: 18 }} /> : <Visibility sx={{ fontSize: 18 }} />}
                                     </button>
                                 </div>
                             </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', marginTop: '-8px' }}>
-                                <Link to="/forgot-password" className={styles.formLink} style={{ fontSize: '13px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-1rem' }}>
+                                <Link to="/forgot-password" className={styles.footerLink}>
                                     Forgot Password?
                                 </Link>
                             </div>
@@ -173,8 +169,8 @@ export function LoginForm(): JSX.Element {
                         </form>
 
                         <div className={styles.formFooter}>
-                            Don't have an account?{' '}
-                            <Link to="/register" className={styles.formLink}>
+                            <span className={styles.footerLink}>No account?</span>
+                            <Link to="/register" className={styles.footerLink} style={{ color: 'var(--accent-cyan)' }}>
                                 Create one now
                             </Link>
                         </div>

@@ -1,26 +1,38 @@
 /* Auth Pages Container */
 .authContainer {
     min-height: 100vh;
-    display: flex;
-    background: linear-gradient(180deg, #0A1929 0%, #1a2942 50%, #0f1f35 100%);
+    background: #050505;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
     position: relative;
     overflow: hidden;
+    display: flex;
 }
 
-.authContainer::before {
-    content: '';
+/* Background Elements */
+.authBackground {
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background-image:
-        radial-gradient(circle at 20% 50%, rgba(0, 102, 255, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%);
+    width: 100%;
+    height: 100%;
+    z-index: 0;
     pointer-events: none;
 }
 
-/* Split Layout */
+.authGrid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: 60px 60px;
+    background-image: 
+        linear-gradient(to right, rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+    mask-image: radial-gradient(circle at center, black, transparent 80%);
+}
+
 .authContent {
     display: flex;
     width: 100%;
@@ -32,64 +44,62 @@
 
 /* Left Side - Branding */
 .authBranding {
-    flex: 1;
+    flex: 1.2;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
     padding: 4rem;
-    color: white;
 }
 
 .brandingContent {
     max-width: 500px;
 }
 
-.brandingLogo {
-    margin-bottom: 2rem;
-}
-
 .brandingTitle {
-    font-size: 3rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    line-height: 1.2;
+    font-size: 3.5rem;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
+    text-transform: uppercase;
 }
 
 .brandingSubtitle {
-    font-size: 1.25rem;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.2rem;
+    color: #888;
     line-height: 1.6;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
 }
 
-.brandingFeatures {
+.featureList {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
-.brandingFeature {
+.featureItem {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 1rem;
+    gap: 1.5rem;
 }
 
 .featureIcon {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--accent-cyan);
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--accent-cyan);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
     flex-shrink: 0;
+}
+
+.featureText {
+    font-size: 1rem;
+    color: #fff;
+    font-weight: 500;
 }
 
 /* Right Side - Form */
@@ -97,241 +107,199 @@
     flex: 1;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     padding: 2rem;
 }
 
 .authFormCard {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    padding: 3rem;
     width: 100%;
-    max-width: 450px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 480px;
+    background: rgba(10, 10, 10, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 3.5rem;
+    position: relative;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+}
+
+.authFormCard::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    width: 40px;
+    height: 40px;
+    border-top: 2px solid var(--accent-cyan);
+    border-left: 2px solid var(--accent-cyan);
 }
 
 .formHeader {
-    margin-bottom: 2rem;
-    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.systemTag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent-cyan);
+    display: block;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.2em;
 }
 
 .formTitle {
-    font-size: 2rem;
-    font-weight: 700;
-    color: white;
-    margin-bottom: 0.5rem;
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    margin: 0;
+    line-height: 1;
+    text-transform: uppercase;
 }
 
 .formSubtitle {
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.6);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 1rem;
+    display: block;
 }
 
 /* Form Elements */
 .authForm {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 2rem;
 }
 
 .formGroup {
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.formLabel {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
 
 .formInput {
-    width: 100%;
-    height: 3.5rem;
-    padding: 0 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    color: white;
-    font-size: 1rem;
-    line-height: 3.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
     transition: all 0.3s ease;
-    outline: none;
-}
-
-.formInput::placeholder {
-    color: rgba(255, 255, 255, 0.4);
 }
 
 .formInput:focus {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: #0066FF;
-    box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.1);
+    outline: none;
+    border-color: var(--accent-cyan);
+    background: rgba(0, 240, 255, 0.05);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
 }
 
 .formInput.error {
     border-color: #ff4444;
 }
 
-.formLabel {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 1rem;
-    pointer-events: none;
-    transition: all 0.3s ease;
-    background: transparent;
-    padding: 0 0.25rem;
-    line-height: normal;
-}
-
-.formInput:focus+.formLabel,
-.formInput:not(:placeholder-shown)+.formLabel {
-    top: -0.75rem;
-    left: 0.75rem;
-    font-size: 0.8rem;
-    color: #0066FF;
-    background: #0f1f35;
-    padding: 0 0.5rem;
-}
-
-.errorMessage {
-    color: #ff6b6b;
-    font-size: 0.875rem;
-    margin-top: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.helperText {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.875rem;
-    margin-top: 0.5rem;
-}
-
 /* Submit Button */
 .submitButton {
-    width: 100%;
-    padding: 1rem 2rem;
-    background: linear-gradient(135deg, #0066FF 0%, #00D4FF 100%);
-    color: white;
+    background: var(--accent-cyan);
+    color: #000;
     border: none;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    font-weight: 600;
+    padding: 1.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(0, 102, 255, 0.4);
-    margin-top: 0.5rem;
+    margin-top: 1rem;
 }
 
 .submitButton:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 30px rgba(0, 102, 255, 0.6);
-}
-
-.submitButton:active:not(:disabled) {
-    transform: translateY(0);
+    transform: scale(1.02);
+    background: #fff;
 }
 
 .submitButton:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
+    filter: grayscale(1);
 }
 
-/* Alert */
-.alert {
-    padding: 1rem;
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.95rem;
-}
-
-.alertError {
-    background: rgba(255, 68, 68, 0.1);
-    border: 1px solid rgba(255, 68, 68, 0.3);
-    color: #ff6b6b;
-}
-
-/* Footer Links */
+/* Footer & Links */
 .formFooter {
-    margin-top: 2rem;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.95rem;
+    margin-top: 2.5rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footerLink {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #666;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footerLink:hover {
+    color: var(--accent-cyan);
 }
 
 .formLink {
-    color: #00D4FF;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s ease;
+    color: var(--accent-cyan);
+    font-weight: 700;
 }
 
-.formLink:hover {
-    color: #0066FF;
-    text-decoration: underline;
+/* Alerts */
+.alert {
+    background: rgba(255, 68, 68, 0.1);
+    border-left: 3px solid #ff4444;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: #ff6b6b;
 }
 
-/* Back to Home Link */
+.errorMessage {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: #ff4444;
+    margin-top: 0.4rem;
+}
+
+/* Back Link */
 .backLink {
     position: absolute;
-    top: 2rem;
-    left: 2rem;
-    color: rgba(255, 255, 255, 0.7);
+    top: 3rem;
+    left: 3rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: #666;
     text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.95rem;
     transition: color 0.3s ease;
-    z-index: 10;
+    z-index: 100;
 }
 
 .backLink:hover {
-    color: white;
+    color: #fff;
 }
 
-/* Responsive */
-@media (max-width: 968px) {
-    .authContent {
-        flex-direction: column;
-    }
-
-    .authBranding {
-        padding: 3rem 2rem 2rem;
-    }
-
-    .brandingTitle {
-        font-size: 2rem;
-    }
-
-    .brandingSubtitle {
-        font-size: 1rem;
-    }
-
-    .authFormSection {
-        padding: 2rem 1rem 3rem;
-    }
-
+@media (max-width: 600px) {
     .authFormCard {
         padding: 2rem;
+        border: none;
+        background: transparent;
     }
-
+    
     .backLink {
-        top: 1rem;
-        left: 1rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .authFormCard {
-        padding: 1.5rem;
-    }
-
-    .formTitle {
-        font-size: 1.5rem;
+        top: 2rem;
+        left: 2rem;
     }
 }
