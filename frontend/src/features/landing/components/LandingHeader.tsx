@@ -32,9 +32,7 @@ export function LandingHeader(): JSX.Element {
             }}
         >
             <div className={styles.headerContent}>
-                <Link to="/" className={styles.headerLogo}>
-                    <BrandLogo />
-                </Link>
+                <BrandLogo />
 
                 <div className={styles.headerActions}>
                     <Link to="/login" className={styles.headerLoginBtn}>
