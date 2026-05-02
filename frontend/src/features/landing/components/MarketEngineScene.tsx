@@ -1,7 +1,6 @@
 import { useRef, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Float, PerspectiveCamera, MeshDistortMaterial, Environment, ContactShadows, Stars, Sparkles } from '@react-three/drei';
-import { EffectComposer, Bloom, Noise } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useScroll, useTransform } from 'framer-motion';
 
@@ -107,13 +106,6 @@ function SceneContent() {
             <Stars radius={150} depth={50} count={8000} factor={5} saturation={0} fade speed={2} />
             
             <Monolith scrollProgress={scrollYProgress} />
-            
-            {/* Temporarily disabled post-processing to fix crash 
-            <EffectComposer>
-                <Bloom luminanceThreshold={1} mipmapBlur intensity={1.5} radius={0.4} />
-                <Noise opacity={0.05} />
-            </EffectComposer>
-            */}
 
             <Environment preset="night" />
             <ContactShadows position={[0, -8, 0]} scale={40} blur={3} far={8} opacity={0.6} />
