@@ -13,7 +13,7 @@ export const ShortSqueezeSection: React.FC = () => (
         <div className="lesson-box">
             <h4>How to Avoid Short Squeezes</h4>
             <ul>
-                <li>Check Short Interest (>20% is risky)</li>
+                <li>Check Short Interest (&gt;20% is risky)</li>
                 <li>Use Stop-Losses (5-8% above entry)</li>
                 <li>Position Sizing (Risk 2-3% of capital)</li>
                 <li>Avoid Meme Stocks</li>
