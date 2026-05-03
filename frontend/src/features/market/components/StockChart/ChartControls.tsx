@@ -1,14 +1,16 @@
 import { Box, ToggleButton, ToggleButtonGroup } from '@mui/material';
-import { CandleInterval } from '../../../types/market.types';
+import { CandleInterval } from '../../types/market.types';
 
 interface ChartControlsProps {
     interval: CandleInterval;
     onIntervalChange: (newInterval: CandleInterval) => void;
 }
 
+const boxStyles = { display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 1 } as const;
+
 export const ChartControls = ({ interval, onIntervalChange }: ChartControlsProps) => {
     return (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 1 }}>
+        <Box sx={boxStyles}>
             <ToggleButtonGroup
                 value={interval}
                 exclusive

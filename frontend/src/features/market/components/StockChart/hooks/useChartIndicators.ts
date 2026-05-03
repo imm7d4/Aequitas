@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { LineSeries, HistogramSeries } from 'lightweight-charts';
-import { IndicatorService } from '../../../../services/indicatorService';
-import { useIndicatorStore } from '../../../../store/indicatorStore';
+import { IndicatorService } from '../../../services/indicatorService';
+import { useIndicatorStore } from '../../../store/indicatorStore';
 import { useTheme } from '@mui/material';
 
 export const useChartIndicators = (
@@ -19,7 +19,7 @@ export const useChartIndicators = (
     const smaData = useMemo(() => {
         if (!indicators.sma.enabled || closePrices.length === 0) return null;
         const periods = indicators.sma.settings.periods || [20, 50, 200];
-        return periods.map(period => ({
+        return periods.map((period: number) => ({
             period,
             values: IndicatorService.calculateSMA(closePrices, period)
         }));
@@ -29,7 +29,7 @@ export const useChartIndicators = (
     const emaData = useMemo(() => {
         if (!indicators.ema.enabled || closePrices.length === 0) return null;
         const periods = indicators.ema.settings.periods || [9, 21, 50];
-        return periods.map(period => ({
+        return periods.map((period: number) => ({
             period,
             values: IndicatorService.calculateEMA(closePrices, period)
         }));
@@ -64,7 +64,7 @@ export const useChartIndicators = (
             return;
         }
         const colors = ['#2196F3', '#FF9800', '#F44336'];
-        smaData.forEach((sma, index) => {
+        smaData.forEach((sma: any, index: number) => {
             const key = `sma-${sma.period}`;
             if (indicatorSeriesRefs.current[key]) chartRef.current.removeSeries(indicatorSeriesRefs.current[key]);
             if (sma.values.length > 0) {
@@ -76,7 +76,7 @@ export const useChartIndicators = (
                     lastValueVisible: true
                 });
                 const offset = closePrices.length - sma.values.length;
-                series.setData(sma.values.map((value, i) => ({ time: sanitizedCandles[offset + i].time, value })));
+                series.setData(sma.values.map((value: number, i: number) => ({ time: sanitizedCandles[offset + i].time, value })));
                 indicatorSeriesRefs.current[key] = series;
             }
         });
@@ -94,7 +94,7 @@ export const useChartIndicators = (
             return;
         }
         const colors = ['#00BCD4', '#9C27B0', '#E91E63'];
-        emaData.forEach((ema, index) => {
+        emaData.forEach((ema: any, index: number) => {
             const key = `ema-${ema.period}`;
             if (indicatorSeriesRefs.current[key]) chartRef.current.removeSeries(indicatorSeriesRefs.current[key]);
             if (ema.values.length > 0) {
@@ -106,7 +106,7 @@ export const useChartIndicators = (
                     lastValueVisible: true
                 });
                 const offset = closePrices.length - ema.values.length;
-                series.setData(ema.values.map((value, i) => ({ time: sanitizedCandles[offset + i].time, value })));
+                series.setData(ema.values.map((value: number, i: number) => ({ time: sanitizedCandles[offset + i].time, value })));
                 indicatorSeriesRefs.current[key] = series;
             }
         });
@@ -129,7 +129,7 @@ export const useChartIndicators = (
         const offset = closePrices.length - macdData.length;
         const histSeries = chartRef.current.addSeries(HistogramSeries, { priceScaleId: 'macd', title: 'MACD Hist', priceLineVisible: false });
         chartRef.current.priceScale('macd').applyOptions({ scaleMargins: { top: 0.75, bottom: 0 } });
-        histSeries.setData(macdData.map((d, i) => ({
+        histSeries.setData(macdData.map((d: any, i: number) => ({
             time: sanitizedCandles[offset + i].time,
             value: d.histogram,
             color: d.histogram >= 0 ? theme.palette.success.light : theme.palette.error.light
@@ -137,11 +137,11 @@ export const useChartIndicators = (
         indicatorSeriesRefs.current['macd-hist'] = histSeries;
 
         const signalSeries = chartRef.current.addSeries(LineSeries, { color: '#FF9800', lineWidth: 1, priceScaleId: 'macd', title: 'Signal', priceLineVisible: false, lastValueVisible: false });
-        signalSeries.setData(macdData.map((d, i) => ({ time: sanitizedCandles[offset + i].time, value: d.signal })));
+        signalSeries.setData(macdData.map((d: any, i: number) => ({ time: sanitizedCandles[offset + i].time, value: d.signal })));
         indicatorSeriesRefs.current['macd-signal'] = signalSeries;
 
         const macdLineSeries = chartRef.current.addSeries(LineSeries, { color: '#2196F3', lineWidth: 1, priceScaleId: 'macd', title: 'MACD', priceLineVisible: false });
-        macdLineSeries.setData(macdData.map((d, i) => ({ time: sanitizedCandles[offset + i].time, value: d.MACD })));
+        macdLineSeries.setData(macdData.map((d: any, i: number) => ({ time: sanitizedCandles[offset + i].time, value: d.MACD })));
         indicatorSeriesRefs.current['macd-line'] = macdLineSeries;
     }, [macdData, sanitizedCandles, closePrices.length, chartRef, indicatorSeriesRefs, theme]);
 
