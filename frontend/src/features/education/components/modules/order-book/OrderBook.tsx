@@ -26,12 +26,3 @@ const OrderBookModule: React.FC = () => {
 };
 
 export default OrderBookModule;
-cution issues.</p>
-                    <Link to="/education/why-orders-fail" className="primary-btn">Why Orders Don't Fill</Link>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-export default OrderBookModule;

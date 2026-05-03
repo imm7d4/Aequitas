@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { LineSeries, HistogramSeries } from 'lightweight-charts';
-import { IndicatorService } from '../../services/indicatorService';
-import { useIndicatorStore } from '../../store/indicatorStore';
+import { IndicatorService } from '../../../../services/indicatorService';
+import { useIndicatorStore } from '../../../../store/indicatorStore';
 import { useTheme } from '@mui/material';
 
 export const useChartIndicators = (

@@ -44,3 +44,4 @@ yarn-error.log*
 /docs/walkthroughs/
 /docs-local/
 /backend/docs/walkthrough/
+frontend_file_stats.csv

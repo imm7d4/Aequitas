@@ -1,5 +1,5 @@
 import { Box, ToggleButton, ToggleButtonGroup } from '@mui/material';
-import { CandleInterval } from '../../types/market.types';
+import { CandleInterval } from '../../../types/market.types';
 
 interface ChartControlsProps {
     interval: CandleInterval;
