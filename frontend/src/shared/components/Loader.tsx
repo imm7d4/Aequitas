@@ -52,7 +52,7 @@ export const Loader: React.FC<LoaderProps> = ({
     const bars = [0.4, 0.8, 0.6, 1.0, 0.5];
 
     return (
-        <Box sx={containerStyle}>
+        <Box sx={containerStyle as any}>
             <Box sx={{ 
                 display: 'flex', 
                 alignItems: 'flex-end', 

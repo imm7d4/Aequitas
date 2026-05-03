@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    Box, Typography, Button, Paper, 
+import {
+    Box, Typography, Button, Paper,
     Alert, AlertTitle, Grid
 } from '@mui/material';
-import { 
-    Dangerous as HaltIcon, 
+import {
+    Dangerous as HaltIcon,
     PlayArrow as ResumeIcon,
     Gavel as DualAuthIcon
 } from '@mui/icons-material';
@@ -24,7 +24,6 @@ export const MarketOps: React.FC = () => {
             const data = await adminService.getAdminConfig();
             setConfig(data);
         } catch (err) {
-            console.error('Failed to fetch config', err);
         }
     };
 
@@ -121,14 +120,14 @@ export const MarketOps: React.FC = () => {
                     </Box>
 
                     {config?.isGlobalHalt ? (
-                        <Button 
+                        <Button
                             variant="contained" color="success" size="large" startIcon={<ResumeIcon />}
                             onClick={handleResumeRequest} sx={{ borderRadius: '12px', px: 4, fontWeight: 700 }}
                         >
                             Initiate Resume
                         </Button>
                     ) : (
-                        <Button 
+                        <Button
                             variant="contained" color="error" size="large" startIcon={<HaltIcon />}
                             onClick={() => setHaltDialogOpen(true)} sx={{ borderRadius: '12px', px: 4, fontWeight: 700 }}
                         >
@@ -154,14 +153,14 @@ export const MarketOps: React.FC = () => {
                 </Grid>
             </Box>
 
-            <HaltDialog 
-                open={haltDialogOpen} onClose={() => setHaltDialogOpen(false)} 
-                reason={reason} onReasonChange={setReason} 
+            <HaltDialog
+                open={haltDialogOpen} onClose={() => setHaltDialogOpen(false)}
+                reason={reason} onReasonChange={setReason}
                 onHaltRequest={handleHaltRequest} onFinalHalt={handleFinalHalt} loading={loading}
             />
 
-            <ResumeDialog 
-                open={resumeDialogOpen} onClose={() => setResumeDialogOpen(false)} 
+            <ResumeDialog
+                open={resumeDialogOpen} onClose={() => setResumeDialogOpen(false)}
                 onFinalResume={handleFinalResume} loading={loading}
             />
         </Box>

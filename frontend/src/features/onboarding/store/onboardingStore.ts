@@ -35,7 +35,6 @@ export const useOnboardingStore = create<OnboardingState>()(
                 try {
                     await api.patch('/user/onboarding-status', { isOnboardingComplete: true, skipped: false });
                 } catch (error) {
-                    console.error('Failed to update onboarding status:', error);
                     // Revert on failure? Or just rely on local state?
                     // For now, rely on local state + retry logic elsewhere if needed
                 }
@@ -45,7 +44,6 @@ export const useOnboardingStore = create<OnboardingState>()(
                 try {
                     await api.patch('/user/onboarding-status', { isOnboardingComplete: true, skipped: true });
                 } catch (error) {
-                    console.error('Failed to update onboarding status (skipped):', error);
                 }
             },
             reset: () => set({ isOnboardingComplete: false, isTourRunning: false, stepIndex: 0 }),

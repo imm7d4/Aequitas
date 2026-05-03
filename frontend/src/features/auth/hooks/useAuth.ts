@@ -108,7 +108,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     completeRegistration: async (email, password, otp) => {
         set({ isLoading: true, error: null });
         try {
-            const user = await authService.completeRegistration(email, password, otp);
+            await authService.completeRegistration(email, password, otp);
             // We don't automatically log in here to ensure user knows their password works
             // But we could if desired. The requirement implies login after success.
         } catch (err: any) {

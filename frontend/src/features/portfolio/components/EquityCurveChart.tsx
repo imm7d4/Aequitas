@@ -34,7 +34,6 @@ export const EquityCurveChart: React.FC = () => {
                 }));
                 setData(formattedData);
             } catch (err) {
-                console.error('Failed to fetch history', err);
             } finally {
                 setIsLoading(false);
             }
@@ -92,7 +91,7 @@ export const EquityCurveChart: React.FC = () => {
                                 borderRadius: 8,
                                 border: `1px solid ${theme.palette.divider}`
                             }}
-                            formatter={(value: number) => [`₹${value.toLocaleString()}`, 'Total Equity']}
+                            formatter={(value: number | undefined) => [value ? `₹${value.toLocaleString()}` : '₹0', 'Total Equity']}
                         />
                         <Area
                             type="monotone"

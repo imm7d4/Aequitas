@@ -25,7 +25,6 @@ export const useAuditLogs = () => {
             }));
             setLogs(mappedLogs);
         } catch (err) {
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -37,16 +36,15 @@ export const useAuditLogs = () => {
             setUnmaskedLogs(prev => new Set(prev).add(id));
             return true;
         } catch (err) {
-            console.error(err);
             return false;
         }
     };
 
     const filteredLogs = useMemo(() => {
         return logs.filter(log => {
-            const matchesSearch = log.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                 log.actor_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                 log.action.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesSearch = log.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                log.actor_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                log.action.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesAction = filterAction === FILTER_ALL || log.action === filterAction;
             return matchesSearch && matchesAction;
         });

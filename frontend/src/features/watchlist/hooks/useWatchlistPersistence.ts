@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/features/auth';
 import { useAuthStore } from '@/features/auth/hooks/useAuth';
-import { useWatchlistStore } from '../store/watchlistStore';
 
 export const useWatchlistPersistence = (watchlistInstruments: any[], groupBy: 'sector' | 'exchange' | 'type' | null) => {
     const { user } = useAuth();
@@ -10,7 +9,7 @@ export const useWatchlistPersistence = (watchlistInstruments: any[], groupBy: 's
         if (user?.email) {
             const saved = localStorage.getItem(`pinned_instruments_${user.email}`);
             if (saved) {
-                try { return JSON.parse(saved); } catch (e) { console.error(e); }
+                try { return JSON.parse(saved); } catch (e) { }
             }
         }
         return [];

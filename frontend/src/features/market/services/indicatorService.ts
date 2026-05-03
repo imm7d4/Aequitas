@@ -16,7 +16,6 @@ export class IndicatorService {
      */
     static calculateSMA(prices: number[], period: number): number[] {
         if (prices.length < period) {
-            console.warn(`Insufficient data for SMA(${period}). Need ${period}, have ${prices.length}`);
             // Return empty array if not enough data
             if (prices.length < period) return [];
         }
@@ -33,7 +32,6 @@ export class IndicatorService {
      */
     static calculateEMA(prices: number[], period: number): number[] {
         if (prices.length < period) {
-            console.warn(`Insufficient data for EMA(${period}). Need ${period}, have ${prices.length}`);
             return [];
         }
 
@@ -49,7 +47,6 @@ export class IndicatorService {
      */
     static calculateRSI(prices: number[], period: number = 14): number[] {
         if (prices.length < period + 1) {
-            console.warn(`Insufficient data for RSI(${period}). Need ${period + 1}, have ${prices.length}`);
             return [];
         }
 
@@ -73,7 +70,6 @@ export class IndicatorService {
     ): Array<{ MACD: number; signal: number; histogram: number }> {
         const requiredLength = slowPeriod + signalPeriod;
         if (prices.length < requiredLength) {
-            console.warn(`Insufficient data for MACD. Need ${requiredLength}, have ${prices.length}`);
             return [];
         }
 
@@ -109,7 +105,6 @@ export class IndicatorService {
         stdDev: number = 2
     ): Array<{ upper: number; middle: number; lower: number; pb: number }> {
         if (prices.length < period) {
-            console.warn(`Insufficient data for Bollinger Bands(${period}). Need ${period}, have ${prices.length}`);
             return [];
         }
 

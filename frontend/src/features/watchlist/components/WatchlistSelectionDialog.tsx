@@ -68,7 +68,6 @@ export const WatchlistSelectionDialog: React.FC = () => {
             await syncInstrumentInWatchlists(instrument.id, targetWatchlistIds);
             onClose();
         } catch (err) {
-            console.error('Failed to sync instrument in watchlists', err);
         } finally {
             setIsSaving(false);
         }

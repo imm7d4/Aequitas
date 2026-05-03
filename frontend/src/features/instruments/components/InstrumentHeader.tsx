@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box, useTheme, alpha } from '@mui/material';
 import { Instrument } from '../types/instrument.types';
 import { MarketData } from '@/features/market/types/market.types';
@@ -21,7 +21,8 @@ interface InstrumentHeaderProps {
 export const InstrumentHeader: React.FC<InstrumentHeaderProps> = (props) => {
     const theme = useTheme();
 
-    const tooltipSlotProps = {
+    // Memoize tooltip styles to prevent object recreation on every price tick
+    const tooltipSlotProps = useMemo(() => ({
         tooltip: {
             sx: {
                 bgcolor: 'background.paper',
@@ -34,7 +35,7 @@ export const InstrumentHeader: React.FC<InstrumentHeaderProps> = (props) => {
                 '& .MuiTooltip-arrow': { color: 'background.paper', '&::before': { border: '1px solid', borderColor: 'divider' } },
             }
         }
-    };
+    }), [theme]);
 
     return (
         <Box sx={{ 
@@ -51,7 +52,12 @@ export const InstrumentHeader: React.FC<InstrumentHeaderProps> = (props) => {
                     tooltipSlotProps={tooltipSlotProps} 
                 />
                 <PriceActions 
-                    {...props} 
+                    marketData={props.marketData}
+                    ltp={props.ltp}
+                    tickColor={props.tickColor}
+                    isStarred={props.isStarred}
+                    onWatchlistToggle={props.onWatchlistToggle}
+                    onSetAlert={props.onSetAlert}
                     tooltipSlotProps={tooltipSlotProps} 
                 />
             </Box>

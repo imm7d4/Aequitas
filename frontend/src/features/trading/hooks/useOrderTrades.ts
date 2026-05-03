@@ -18,7 +18,6 @@ export const useOrderTrades = (orders: OrderResponse[]) => {
                     const trades = await tradeService.getTradesByOrder(id);
                     setOrderTrades(prev => ({ ...prev, [id]: trades }));
                 } catch (error) {
-                    console.error('Failed to fetch trades for order:', id, error);
                 } finally {
                     setTradesLoading(prev => ({ ...prev, [id]: false }));
                 }

@@ -34,7 +34,6 @@ export const useStockChart = (instrumentId: string, interval: CandleInterval) =>
             setCandles(data);
             candlesRef.current = data;
         } catch (err: any) {
-            console.error('Failed to fetch historical candles', err);
             setError('Failed to load chart data');
         } finally {
             setIsLoading(false);

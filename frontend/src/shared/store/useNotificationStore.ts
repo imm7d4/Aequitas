@@ -60,7 +60,7 @@ export const useNotificationStore = create<NotificationState>()(
                     );
 
                     // Fire and forget API call
-                    api.put(`/notifications/${id}/read`).catch(console.error);
+                    api.put(`/notifications/${id}/read`).catch(() => {});
 
                     return {
                         notifications: updated,
@@ -72,11 +72,11 @@ export const useNotificationStore = create<NotificationState>()(
                     notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
                     unreadCount: 0,
                 }));
-                api.put('/notifications/read-all').catch(console.error);
+                api.put('/notifications/read-all').catch(() => {});
             },
             reset: () => {
                 set({ notifications: [], unreadCount: 0 });
-                api.delete('/notifications').catch(console.error);
+                api.delete('/notifications').catch(() => {});
             },
             fetchNotifications: async () => {
                 try {
@@ -84,7 +84,6 @@ export const useNotificationStore = create<NotificationState>()(
                     const notifications = responseData.data;
 
                     if (!Array.isArray(notifications)) {
-                        console.warn('fetchNotifications received non-array:', notifications);
                         set({ notifications: [], unreadCount: 0 });
                         return;
                     }
@@ -93,7 +92,6 @@ export const useNotificationStore = create<NotificationState>()(
                         unreadCount: notifications.filter((n) => !n.isRead).length
                     });
                 } catch (error) {
-                    console.error('Failed to fetch notifications:', error);
                 }
             }
         }),
@@ -102,7 +100,7 @@ export const useNotificationStore = create<NotificationState>()(
             partialize: (state) => ({
                 notifications: state.notifications,
                 unreadCount: state.unreadCount
-            }),
+            } as any),
         }
     )
 );

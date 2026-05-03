@@ -38,7 +38,6 @@ export const TicketConversation: React.FC<TicketConversationProps> = ({
             setTicket(data);
             scrollToBottom();
         } catch (err) {
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -67,7 +66,6 @@ export const TicketConversation: React.FC<TicketConversationProps> = ({
             await fetchData();
             if (onCommentAdded) onCommentAdded();
         } catch (err) {
-            console.error(err);
         } finally {
             setSending(false);
         }

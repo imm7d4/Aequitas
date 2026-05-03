@@ -9,7 +9,7 @@ interface IntelligenceRibbonProps {
     tooltipSlotProps: any;
 }
 
-export const IntelligenceRibbon: React.FC<IntelligenceRibbonProps> = ({
+export const IntelligenceRibbon = React.memo<IntelligenceRibbonProps>(({
     instrument, intelligence, tooltipSlotProps
 }) => {
     return (
@@ -67,4 +67,4 @@ export const IntelligenceRibbon: React.FC<IntelligenceRibbonProps> = ({
             </Box>
         </Box>
     );
-};
+});

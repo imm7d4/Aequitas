@@ -1,5 +1,5 @@
 import React from 'react';
-import { ToggleButtonGroup, ToggleButton, Theme, alpha } from '@mui/material';
+import { ToggleButtonGroup, ToggleButton, Theme } from '@mui/material';
 import { TrendingUp as BuyIcon, TrendingDown as SellIcon } from '@mui/icons-material';
 import { OrderSide, ORDER_SIDE } from '@/shared/constants/AppConstants';
 

@@ -55,6 +55,15 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
         if (activeWatchlistId) await removeInstrumentFromWatchlist(activeWatchlistId, id);
     }, [activeWatchlistId, removeInstrumentFromWatchlist]);
 
+    const handleContextMenu = useCallback((e: React.MouseEvent, id: string) => {
+        e.preventDefault();
+        setContextMenu({ x: e.clientX, y: e.clientY, instrumentId: id });
+    }, []);
+
+    const handleMouseEnter = useCallback((id: string) => setHoveredRowId(id), []);
+    const handleMouseLeave = useCallback(() => setHoveredRowId(null), []);
+    const handleSelect = useCallback((id: string) => setSelectedRowId(id), []);
+
     useWatchlistKeyboardNavigation(watchlistInstruments, hoveredRowId || selectedRowId, {
         onBuy: handleBuy, onSell: handleSell, onChart: handleChart,
         setSelectedRowId, setHoveredRowId
@@ -62,16 +71,22 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
 
     const renderRow = (inst: any, isPinned: boolean = false) => (
         <WatchlistRow 
-            key={inst.id} instrument={inst} marketData={prices[inst.id]}
-            visibleColumns={visibleColumns} isPinned={isPinned}
-            isSelected={selectedRowId === inst.id} isHovered={hoveredRowId === inst.id}
-            onSelect={() => setSelectedRowId(inst.id)}
-            onMouseEnter={() => setHoveredRowId(inst.id)}
-            onMouseLeave={() => setHoveredRowId(null)}
-            onContextMenu={(e) => { e.preventDefault(); setContextMenu({ x: e.clientX, y: e.clientY, instrumentId: inst.id }); }}
-            onTogglePin={() => persistence.togglePin(inst.id)}
-            onBuy={() => handleBuy(inst.id)} onSell={() => handleSell(inst.id)}
-            onChart={() => handleChart(inst.id)} onRemove={() => handleRemove(inst.id)}
+            key={inst.id} 
+            instrument={inst} 
+            marketData={prices[inst.id]}
+            visibleColumns={visibleColumns} 
+            isPinned={isPinned}
+            isSelected={selectedRowId === inst.id} 
+            isHovered={hoveredRowId === inst.id}
+            onSelect={handleSelect}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onContextMenu={handleContextMenu}
+            onTogglePin={persistence.togglePin}
+            onBuy={handleBuy} 
+            onSell={handleSell}
+            onChart={handleChart} 
+            onRemove={handleRemove}
         />
     );
 
@@ -100,16 +115,28 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
                                 <TableRow><TableCell colSpan={visibleColumns.length + 1} sx={{ p: 0 }}><Divider /></TableCell></TableRow>
                             </>
                         )}
-                        {groupBy && persistence.groupedInstruments ? Object.entries(persistence.groupedInstruments).map(([name, groupInsts]) => (
-                            <React.Fragment key={name}>
-                                <TableRow>
-                                    <TableCell colSpan={visibleColumns.length + 1} sx={{ p: 0 }}>
-                                        <GroupHeader groupName={name} count={groupInsts.length} isExpanded={persistence.expandedGroups.has(name)} onToggle={() => persistence.toggleGroup(name)} />
-                                    </TableCell>
-                                </TableRow>
-                                {persistence.expandedGroups.has(name) && groupInsts.map(inst => renderRow(inst))}
-                            </React.Fragment>
-                        )) : persistence.regularItems.map(inst => renderRow(inst))}
+                        {groupBy && persistence.groupedInstruments ? Object.entries(persistence.groupedInstruments).map(([name, groupInsts]) => {
+                            const avgChange = groupInsts.reduce((acc, inst) => acc + (prices[inst.id]?.changePct || 0), 0) / groupInsts.length;
+                            const totalVolume = groupInsts.reduce((acc, inst) => acc + (prices[inst.id]?.volume || 0), 0);
+
+                            return (
+                                <React.Fragment key={name}>
+                                    <TableRow>
+                                        <TableCell colSpan={visibleColumns.length + 1} sx={{ p: 0 }}>
+                                            <GroupHeader 
+                                                groupName={name} 
+                                                count={groupInsts.length} 
+                                                avgChange={avgChange}
+                                                totalVolume={totalVolume}
+                                                isExpanded={persistence.expandedGroups.has(name)} 
+                                                onToggle={() => persistence.toggleGroup(name)} 
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                    {persistence.expandedGroups.has(name) && groupInsts.map(inst => renderRow(inst))}
+                                </React.Fragment>
+                            );
+                        }) : persistence.regularItems.map(inst => renderRow(inst))}
                     </TableBody>
                 </Table>
             </TableContainer>

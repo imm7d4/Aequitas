@@ -30,7 +30,6 @@ export const authService = {
         try {
             await api.post('/auth/logout');
         } catch (error) {
-            console.error('Logout tracking failed:', error);
         } finally {
             localStorage.removeItem('token');
             localStorage.removeItem('user');

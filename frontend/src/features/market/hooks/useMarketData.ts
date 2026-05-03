@@ -25,7 +25,6 @@ export const useMarketData = (instrumentIds: string[]) => {
                 ...priceMap
             }));
         } catch (err: any) {
-            console.error('Failed to fetch market data', err);
             setError(err.response?.data?.message || 'Failed to fetch prices');
         }
     };

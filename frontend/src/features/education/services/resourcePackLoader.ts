@@ -68,7 +68,6 @@ class ResourcePackLoader {
             this.index = response.default as ModuleIndex;
             return this.index;
         } catch (error) {
-            console.error('Failed to load education index:', error);
             throw new Error('Failed to load education modules');
         }
     }
@@ -120,7 +119,6 @@ class ResourcePackLoader {
                 const moduleData = await this.loadModule(moduleId);
                 modules.push(moduleData);
             } catch (error) {
-                console.warn(`Skipping missing module: ${moduleId}`);
             }
         }
 

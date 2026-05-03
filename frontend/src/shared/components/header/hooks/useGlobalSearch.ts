@@ -31,7 +31,6 @@ export const useGlobalSearch = () => {
             try {
                 setRecentSearches(JSON.parse(stored));
             } catch (e) {
-                console.error('Failed to parse recent searches');
             }
         }
     }, []);
@@ -91,7 +90,6 @@ export const useGlobalSearch = () => {
                 const results = await instrumentService.searchInstruments(query);
                 setOptions(smartRank(results, query));
             } catch (error) {
-                console.error('Global search error:', error);
             } finally {
                 setLoading(false);
             }

@@ -51,7 +51,7 @@ export const OrderConfigurationSection: React.FC<OrderConfigurationSectionProps>
                         value={([ORDER_TYPE.STOP, ORDER_TYPE.STOP_LIMIT, ORDER_TYPE.TRAILING_STOP] as string[]).includes(orderType) ? orderType : ''}
                         displayEmpty
                         onChange={(e) => e.target.value && onOrderTypeChange(e.target.value as OrderType)}
-                        sx={{ borderRadius: '8px', fontWeight: 600 }}
+                        sx={{ borderRadius: '8px', fontWeight: 600 } as any}
                     >
                         <MenuItem value="" disabled>Advanced Order Type</MenuItem>
                         <MenuItem value={ORDER_TYPE.STOP}>STOP (MARKET)</MenuItem>
@@ -66,8 +66,8 @@ export const OrderConfigurationSection: React.FC<OrderConfigurationSectionProps>
                 value={quantity}
                 onChange={(e) => onQuantityChange(e.target.value)}
                 InputProps={{
-                    endAdornment: <InputAdornment position="end" sx={{ fontWeight: 700, fontSize: '0.75rem' }}>QTY</InputAdornment>,
-                    sx: { borderRadius: '8px', fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' }
+                    endAdornment: <InputAdornment position="end" sx={{ fontWeight: 700, fontSize: '0.75rem' } as any}>QTY</InputAdornment>,
+                    sx: { borderRadius: '8px', fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' } as any
                 }}
             />
 
@@ -78,7 +78,7 @@ export const OrderConfigurationSection: React.FC<OrderConfigurationSectionProps>
                     onChange={(e) => onPriceChange(e.target.value)}
                     InputProps={{
                         startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                        sx: { borderRadius: '8px', fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' }
+                        sx: { borderRadius: '8px', fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' } as any
                     }}
                 />
             )}
@@ -91,7 +91,7 @@ export const OrderConfigurationSection: React.FC<OrderConfigurationSectionProps>
                     helperText={`Triggers when ${side === ORDER_SIDE.BUY ? 'rises to' : 'falls to'}`}
                     InputProps={{
                         startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                        sx: { borderRadius: '8px', fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' }
+                        sx: { borderRadius: '8px', fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' } as any
                     }}
                 />
             )}
@@ -103,7 +103,7 @@ export const OrderConfigurationSection: React.FC<OrderConfigurationSectionProps>
                     onChange={(e) => onLimitPriceChange(e.target.value)}
                     InputProps={{
                         startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                        sx: { borderRadius: '8px', fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' }
+                        sx: { borderRadius: '8px', fontWeight: 700, fontFamily: '"JetBrains Mono", monospace' } as any
                     }}
                 />
             )}
@@ -119,7 +119,7 @@ export const OrderConfigurationSection: React.FC<OrderConfigurationSectionProps>
                         value={trailType}
                         onChange={(e) => onTrailTypeChange(e.target.value as TrailType)}
                         size="small"
-                        sx={{ minWidth: 80, borderRadius: '8px', fontWeight: 700 }}
+                        sx={{ minWidth: 80, borderRadius: '8px', fontWeight: 700 } as any}
                     >
                         <MenuItem value={TRAIL_TYPE.PERCENTAGE}>%</MenuItem>
                         <MenuItem value={TRAIL_TYPE.ABSOLUTE}>₹</MenuItem>
@@ -131,7 +131,7 @@ export const OrderConfigurationSection: React.FC<OrderConfigurationSectionProps>
                 <Select
                     value={validity}
                     onChange={(e) => onValidityChange(e.target.value as OrderValidity)}
-                    sx={{ borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem' }}
+                    sx={{ borderRadius: '8px', fontWeight: 600, fontSize: '0.85rem' } as any}
                 >
                     <MenuItem value={ORDER_VALIDITY.DAY}>DAY (Standard)</MenuItem>
                     <MenuItem value={ORDER_VALIDITY.IOC}>IOC (Immediate or Cancel)</MenuItem>

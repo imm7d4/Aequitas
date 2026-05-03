@@ -48,7 +48,6 @@ export const WatchlistManager: React.FC = () => {
             setIsCreateDialogOpen(false);
             await fetchWatchlists();
         } catch (err) {
-            console.error('Failed to create watchlist', err);
         }
     }, [newWatchlistName, fetchWatchlists]);
 
@@ -68,7 +67,6 @@ export const WatchlistManager: React.FC = () => {
             await watchlistService.deleteWatchlist(selectedWatchlistId);
             await fetchWatchlists();
         } catch (err) {
-            console.error('Failed to delete watchlist', err);
         }
         handleMenuClose();
     }, [selectedWatchlistId, fetchWatchlists, handleMenuClose]);
@@ -79,7 +77,6 @@ export const WatchlistManager: React.FC = () => {
             await watchlistService.setDefaultWatchlist(selectedWatchlistId);
             await fetchWatchlists();
         } catch (err) {
-            console.error('Failed to set default watchlist', err);
         }
         handleMenuClose();
     }, [selectedWatchlistId, fetchWatchlists, handleMenuClose]);

@@ -1,13 +1,9 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
-    Box, Paper, ToggleButtonGroup, ToggleButton,
+    Box, Paper,
     Button, Stack, CircularProgress, Tooltip,
-    Snackbar, Alert, useTheme, alpha, Typography, Theme
+    Snackbar, Alert, useTheme, alpha, Typography, Theme, SxProps
 } from '@mui/material';
-import {
-    TrendingUp as BuyIcon,
-    TrendingDown as SellIcon
-} from '@mui/icons-material';
 import { Instrument } from '@/features/instruments/types/instrument.types';
 import { ShortSellWarning } from './ShortSellWarning';
 import { TradePanelHeader } from './TradePanelHeader';
@@ -53,22 +49,18 @@ export const TradePanel: React.FC<TradePanelProps> = ({
         }
     }, [trade]);
 
-    const liveInterpretation = useMemo(() => {
+    // Simple derived values computed during render (aggressive useEffect/useMemo minimization)
+    const isValid = parseInt(trade.quantity) > 0 && (parseInt(trade.quantity) % instrument.lotSize === 0);
+    const isBuy = trade.side === ORDER_SIDE.BUY;
+
+    const liveInterpretation = (() => {
         if (trade.orderType === ORDER_TYPE.MARKET) return `Executes immediately at ~${formatCurrency(ltp)}`;
         if (trade.orderType === ORDER_TYPE.LIMIT) {
             const p = parseFloat(trade.price);
             return isNaN(p) ? null : `Executes when price reaches ${formatCurrency(p)} or better`;
         }
         return "Advanced order will trigger based on conditions";
-    }, [trade.orderType, trade.price, ltp]);
-
-    const isValid = useMemo(() => {
-        const qty = parseInt(trade.quantity);
-        return !isNaN(qty) && qty > 0 && qty % instrument.lotSize === 0;
-    }, [trade.quantity, instrument.lotSize]);
-
-    const isBuy = trade.side === ORDER_SIDE.BUY;
-    const accentColor = isBuy ? theme.palette.success.main : theme.palette.error.main;
+    })();
 
     return (
         <Paper id="trade-panel" elevation={0} sx={getPanelStyles(theme)}>
@@ -92,7 +84,7 @@ export const TradePanel: React.FC<TradePanelProps> = ({
                 />
 
                 <Box>
-                    <Typography variant="caption" color="text.secondary" fontWeight={700} sx={SECTION_HEADER_STYLES}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={700} sx={SECTION_HEADER_STYLES as any}>
                         Order Configuration
                     </Typography>
                     <OrderConfigurationSection 
@@ -134,8 +126,7 @@ export const TradePanel: React.FC<TradePanelProps> = ({
                             onClick={trade.handlePlaceOrder}
                             sx={{
                                 py: 1.4, fontWeight: 900, borderRadius: '12px',
-                                boxShadow: `0 6px 12px ${alpha(accentColor, 0.2)}`
-                            }}
+                            } as any}
                         >
                             {trade.isLoading ? <CircularProgress size={24} color="inherit" /> : `${trade.side} ${instrument.symbol}`}
                         </Button>
@@ -157,12 +148,12 @@ export const TradePanel: React.FC<TradePanelProps> = ({
     );
 };
 
-const getPanelStyles = (theme: Theme) => ({
+const getPanelStyles = (theme: Theme): SxProps<Theme> => ({
     p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 3,
     background: theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.6)' : alpha(theme.palette.background.paper, 0.8),
     backdropFilter: 'blur(12px)',
     boxShadow: theme.palette.mode === 'light' ? '0 8px 32px rgba(0,0,0,0.04)' : '0 8px 32px rgba(0,0,0,0.4)'
 });
 
-const SECTION_HEADER_STYLES = { mb: 1, display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' } as const;
+const SECTION_HEADER_STYLES: SxProps<Theme> = { mb: 1, display: 'block', fontSize: '0.65rem', textTransform: 'uppercase' };
 

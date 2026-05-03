@@ -17,30 +17,32 @@ interface WatchlistRowProps {
     isPinned: boolean;
     isSelected: boolean;
     isHovered: boolean;
-    onSelect: () => void;
-    onMouseEnter: () => void;
+    onSelect: (id: string) => void;
+    onMouseEnter: (id: string) => void;
     onMouseLeave: () => void;
-    onContextMenu: (e: React.MouseEvent) => void;
-    onTogglePin: () => void;
-    onBuy: () => void;
-    onSell: () => void;
-    onChart: () => void;
-    onRemove: () => void;
+    onContextMenu: (e: React.MouseEvent, id: string) => void;
+    onTogglePin: (id: string) => void;
+    onBuy: (id: string) => void;
+    onSell: (id: string) => void;
+    onChart: (id: string) => void;
+    onRemove: (id: string) => void;
 }
 
-export const WatchlistRow: React.FC<WatchlistRowProps> = ({
+export const WatchlistRow = React.memo<WatchlistRowProps>(({
     instrument, marketData, visibleColumns, isPinned, isSelected, isHovered,
     onSelect, onMouseEnter, onMouseLeave, onContextMenu,
     onTogglePin, onBuy, onSell, onChart, onRemove
 }) => {
+    const id = instrument.id;
+
     return (
         <TableRow
             hover
             selected={isSelected}
-            onClick={onSelect}
-            onMouseEnter={onMouseEnter}
+            onClick={() => onSelect(id)}
+            onMouseEnter={() => onMouseEnter(id)}
             onMouseLeave={onMouseLeave}
-            onContextMenu={onContextMenu}
+            onContextMenu={(e) => onContextMenu(e, id)}
             sx={{
                 cursor: 'pointer',
                 bgcolor: isSelected ? 'action.selected' : isPinned ? 'action.hover' : 'inherit',
@@ -49,7 +51,7 @@ export const WatchlistRow: React.FC<WatchlistRowProps> = ({
             {visibleColumns.includes('symbol') && (
                 <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); onTogglePin(); }} sx={{ p: 0.5 }}>
+                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); onTogglePin(id); }} sx={{ p: 0.5 }}>
                             {isPinned ? <StarIcon fontSize="small" color="primary" /> : <StarOutlineIcon fontSize="small" />}
                         </IconButton>
                         <Box>
@@ -73,15 +75,15 @@ export const WatchlistRow: React.FC<WatchlistRowProps> = ({
             <TableCell align="right">
                 {(isHovered || isSelected) ? (
                     <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                        <IconButton size="small" color="success" onClick={(e) => { e.stopPropagation(); onBuy(); }} title="Buy (B)"><BuyIcon fontSize="small" /></IconButton>
-                        <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); onSell(); }} title="Sell (S)"><SellIcon fontSize="small" /></IconButton>
-                        <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); onChart(); }} title="Chart (C)"><ChartIcon fontSize="small" /></IconButton>
-                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remove"><DeleteIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" color="success" onClick={(e) => { e.stopPropagation(); onBuy(id); }} title="Buy (B)"><BuyIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); onSell(id); }} title="Sell (S)"><SellIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); onChart(id); }} title="Chart (C)"><ChartIcon fontSize="small" /></IconButton>
+                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); onRemove(id); }} title="Remove"><DeleteIcon fontSize="small" /></IconButton>
                     </Stack>
                 ) : (
-                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); onRemove(); }} title="Remove"><DeleteIcon fontSize="small" /></IconButton>
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); onRemove(id); }} title="Remove"><DeleteIcon fontSize="small" /></IconButton>
                 )}
             </TableCell>
         </TableRow>
     );
-};
+});

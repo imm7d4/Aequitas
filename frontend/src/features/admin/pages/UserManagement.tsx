@@ -33,7 +33,6 @@ export const UserManagement: React.FC = () => {
             }));
             setUsers(mappedUsers);
         } catch (err) {
-            console.error(err);
         } finally {
             setLoading(false);
         }

@@ -39,7 +39,6 @@ export const useWebSocket = (url: string = getWebSocketUrl()) => {
         const socket = new WebSocket(wsUrl);
 
         socket.onopen = () => {
-            console.log('WebSocket Connected');
         };
 
         socket.onmessage = (event) => {
@@ -55,12 +54,10 @@ export const useWebSocket = (url: string = getWebSocketUrl()) => {
                     window.dispatchEvent(new CustomEvent('ws-platform_metrics', { detail: message }));
                 }
             } catch (err) {
-                console.error('WebSocket message parse error:', err);
             }
         };
 
         socket.onclose = () => {
-            console.log('WebSocket Disconnected');
             ws.current = null;
             // Reconnect after 3 seconds
             reconnectTimeout.current = setTimeout(() => {
@@ -68,8 +65,7 @@ export const useWebSocket = (url: string = getWebSocketUrl()) => {
             }, 3000);
         };
 
-        socket.onerror = (error) => {
-            console.error('WebSocket Error:', error);
+        socket.onerror = () => {
             socket.close();
         };
 
@@ -93,7 +89,6 @@ export const useWebSocket = (url: string = getWebSocketUrl()) => {
         if (ws.current?.readyState === WebSocket.OPEN) {
             ws.current.send(JSON.stringify(msg));
         } else {
-            console.warn('WebSocket not connected, cannot send message');
         }
     }, []);
 

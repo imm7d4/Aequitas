@@ -33,7 +33,6 @@ export const ControlCenter: React.FC = () => {
                 setMetrics(metricsData);
                 setConfig(configData);
             } catch (err) {
-                console.error(err);
             } finally {
                 setLoading(false);
             }
@@ -55,7 +54,6 @@ export const ControlCenter: React.FC = () => {
             await adminService.updateAdminConfig(newConfig);
             setConfig(newConfig);
         } catch (err) {
-            console.error(err);
         }
     };
 

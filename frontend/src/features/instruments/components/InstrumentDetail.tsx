@@ -107,7 +107,7 @@ export function InstrumentDetail() {
             const inActiveWatchlist = activeWatchlist?.instrumentIds.includes(instrument.id) || false;
             if (inActiveWatchlist) await removeInstrumentFromWatchlist(activeWatchlistId, instrument.id);
             else await addInstrumentToWatchlist(activeWatchlistId, instrument.id);
-        } catch (err) { console.error('Failed to update watchlist', err); }
+        } catch (err) { }
     };
 
     if (isLoading) return <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}><Box sx={{ height: 64, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }} /></Box>;
@@ -136,7 +136,14 @@ export function InstrumentDetail() {
 
                     <Grid item xs={12} lg={3.5}>
                         <Box sx={{ position: { lg: 'sticky' }, top: 80 }}>
-                            <TradePanel instrument={instrument} ltp={ltp} initialSide={(location.state as any)?.side} initialQuantity={(location.state as any)?.quantity} initialIntent={(location.state as any)?.intent} />
+                            <TradePanel
+                                key={instrument.id}
+                                instrument={instrument}
+                                ltp={ltp}
+                                initialSide={(location.state as any)?.side}
+                                initialQuantity={(location.state as any)?.quantity}
+                                initialIntent={(location.state as any)?.intent}
+                            />
                         </Box>
                     </Grid>
                 </Grid>

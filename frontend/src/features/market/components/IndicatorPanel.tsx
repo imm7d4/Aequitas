@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     Box, Typography, Paper, Collapse, IconButton,
     Divider, useTheme, alpha,
@@ -35,12 +35,15 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({ instrumentId }) 
     const theme = useTheme();
     const navigate = useNavigate();
     const [expanded, setExpanded] = useState(false);
+    const isLight = theme.palette.mode === 'light';
     
     // Store access
     const { getIndicators, toggleIndicator } = useIndicatorStore();
     const indicators = getIndicators(instrumentId);
 
-    const isLight = theme.palette.mode === 'light';
+    const handleToggle = useCallback((key: keyof InstrumentIndicators) => {
+        toggleIndicator(instrumentId, key);
+    }, [instrumentId, toggleIndicator]);
 
     return (
         <Paper
@@ -102,7 +105,7 @@ export const IndicatorPanel: React.FC<IndicatorPanelProps> = ({ instrumentId }) 
                                 label={meta.label}
                                 description={meta.description}
                                 enabled={indicators[meta.key].enabled}
-                                onToggle={() => toggleIndicator(instrumentId, meta.key)}
+                                onToggle={() => handleToggle(meta.key)}
                             />
                         ))}
                     </Box>

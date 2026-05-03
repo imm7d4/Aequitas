@@ -27,7 +27,6 @@ class WebSocketService {
         const baseUrl = apiUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '');
 
         this.url = `${wsProtocol}://${baseUrl}/ws`;
-        //console.log('WebSocket URL configured:', this.url);
     }
 
     private messageQueue: WSMessage[] = [];
@@ -37,15 +36,12 @@ class WebSocketService {
 
         const token = useAuthStore.getState().token;
         if (!token) {
-            console.warn('No auth token found, skipping WebSocket connection');
             return;
         }
 
-        console.log('Connecting to WebSocket...');
         this.ws = new WebSocket(`${this.url}?token=${token}`);
 
         this.ws.onopen = () => {
-            console.log('WebSocket Connected');
             this.reconnectAttempts = 0;
 
             // Flush message queue
@@ -70,27 +66,22 @@ class WebSocketService {
                         callbacks.forEach((cb) => cb(message.data));
                     }
                 } else if (message.type === 'error') {
-                    console.error('WebSocket Error:', message.data);
                 }
             } catch (err) {
-                console.error('Failed to parse WebSocket message', err);
             }
         };
 
         this.ws.onclose = () => {
-            console.log('WebSocket Disconnected');
             this.handleReconnect();
         };
 
-        this.ws.onerror = (error) => {
-            console.error('WebSocket Error:', error);
+        this.ws.onerror = () => {
         };
     }
 
     private handleReconnect() {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
-            console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
             setTimeout(() => this.connect(), this.reconnectDelay * this.reconnectAttempts);
         }
     }
@@ -99,7 +90,6 @@ class WebSocketService {
         if (this.ws?.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify(message));
         } else {
-            console.warn('WebSocket not connected. Message not sent:', message);
         }
     }
 

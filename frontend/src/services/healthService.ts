@@ -10,7 +10,6 @@ export const healthService = {
             await api.get('/health');
         } catch (error) {
             // Silently fail - just meant for warmup
-            console.debug('Health check warmup failed', error);
         }
     }
 };

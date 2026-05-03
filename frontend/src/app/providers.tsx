@@ -1,5 +1,5 @@
 import { ThemeProvider, createTheme, CssBaseline, PaletteMode } from '@mui/material';
-import { ReactNode, createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { ReactNode, createContext, useContext, useMemo, useState } from 'react';
 
 // Theme persistence key
 const THEME_STORAGE_KEY = 'aequitas-theme-mode';

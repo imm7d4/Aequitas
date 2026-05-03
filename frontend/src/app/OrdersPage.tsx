@@ -57,7 +57,6 @@ export function OrdersPage(): JSX.Element {
             // For now assuming backend returns correct count for the query
             setTotalCount(data.pagination.total);
         } catch (error) {
-            console.error('Failed to fetch orders:', error);
             setOrders([]);
         } finally {
             setIsLoading(false);
@@ -69,7 +68,6 @@ export function OrdersPage(): JSX.Element {
             await orderService.cancelOrder(id);
             fetchOrders();
         } catch (error) {
-            console.error('Failed to cancel order:', error);
         }
     };
 
@@ -78,7 +76,6 @@ export function OrdersPage(): JSX.Element {
             await orderService.modifyOrder(id, quantity, price);
             fetchOrders();
         } catch (error) {
-            console.error('Failed to modify order:', error);
         }
     };
 

@@ -43,7 +43,6 @@ export const InstrumentCard = ({ instrument, onClick, marketData }: InstrumentCa
                 await addInstrumentToWatchlist(activeWatchlistId, instrument.id);
             }
         } catch (err) {
-            console.error('Failed to update watchlist', err);
         }
     };
 

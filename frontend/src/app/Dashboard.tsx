@@ -39,7 +39,6 @@ export function Dashboard(): JSX.Element {
                 setDashboardData(data);
                 setError(null);
             } catch (err) {
-                console.error('Failed to fetch dashboard data', err);
                 setError('Failed to load dashboard data. Please try again.');
             } finally {
                 setLoading(false);

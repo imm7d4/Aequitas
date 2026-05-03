@@ -16,6 +16,8 @@ interface TradingAccount {
     balance: number;
     freeCash: number;
     blockedMargin: number;
+    settlementPending: number;
+    currency: string;
     status: string;
 }
 
@@ -34,11 +36,13 @@ export const WalletManagement: React.FC = () => {
         try {
             const data = await adminService.getWallets();
             const mapped = data.map((acc: any) => ({
-                ...acc, id: acc.id || acc._id
+                ...acc, 
+                id: acc.id || acc._id,
+                settlementPending: acc.settlementPending || 0,
+                currency: acc.currency || 'INR'
             }));
             setAccounts(mapped);
         } catch (err) {
-            console.error(err);
         } finally {
             setLoading(false);
         }

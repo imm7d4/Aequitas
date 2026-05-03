@@ -52,9 +52,6 @@ class TelemetryService {
                 route: window.location.pathname,
             };
 
-            if (import.meta.env.DEV) {
-                console.log(`[Telemetry] ${envelope.classification}: ${envelope.event_name}`, envelope);
-            }
 
             this.addToBuffer(envelope);
 
@@ -93,9 +90,6 @@ class TelemetryService {
 
         try {
             await apiClient.post('/telemetry', { events: eventsToFlush });
-            if (import.meta.env.DEV) {
-                console.debug(`[Telemetry] Flushed ${eventsToFlush.length} events to backend`);
-            }
         } catch (error) {
             this.reportInternalFailure();
             // Put events back if not immediate (don't lose data on network failure)
@@ -108,7 +102,6 @@ class TelemetryService {
     private reportInternalFailure() {
         if (this.failureReported) return;
         this.failureReported = true;
-        console.error('[Telemetry] Service failed locally');
     }
 }
 

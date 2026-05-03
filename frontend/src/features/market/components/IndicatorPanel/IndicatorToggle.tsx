@@ -12,7 +12,7 @@ interface IndicatorToggleProps {
  * A specialized toggle for technical indicators.
  * Optimized to be defined outside the parent to prevent unmounts.
  */
-export const IndicatorToggle: React.FC<IndicatorToggleProps> = ({ 
+export const IndicatorToggle = React.memo<IndicatorToggleProps>(({ 
     label, 
     description, 
     enabled, 
@@ -50,7 +50,7 @@ export const IndicatorToggle: React.FC<IndicatorToggleProps> = ({
             />
         </Box>
     );
-};
+});
 
 // Static styles extracted to avoid object recreation on every render
 const SWITCH_STYLES = (isLight: boolean) => ({

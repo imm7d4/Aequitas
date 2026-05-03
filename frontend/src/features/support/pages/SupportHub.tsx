@@ -28,7 +28,6 @@ export const SupportHub: React.FC = () => {
                 if (ticket) { setSelectedTicket(ticket); setSearchParams({}, { replace: true }); }
             }
         } catch (err) {
-            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -46,8 +45,10 @@ export const SupportHub: React.FC = () => {
         }
     };
 
+    const containerStyle = { p: { xs: 2, md: 4 }, maxWidth: '1000px', mx: 'auto' };
+
     return (
-        <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: '1000px', mx: 'auto' }}>
+        <Box sx={containerStyle}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Box>
                     <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: -1, mb: 0.5 }}>Support Hub</Typography>

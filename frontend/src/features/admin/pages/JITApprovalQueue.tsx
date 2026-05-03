@@ -24,7 +24,6 @@ export const JITApprovalQueue: React.FC = () => {
             const mapped = data.map((r: any) => ({ ...r, id: r.id || r._id }));
             setRequests(mapped);
         } catch (err) {
-            console.error(err);
         } finally {
             setLoading(false);
         }

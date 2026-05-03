@@ -25,11 +25,9 @@ export const PortfolioPage: React.FC = () => {
         const fetchData = async () => {
             try {
                 const data = await portfolioService.getSummary();
-                console.log('PortfolioPage Summary:', data);
                 setSummaryData(data);
                 // setHoldings(data.holdings); // If we need holdings separately
             } catch (err) {
-                console.error('Failed to fetch portfolio summary:', err);
             } finally {
                 setIsLoading(false);
             }
