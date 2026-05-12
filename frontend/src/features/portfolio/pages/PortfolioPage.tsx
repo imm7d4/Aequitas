@@ -121,7 +121,16 @@ export const PortfolioPage: React.FC = () => {
     }, [marketData]);
 
     return (
-        <Container maxWidth="xl" sx={{ height: 'calc(100vh - 64px)', pb: 1, display: 'flex', flexDirection: 'column' }}>
+        <Box
+            sx={{
+                height: 'calc(100vh - 64px)',
+                p: { xs: 2, md: 3 },
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                bgcolor: 'background.default',
+            }}
+        >
             <Fade in={true} timeout={600}>
                 <Box sx={{ flexShrink: 0 }}>
                     <Box sx={{ mb: 1.5 }}>
@@ -200,6 +209,6 @@ export const PortfolioPage: React.FC = () => {
                     </Box>
                 </Fade>
             )}
-        </Container>
+        </Box>
     );
 };

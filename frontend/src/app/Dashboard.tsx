@@ -53,7 +53,16 @@ export function Dashboard(): JSX.Element {
         user?.fullName || user?.email?.split('@')[0] || 'Trader';
 
     return (
-        <Box id="dashboard-overview" sx={{ py: 3, px: { xs: 1, md: 3 } }}>
+        <Box
+            id="dashboard-overview"
+            sx={{
+                height: 'calc(100vh - 64px)',
+                p: { xs: 2, md: 3 },
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'auto',
+            }}
+        >
             <Fade in={true} timeout={600}>
                 <Box
                     sx={{
@@ -66,8 +75,12 @@ export function Dashboard(): JSX.Element {
                     <Box>
                         <Typography
                             variant="h5"
-                            fontWeight={700}
-                            sx={{ letterSpacing: '-0.01em', mb: 0.5 }}
+                            sx={{
+                                fontWeight: 700,
+                                letterSpacing: '-0.01em',
+                                mb: 0.5,
+                                color: 'text.primary',
+                            }}
                         >
                             Welcome back, {userDisplayName}! 📈
                         </Typography>

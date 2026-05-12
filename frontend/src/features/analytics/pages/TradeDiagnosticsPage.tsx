@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
     Box,
     Typography,
-    Container,
     Alert,
     Fade,
 } from '@mui/material';
@@ -33,7 +32,15 @@ export const TradeDiagnosticsPage: React.FC = () => {
     }, []);
 
     return (
-        <Container maxWidth="xl" sx={{ height: 'calc(100vh - 64px)', pb: 1, display: 'flex', flexDirection: 'column' }}>
+        <Box
+            sx={{
+                height: 'calc(100vh - 64px)',
+                p: { xs: 2, md: 3 },
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+            }}
+        >
             <Fade in={true} timeout={600}>
                 <Box sx={{ mb: 1.5, flexShrink: 0 }}>
                     <Typography variant="h5" fontWeight={700}>
@@ -59,6 +66,6 @@ export const TradeDiagnosticsPage: React.FC = () => {
                     </Box>
                 </Fade>
             )}
-        </Container>
+        </Box>
     );
 };

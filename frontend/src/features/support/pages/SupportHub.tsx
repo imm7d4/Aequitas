@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-    Box, Typography, Button, Stack, Chip, 
+    Box, Typography, Button, Stack, Chip, Container,
     Card, CardContent, Dialog, DialogTitle, DialogContent, Grid, useTheme
 } from '@mui/material';
 import { Add as AddIcon, Chat as ChatIcon, AccessTime as TimeIcon } from '@mui/icons-material';
@@ -45,13 +45,27 @@ export const SupportHub: React.FC = () => {
         }
     };
 
-    const containerStyle = { p: { xs: 2, md: 4 }, maxWidth: '1000px', mx: 'auto' };
-
     return (
-        <Box sx={containerStyle}>
+        <Container
+            maxWidth="lg"
+            sx={{
+                py: { xs: 2, md: 4 },
+                px: { xs: 2, md: 3 },
+            }}
+        >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: -1, mb: 0.5 }}>Support Hub</Typography>
+                    <Typography
+                        variant="h5"
+                        sx={{
+                            fontWeight: 700,
+                            letterSpacing: '-0.01em',
+                            mb: 0.5,
+                            color: 'text.primary',
+                        }}
+                    >
+                        Support Hub
+                    </Typography>
                     <Typography variant="body2" color="text.secondary">Track requests and communicate with compliance.</Typography>
                 </Box>
                 <Button variant="contained" startIcon={<AddIcon />} onClick={() => setIsRaiseOpen(true)} sx={{ borderRadius: '8px', px: 3, fontWeight: 700 }}>New Ticket</Button>
@@ -97,6 +111,6 @@ export const SupportHub: React.FC = () => {
                     {selectedTicket && <TicketConversation ticketId={selectedTicket.id} />}
                 </DialogContent>
             </Dialog>
-        </Box>
+        </Container>
     );
 };

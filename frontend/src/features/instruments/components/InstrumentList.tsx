@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Box, Typography, Alert, TablePagination, Button } from '@mui/material';
+import { Box, Typography, Alert, TablePagination, Button, Fade } from '@mui/material';
 import { Loader } from '@/shared/components/Loader';
 import { useInstrumentList } from '../hooks/useInstrumentList';
 import { getInstrumentColumns } from './InstrumentColumns';
@@ -32,9 +32,29 @@ export const InstrumentList = () => {
     }
 
     return (
-        <Box sx={{ height: 'calc(100vh - 64px)', pt: 2, px: { xs: 2, lg: 3 }, pb: 2, display: 'flex', flexDirection: 'column', overflow: 'hidden', bgcolor: 'background.default' }}>
+        <Fade in={true} timeout={600}>
+            <Box
+            sx={{
+                height: 'calc(100vh - 64px)',
+                p: { xs: 2, md: 3 },
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                bgcolor: 'background.default',
+            }}
+        >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Typography variant="h6" color="primary.main">Market Instruments</Typography>
+                <Typography
+                    variant="h5"
+                    sx={{
+                        fontWeight: 700,
+                        letterSpacing: '-0.01em',
+                        mb: 0.5,
+                        color: 'text.primary',
+                    }}
+                >
+                    Market Instruments
+                </Typography>
                 {isFiltered && <Button size="small" onClick={resetFilters}>Clear Filters</Button>}
             </Box>
 
@@ -69,6 +89,7 @@ export const InstrumentList = () => {
                     </>
                 )}
             </Box>
-        </Box>
+            </Box>
+        </Fade>
     );
 };

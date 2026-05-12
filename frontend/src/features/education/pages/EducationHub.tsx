@@ -83,7 +83,15 @@ const EducationHub: React.FC = () => {
         } as any}>
             {/* Header */}
             <header className="education-header">
-                <Typography variant="h4" fontWeight={700} gutterBottom>
+                <Typography
+                    variant="h5"
+                    sx={{
+                        fontWeight: 700,
+                        letterSpacing: '-0.01em',
+                        mb: 0.5,
+                        color: 'text.primary',
+                    }}
+                >
                     Education Hub
                 </Typography>
                 <Typography variant="body1" color="text.secondary">

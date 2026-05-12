@@ -55,10 +55,25 @@ export function ProfilePage() {
     }, []);
 
     return (
-        <Container maxWidth="md" sx={{ mt: 4, mb: 4 }} id="profile-container">
+        <Container
+            maxWidth="lg"
+            sx={{
+                py: { xs: 2, md: 4 },
+                px: { xs: 2, md: 3 },
+            }}
+            id="profile-container"
+        >
             <Fade in={true} timeout={600}>
                 <Box>
-                    <Typography variant="h4" fontWeight={700} gutterBottom>
+                    <Typography
+                        variant="h5"
+                        sx={{
+                            fontWeight: 700,
+                            letterSpacing: '-0.01em',
+                            mb: 1,
+                            color: 'text.primary',
+                        }}
+                    >
                         Trader Settings
                     </Typography>
 

@@ -13,7 +13,17 @@ export function AdminInstrumentForm() {
         <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
             <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/admin')} sx={{ mb: 3 }}>Back to Admin Panel</Button>
             <Paper sx={{ p: 4 }}>
-                <Typography variant="h4" gutterBottom>{isEdit ? `Edit: ${formData.symbol}` : 'Add New Instrument'}</Typography>
+                <Typography
+                    variant="h5"
+                    sx={{
+                        fontWeight: 700,
+                        letterSpacing: '-0.01em',
+                        mb: 2,
+                        color: 'text.primary',
+                    }}
+                >
+                    {isEdit ? `Edit: ${formData.symbol}` : 'Add New Instrument'}
+                </Typography>
                 {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
                 {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
                 <form onSubmit={handleSubmit}>

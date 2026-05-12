@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Box, Typography, Paper } from '@mui/material';
+import { Box, Typography, Paper, Fade } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import { WatchlistManager } from '../components/WatchlistManager';
 import { WatchlistTable } from '../components/WatchlistTable';
 import { WatchlistToolbar } from '../components/WatchlistToolbar';
@@ -19,7 +20,7 @@ const DEFAULT_VISIBLE_COLUMNS = ['symbol', 'name', 'lastPrice', 'volume'];
 
 export function WatchlistPage(): JSX.Element {
     // Fetch instruments for real-time updates
-    const { instruments } = useInstruments();
+    const { instruments, isLoading } = useInstruments();
     const activeWatchlistId = useWatchlistStore(s => s.activeWatchlistId);
     const watchlists = useWatchlistStore(s => s.watchlists);
 
@@ -113,11 +114,36 @@ export function WatchlistPage(): JSX.Element {
         return displayInstruments;
     }, [instrumentIds, instruments, prices, searchQuery, sortBy, sortDirection]);
 
+    if (isLoading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <Loader size="medium" message="Loading watchlist..." />
+            </Box>
+        );
+    }
+
     return (
-        <Box sx={{ pb: 3, px: { xs: 1, md: 3 } }}>
+        <Fade in={true} timeout={600}>
+            <Box
+            sx={{
+                height: 'calc(100vh - 64px)',
+                p: { xs: 2, md: 3 },
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+            }}
+        >
             {/* Page Header */}
             <Box sx={{ mb: 2 }}>
-                <Typography variant="h5" fontWeight={700} sx={{ letterSpacing: '-0.01em', mb: 0.5 }}>
+                <Typography
+                    variant="h5"
+                    sx={{
+                        fontWeight: 700,
+                        letterSpacing: '-0.01em',
+                        mb: 0.5,
+                        color: 'text.primary',
+                    }}
+                >
                     My Watchlists
                 </Typography>
                 <Typography variant="body1" color="text.secondary" fontWeight={500}>
@@ -187,6 +213,7 @@ export function WatchlistPage(): JSX.Element {
                 columnOrder={columnOrder}
                 onSave={handleSaveColumnSettings}
             />
-        </Box>
+            </Box>
+        </Fade>
     );
 }

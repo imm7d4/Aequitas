@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
-    Container,
     Paper,
     IconButton,
     Tooltip,
     Tabs,
     Tab,
+    Fade,
 } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import {
     Refresh as RefreshIcon,
     History as OrdersIcon,
@@ -92,26 +93,39 @@ export function OrdersPage(): JSX.Element {
         fetchOrders();
     }, [page, rowsPerPage, statusFilter]);
 
-    return (
+    if (isLoading && orders.length === 0) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <Loader size="medium" message="Loading orders..." />
+            </Box>
+        );
+    }
 
-        <Container maxWidth="xl" sx={{ height: 'calc(100vh - 64px)', pb: 1, display: 'flex', flexDirection: 'column' }}>
+    return (
+        <Fade in={true} timeout={600}>
+            <Box
+            sx={{
+                height: 'calc(100vh - 64px)',
+                p: { xs: 2, md: 3 },
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+            }}
+        >
             <Box sx={{ flexShrink: 0 }}>
                 <Box sx={{ mb: 2 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box
-                                sx={{
-                                    p: 1.5,
-                                    borderRadius: 2,
-                                    bgcolor: 'primary.main',
-                                    color: 'primary.contrastText',
-                                    display: 'flex',
-                                }}
-                            >
-                                <OrdersIcon />
-                            </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <Box>
-                                <Typography variant="h5" fontWeight={700} sx={{ letterSpacing: '-0.01em' }}>
+                                <Typography
+                                    variant="h5"
+                                    sx={{
+                                        fontWeight: 700,
+                                        letterSpacing: '-0.01em',
+                                        mb: 0.5,
+                                        color: 'text.primary',
+                                    }}
+                                >
                                     Order Book
                                 </Typography>
                                 <Typography variant="body1" color="text.secondary">
@@ -186,7 +200,8 @@ export function OrdersPage(): JSX.Element {
                     onRowsPerPageChange={handleChangeRowsPerPage}
                 />
             </Box>
-        </Container>
+            </Box>
+        </Fade>
     );
 
 

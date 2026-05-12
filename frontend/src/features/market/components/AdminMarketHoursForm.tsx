@@ -10,7 +10,17 @@ export function AdminMarketHoursForm() {
         <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
             <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/admin')} sx={{ mb: 3 }}>Back to Admin Panel</Button>
             <Paper sx={{ p: 4 }}>
-                <Typography variant="h4" gutterBottom>Configure Market Hours</Typography>
+                <Typography
+                    variant="h5"
+                    sx={{
+                        fontWeight: 700,
+                        letterSpacing: '-0.01em',
+                        mb: 2,
+                        color: 'text.primary',
+                    }}
+                >
+                    Configure Market Hours
+                </Typography>
                 {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
                 {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
                 <form onSubmit={handleSubmit}>
