@@ -91,6 +91,7 @@ export const OrderList: React.FC<OrderListProps> = ({
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 2 }}>
             <Box sx={{ flex: 1, minHeight: 0 }}>
                 <CustomGrid<OrderResponse>
+                    maxHeight="100%"
                     columns={columns}
                     data={orders.map(o => ({ ...o, id: o.orderId }))}
                     renderExpansion={(row) => (

@@ -122,14 +122,11 @@ export function OrdersPage(): JSX.Element {
                                     sx={{
                                         fontWeight: 700,
                                         letterSpacing: '-0.01em',
-                                        mb: 0.5,
+                                        mb: 2,
                                         color: 'text.primary',
                                     }}
                                 >
                                     Order Book
-                                </Typography>
-                                <Typography variant="body1" color="text.secondary">
-                                    View and manage your trade executions
                                 </Typography>
                             </Box>
                         </Box>

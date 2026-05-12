@@ -19,7 +19,7 @@ export const Loader: React.FC<LoaderProps> = ({
     const loaderColor = color || theme.palette.primary.main;
 
     const sizes = {
-        small: { width: 40, height: 20, barWidth: 3, gap: 2 },
+        small: { width: 24, height: 12, barWidth: 2, gap: 1 },
         medium: { width: 80, height: 40, barWidth: 6, gap: 4 },
         large: { width: 120, height: 60, barWidth: 8, gap: 6 }
     };
@@ -44,8 +44,8 @@ export const Loader: React.FC<LoaderProps> = ({
         flexDirection: 'column' as const,
         alignItems: 'center',
         justifyContent: 'center',
-        padding: theme.spacing(4),
-        width: '100%',
+        padding: size === 'small' ? 0 : theme.spacing(4),
+        width: size === 'small' ? 'auto' : '100%',
     };
 
     // 5 bars with different heights to mimic a bar chart/volume
@@ -68,15 +68,14 @@ export const Loader: React.FC<LoaderProps> = ({
                             backgroundColor: loaderColor,
                             borderRadius: current.barWidth / 2,
                         }}
-                        initial={{ height: current.height * 0.2, opacity: 0.3 }}
+                        initial={{ height: current.height * 0.2, opacity: index % 2 === 0 ? 0.3 : 0.2 }}
                         animate={{ 
                             height: [
                                 current.height * heightFactor * 0.4, 
                                 current.height * heightFactor, 
                                 current.height * heightFactor * 0.4
                             ],
-                            opacity: [0.3, 1, 0.3],
-                            backgroundColor: index % 2 === 0 ? loaderColor : alpha(loaderColor, 0.7)
+                            opacity: index % 2 === 0 ? [0.3, 1, 0.3] : [0.2, 0.7, 0.2],
                         }}
                         transition={{
                             duration: 1.2,

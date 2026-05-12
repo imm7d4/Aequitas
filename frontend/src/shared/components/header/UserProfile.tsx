@@ -16,7 +16,11 @@ export const UserProfile: React.FC = () => {
                 <Avatar src={user?.avatar} sx={{ width: 32, height: 32, background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)', fontSize: '0.8rem', fontWeight: 800 }}>{userInitial}</Avatar>
                 <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'left', maxWidth: 140 }}>
                     <Typography variant="subtitle2" sx={{ lineHeight: 1.1, fontWeight: 700, fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{displayName}</Typography>
-                    <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.7rem' }}>{user?.isAdmin ? 'Administrator' : 'Master Trader'}</Typography>
+                    {user?.isAdmin && (
+                        <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.7rem' }}>
+                            Admin
+                        </Typography>
+                    )}
                 </Box>
                 <ExpandIcon sx={{ fontSize: 16, color: 'text.disabled', ml: -0.5, transition: 'transform 0.2s', transform: anchorEl ? 'rotate(180deg)' : 'none' }} />
             </Button>
