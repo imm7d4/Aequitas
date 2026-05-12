@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Typography, Button, Paper, Stack, Chip, CircularProgress, Alert, Snackbar } from '@mui/material';
+import { Box, Typography, Button, Paper, Stack, Chip, Alert, Snackbar } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import CloseIcon from '@mui/icons-material/Close';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -49,7 +50,7 @@ export const PositionBanner: React.FC<{ instrument: Instrument; ltp: number }> =
                         </Stack>
                     </Box>
                 </Stack>
-                <Button variant="contained" size="small" startIcon={isSquaringOff ? <CircularProgress size={12} color="inherit" /> : <CloseIcon sx={{ fontSize: 14 }} />} onClick={handleSquareOff} disabled={isSquaringOff} sx={{ borderRadius: 1.5, fontWeight: 800, bgcolor: 'text.primary', color: 'background.paper' }}>
+                <Button variant="contained" size="small" startIcon={isSquaringOff ? <Loader size="small" color="inherit" /> : <CloseIcon sx={{ fontSize: 14 }} />} onClick={handleSquareOff} disabled={isSquaringOff} sx={{ borderRadius: 1.5, fontWeight: 800, bgcolor: 'text.primary', color: 'background.paper' }}>
                     {isSquaringOff ? 'EXITING...' : 'SQUARE OFF'}
                 </Button>
             </Paper>

@@ -11,9 +11,9 @@ import {
     alpha,
     IconButton,
     Collapse,
-    CircularProgress,
     TablePagination
 } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import {
     KeyboardArrowDown,
     KeyboardArrowUp
@@ -177,7 +177,7 @@ export function CustomGrid<T extends BaseRow>({
                     {isLoading && (
                         <TableRow>
                             <TableCell colSpan={columns.length + (renderExpansion ? 1 : 0)} sx={{ height: 200, textAlign: 'center' }}>
-                                <CircularProgress size={32} />
+                                <Loader size="medium" />
                             </TableCell>
                         </TableRow>
                     )}

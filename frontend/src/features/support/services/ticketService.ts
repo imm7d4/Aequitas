@@ -1,5 +1,5 @@
 import { api } from '@/lib/api/apiClient';
-import { APIResponse } from '@/shared/types';
+import { APIResponse } from '@/features/auth/types';
 
 export interface SupportTicket {
     id: string;
@@ -28,6 +28,7 @@ export interface TicketData {
     userName: string;
     subject: string;
     description: string;
+    status: string;
     attachments?: string[];
     createdAt: string;
     comments: TicketComment[];

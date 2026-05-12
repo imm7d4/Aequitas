@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
     Box, Typography, Stack, TextField, Button, 
-    Avatar, Paper, Divider, CircularProgress 
+    Avatar, Paper, Divider 
 } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import { 
     Send as SendIcon, 
     AdminPanelSettings as SupportIcon,
@@ -10,17 +11,15 @@ import {
 } from '@mui/icons-material';
 import { Base64ImagePicker } from '../../../shared/components/Base64ImagePicker';
 import { useAuth } from '@/features/auth';
-import { ticketService, TicketData, TicketComment } from '../services/ticketService';
+import { ticketService, TicketData } from '../services/ticketService';
 
 interface TicketConversationProps {
     ticketId: string;
-    isAdminView?: boolean;
     onCommentAdded?: () => void;
 }
 
 export const TicketConversation: React.FC<TicketConversationProps> = ({ 
     ticketId, 
-    isAdminView = false,
     onCommentAdded
 }) => {
     const { user } = useAuth();
@@ -71,7 +70,7 @@ export const TicketConversation: React.FC<TicketConversationProps> = ({
         }
     };
 
-    if (loading && !ticket) return <Box sx={{ p: 4, textAlign: 'center' }}><CircularProgress size={24} /></Box>;
+    if (loading && !ticket) return <Box sx={{ p: 4, textAlign: 'center' } as any}><Loader size="small" /></Box>;
 
     const comments = ticket?.comments || [];
 
@@ -147,7 +146,7 @@ export const TicketConversation: React.FC<TicketConversationProps> = ({
                     <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
                         <TextField fullWidth size="small" placeholder="Type..." multiline maxRows={4} value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} />
                         <Button variant="contained" onClick={handleSend} disabled={sending || (!message.trim() && attachments.length === 0)} sx={{ minWidth: 'auto', px: 2 }}>
-                            {sending ? <CircularProgress size={20} color="inherit" /> : <SendIcon fontSize="small" />}
+                            {sending ? <Loader size="small" color="inherit" /> : <SendIcon fontSize="small" />}
                         </Button>
                     </Stack>
                 </Box>

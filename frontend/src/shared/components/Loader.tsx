@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, useTheme, alpha } from '@mui/material';
+import { Box, Typography, useTheme, alpha, SxProps, Theme } from '@mui/material';
 import { motion } from 'framer-motion';
 
 interface LoaderProps {
@@ -26,7 +26,7 @@ export const Loader: React.FC<LoaderProps> = ({
 
     const current = sizes[size];
 
-    const containerStyle = fullScreen ? {
+    const containerStyle: SxProps<Theme> = fullScreen ? {
         position: 'fixed' as const,
         top: 0,
         left: 0,
@@ -52,7 +52,7 @@ export const Loader: React.FC<LoaderProps> = ({
     const bars = [0.4, 0.8, 0.6, 1.0, 0.5];
 
     return (
-        <Box sx={containerStyle as any}>
+        <Box sx={containerStyle}>
             <Box sx={{ 
                 display: 'flex', 
                 alignItems: 'flex-end', 

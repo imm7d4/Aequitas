@@ -1,8 +1,9 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    Paper, Typography, Box, CircularProgress, Divider
+    Paper, Typography, Box, Divider
 } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import { useNavigate } from 'react-router-dom';
 import { useWatchlistStore } from '../store/watchlistStore';
 import { useInstrumentStore } from '@/features/instruments/store/instrumentStore';
@@ -91,7 +92,7 @@ export const WatchlistTable: React.FC<WatchlistTableProps> = ({
     );
 
     if (!activeWatchlistId) return <Box sx={{ p: 4, textAlign: 'center' }}><Typography color="textSecondary">Select a watchlist</Typography></Box>;
-    if (isLoadingInstruments && watchlistInstruments.length === 0) return <Box sx={{ p: 4, textAlign: 'center' }}><CircularProgress size={24} sx={{ mb: 2 }} /><Typography color="textSecondary">Loading...</Typography></Box>;
+    if (isLoadingInstruments && watchlistInstruments.length === 0) return <Box sx={{ p: 4, textAlign: 'center' }}><Loader size="small" message="Loading..." /></Box>;
     if (watchlistInstruments.length === 0) return <Box sx={{ p: 4, textAlign: 'center' }}><Typography color="textSecondary">No instruments found</Typography></Box>;
 
     return (

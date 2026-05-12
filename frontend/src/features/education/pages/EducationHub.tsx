@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useEducationIndex } from '../hooks/useEducation';
 import ScrollToTop from '../components/ScrollToTop';
+import { Loader } from '@/shared/components/Loader';
 import {
     Typography,
     useTheme,
@@ -44,7 +45,9 @@ const EducationHub: React.FC = () => {
                 '--primary-light': alpha(theme.palette.primary.main, 0.1),
                 '--divider': theme.palette.divider,
             } as any}>
-                <div className="loading">Loading education modules...</div>
+                <div className="loading">
+                    <Loader message="Loading education modules..." />
+                </div>
             </div>
         );
     }

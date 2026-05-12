@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Box, Typography, CircularProgress, Alert, TablePagination, Button } from '@mui/material';
+import { Box, Typography, Alert, TablePagination, Button } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import { useInstrumentList } from '../hooks/useInstrumentList';
 import { getInstrumentColumns } from './InstrumentColumns';
 import { InstrumentFilters } from './InstrumentFilters';
@@ -21,7 +22,7 @@ export const InstrumentList = () => {
     if (isLoading && displayInstruments.length === 0) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <CircularProgress size={32} thickness={5} />
+                <Loader size="medium" />
             </Box>
         );
     }

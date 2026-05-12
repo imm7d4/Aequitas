@@ -1,4 +1,5 @@
-import { Container, Paper, Typography, TextField, Button, MenuItem, Box, Alert, CircularProgress } from '@mui/material';
+import { Container, Paper, Typography, TextField, Button, MenuItem, Box, Alert } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon from '@mui/icons-material/Save';
 import { useAdminManageHours } from '../hooks/useAdminManageHours';
@@ -20,7 +21,7 @@ export function AdminManageHours() {
                         <MenuItem value="BSE">BSE</MenuItem>
                     </TextField>
                 </Box>
-                {isLoading ? <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress /></Box> : (
+                {isLoading ? <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><Loader size="medium" /></Box> : (
                     <>
                         {weeklyHours.map((dayHours, index) => (
                             <DayHoursCard 
@@ -33,7 +34,7 @@ export function AdminManageHours() {
                         ))}
                         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 4 }}>
                             <Button onClick={() => navigate('/admin')}>Cancel</Button>
-                            <Button variant="contained" startIcon={isSaving ? <CircularProgress size={20} /> : <SaveIcon />} onClick={handleSave} disabled={isSaving}>
+                            <Button variant="contained" startIcon={isSaving ? <Loader size="small" /> : <SaveIcon />} onClick={handleSave} disabled={isSaving}>
                                 Save All Changes
                             </Button>
                         </Box>

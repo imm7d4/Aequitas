@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import {
     Box, Paper,
-    Button, Stack, CircularProgress, Tooltip,
+    Button, Stack, Tooltip,
     Snackbar, Alert, useTheme, alpha, Typography, Theme, SxProps
 } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import { Instrument } from '@/features/instruments/types/instrument.types';
 import { ShortSellWarning } from './ShortSellWarning';
 import { TradePanelHeader } from './TradePanelHeader';
@@ -128,7 +129,7 @@ export const TradePanel: React.FC<TradePanelProps> = ({
                                 py: 1.4, fontWeight: 900, borderRadius: '12px',
                             } as any}
                         >
-                            {trade.isLoading ? <CircularProgress size={24} color="inherit" /> : `${trade.side} ${instrument.symbol}`}
+                            {trade.isLoading ? <Loader size="small" color="inherit" /> : `${trade.side} ${instrument.symbol}`}
                         </Button>
                     </Box>
                 </Tooltip>

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button, Typography, Box, Grid, Chip, Divider,
-    IconButton, TextField, alpha, useTheme, CircularProgress
+    IconButton, TextField, alpha, useTheme
 } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import {
     Close,
     ConfirmationNumber, Description, Send
@@ -97,7 +98,7 @@ export const WalletDetailModal: React.FC<WalletDetailModalProps> = ({ open, acco
                 <TextField fullWidth label="Reason" multiline rows={2} size="small" value={reason} onChange={e => setReason(e.target.value)} InputProps={{ startAdornment: <Description sx={{ mr: 1, color: 'text.disabled', fontSize: 20, mt: 1 }} /> }} />
             </DialogContent>
             <DialogActions sx={{ p: 3, pt: 0 }}>
-                <Button variant="contained" fullWidth size="large" onClick={handleSubmitJIT} disabled={submitting || !adjAmount || !ticketId} startIcon={submitting ? <CircularProgress size={20} /> : <Send />} sx={{ borderRadius: '10px', fontWeight: 800 }}>Submit for Approval</Button>
+                <Button variant="contained" fullWidth size="large" onClick={handleSubmitJIT} disabled={submitting || !adjAmount || !ticketId} startIcon={submitting ? <Loader size="small" /> : <Send />} sx={{ borderRadius: '10px', fontWeight: 800 }}>Submit for Approval</Button>
             </DialogActions>
         </Dialog>
     );

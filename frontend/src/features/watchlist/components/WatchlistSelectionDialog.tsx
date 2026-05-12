@@ -10,10 +10,10 @@ import {
     Checkbox,
     Typography,
     Box,
-    CircularProgress,
     TextField,
     Divider,
 } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import AddIcon from '@mui/icons-material/Add';
 import { useWatchlistStore } from '../store/watchlistStore';
 
@@ -149,7 +149,7 @@ export const WatchlistSelectionDialog: React.FC = () => {
                     onClick={handleSave}
                     variant="contained"
                     disabled={isSaving || (watchlists.length === 0 && !newWatchlistName.trim())}
-                    startIcon={isSaving ? <CircularProgress size={20} color="inherit" /> : null}
+                    startIcon={isSaving ? <Loader size="small" color="inherit" /> : null}
                     sx={{ borderRadius: '8px', px: 3 }}
                 >
                     {isSaving ? 'Saving...' : 'Save Changes'}

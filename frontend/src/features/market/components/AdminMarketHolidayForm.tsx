@@ -1,4 +1,5 @@
-import { Container, Paper, Typography, Button, Box, Alert, CircularProgress, Divider, TextField, MenuItem, Grid } from '@mui/material';
+import { Container, Paper, Typography, Button, Box, Alert, Divider, TextField, MenuItem, Grid } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAdminMarketHolidays } from '../hooks/useAdminMarketHolidays';
 import { HolidayFormFields } from './HolidayFormFields';
@@ -18,7 +19,7 @@ export function AdminMarketHolidayForm() {
                     <HolidayFormFields formData={formData} onChange={handleChange} />
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
                         <Button onClick={() => navigate('/admin')}>Cancel</Button>
-                        <Button type="submit" variant="contained" disabled={isSaving} startIcon={isSaving && <CircularProgress size={20} />}>Add Holiday</Button>
+                        <Button type="submit" variant="contained" disabled={isSaving} startIcon={isSaving && <Loader size="small" />}>Add Holiday</Button>
                     </Box>
                 </form>
             </Paper>
@@ -35,7 +36,7 @@ export function AdminMarketHolidayForm() {
                         </TextField>
                     </Grid>
                 </Grid>
-                {isLoadingHolidays ? <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box> : <HolidayTable holidays={filteredHolidays} onDelete={handleDelete} />}
+                {isLoadingHolidays ? <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><Loader size="medium" /></Box> : <HolidayTable holidays={filteredHolidays} onDelete={handleDelete} />}
             </Paper>
         </Container>
     );

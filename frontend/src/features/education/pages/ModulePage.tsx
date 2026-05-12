@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useEducationModule } from '../hooks/useEducation';
+import { Loader } from '@/shared/components/Loader';
 import { useTelemetry } from '@/shared/services/telemetry/TelemetryProvider';
 import { getCustomModule } from '../components/modules/ModuleRegistry';
 import ScrollToTop from '../components/ScrollToTop';
@@ -43,7 +44,7 @@ const ModulePage: React.FC = () => {
         '--warning-light': theme.palette.mode === 'light' ? '#fff3e0' : 'rgba(255, 152, 0, 0.1)',
     } as any;
 
-    if (loading) return <div className="module-page" style={themeVars}><div className="loading">Loading module...</div></div>;
+    if (loading) return <div className="module-page" style={themeVars}><div className="loading"><Loader message="Loading module..." /></div></div>;
     if (error || !module) return <div className="module-page" style={themeVars}><div className="error">Module not found</div><Link to="/education" className="back-button">← Back to Education</Link></div>;
 
     return (

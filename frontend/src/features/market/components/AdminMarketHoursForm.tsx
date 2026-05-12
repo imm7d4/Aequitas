@@ -1,4 +1,5 @@
-import { Container, Paper, Typography, TextField, Button, Grid, MenuItem, Box, Alert, CircularProgress } from '@mui/material';
+import { Container, Paper, Typography, TextField, Button, Grid, MenuItem, Box, Alert } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAdminMarketHoursForm } from '../hooks/useAdminMarketHoursForm';
 
@@ -33,7 +34,7 @@ export function AdminMarketHoursForm() {
                         <Grid item xs={12}>
                             <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2 }}>
                                 <Button onClick={() => navigate('/admin')}>Cancel</Button>
-                                <Button type="submit" variant="contained" disabled={isSaving} startIcon={isSaving && <CircularProgress size={20} />}>Save</Button>
+                                <Button type="submit" variant="contained" disabled={isSaving} startIcon={isSaving && <Loader size="small" />}>Save</Button>
                             </Box>
                         </Grid>
                     </Grid>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Box, Typography, Container, CircularProgress, Tabs, Tab } from '@mui/material';
+import { Box, Typography, Container, Tabs, Tab, Fade } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import { portfolioService, PortfolioSummaryData } from '../services/portfolioService';
 import { HoldingsTable } from '../components/HoldingsTable';
 // Removed unused accountService
@@ -119,81 +120,85 @@ export const PortfolioPage: React.FC = () => {
         return prices;
     }, [marketData]);
 
-    if (isLoading) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
-
     return (
         <Container maxWidth="xl" sx={{ height: 'calc(100vh - 64px)', pb: 1, display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ flexShrink: 0 }}>
-                <Box sx={{ mb: 1.5 }}>
-                    <Typography variant="h5" fontWeight={700}>
-                        Portfolio
-                    </Typography>
-                </Box>
-
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 1.5 }}>
-                    <Tabs value={tabValue} onChange={handleTabChange} aria-label="portfolio tabs">
-                        <Tab label="Overview" />
-                        <Tab label="Holdings" />
-                    </Tabs>
-                </Box>
-            </Box>
-
-            {/* Overview Tab */}
-            {tabValue === 0 && (
-                <Box sx={{ flexShrink: 0, overflow: 'auto', flex: 1, minHeight: 0 }}>
-                    <PortfolioSummary
-                        totalEquity={displaySummary.totalEquity}
-                        totalHoldingsValue={displaySummary.totalHoldingsValue}
-                        cashBalance={displaySummary.cashBalance}
-                        blockedMargin={displaySummary.blockedMargin}
-                        totalPL={displaySummary.unrealizedPL}
-                        totalPLPercent={displaySummary.unrealizedPLPercent}
-                        realizedPL={displaySummary.realizedPL}
-                        holdingsCount={displaySummary.holdingsCount}
-                        holdings={holdings}
-                        marketPrices={marketPrices}
-                        freeCash={summaryData?.freeCash || 0}
-                        marginCash={summaryData?.marginCash || 0}
-                        shortProceeds={summaryData?.shortProceeds || 0}
-                        settlementPending={summaryData?.settlementPending || 0}
-                    />
-                </Box>
-            )}
-
-            {/* Holdings Tab */}
-            {tabValue === 1 && (
-                <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="h6" fontWeight={700}>
-                            Your Holdings
+            <Fade in={true} timeout={600}>
+                <Box sx={{ flexShrink: 0 }}>
+                    <Box sx={{ mb: 1.5 }}>
+                        <Typography variant="h5" fontWeight={700}>
+                            Portfolio
                         </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box sx={{ textAlign: 'right' }}>
-                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                                    Unrealized P&L
-                                </Typography>
-                                <Typography
-                                    variant="body2"
-                                    fontWeight={700}
-                                    color={displaySummary.unrealizedPL >= 0 ? 'success.main' : 'error.main'}
-                                    sx={{ fontSize: '0.95rem' }}
-                                >
-                                    {displaySummary.unrealizedPL >= 0 ? '+' : '-'}₹{Math.abs(displaySummary.unrealizedPL).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-                                    <Typography component="span" variant="caption" sx={{ ml: 0.5, fontSize: '0.7rem' }}>
-                                        ({displaySummary.unrealizedPL >= 0 ? '+' : ''}{displaySummary.unrealizedPLPercent.toFixed(2)}%)
-                                    </Typography>
-                                </Typography>
-                            </Box>
-                        </Box>
                     </Box>
-                    <HoldingsTable holdings={holdings} />
+
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 1.5 }}>
+                        <Tabs value={tabValue} onChange={handleTabChange} aria-label="portfolio tabs">
+                            <Tab label="Overview" />
+                            <Tab label="Holdings" />
+                        </Tabs>
+                    </Box>
                 </Box>
+            </Fade>
+
+            {isLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}>
+                    <Loader size="medium" />
+                </Box>
+            ) : (
+                <Fade in={!isLoading} timeout={400}>
+                    <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                        {/* Overview Tab */}
+                        {tabValue === 0 && (
+                            <Box sx={{ flexShrink: 0, overflow: 'auto', flex: 1, minHeight: 0 }}>
+                                <PortfolioSummary
+                                    totalEquity={displaySummary.totalEquity}
+                                    totalHoldingsValue={displaySummary.totalHoldingsValue}
+                                    cashBalance={displaySummary.cashBalance}
+                                    blockedMargin={displaySummary.blockedMargin}
+                                    totalPL={displaySummary.unrealizedPL}
+                                    totalPLPercent={displaySummary.unrealizedPLPercent}
+                                    realizedPL={displaySummary.realizedPL}
+                                    holdingsCount={displaySummary.holdingsCount}
+                                    holdings={holdings}
+                                    marketPrices={marketPrices}
+                                    freeCash={summaryData?.freeCash || 0}
+                                    marginCash={summaryData?.marginCash || 0}
+                                    shortProceeds={summaryData?.shortProceeds || 0}
+                                    settlementPending={summaryData?.settlementPending || 0}
+                                />
+                            </Box>
+                        )}
+
+                        {/* Holdings Tab */}
+                        {tabValue === 1 && (
+                            <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                    <Typography variant="h6" fontWeight={700}>
+                                        Your Holdings
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Box sx={{ textAlign: 'right' }}>
+                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                                                Unrealized P&L
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                fontWeight={700}
+                                                color={displaySummary.unrealizedPL >= 0 ? 'success.main' : 'error.main'}
+                                                sx={{ fontSize: '0.95rem' }}
+                                            >
+                                                {displaySummary.unrealizedPL >= 0 ? '+' : '-'}₹{Math.abs(displaySummary.unrealizedPL).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                                                <Typography component="span" variant="caption" sx={{ ml: 0.5, fontSize: '0.7rem' }}>
+                                                    ({displaySummary.unrealizedPL >= 0 ? '+' : ''}{displaySummary.unrealizedPLPercent.toFixed(2)}%)
+                                                </Typography>
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </Box>
+                                <HoldingsTable holdings={holdings} />
+                            </Box>
+                        )}
+                    </Box>
+                </Fade>
             )}
         </Container>
     );

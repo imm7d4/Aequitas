@@ -8,7 +8,8 @@ import {
     Tooltip,
     ResponsiveContainer
 } from 'recharts';
-import { Box, Typography, Paper, useTheme, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper, useTheme } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import { portfolioService } from '../services/portfolioService';
 
 interface Snapshot {
@@ -43,7 +44,7 @@ export const EquityCurveChart: React.FC = () => {
     }, []);
 
     if (isLoading) {
-        return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>;
+        return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><Loader size="medium" /></Box>;
     }
 
     if (data.length === 0) {

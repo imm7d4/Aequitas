@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CandlestickSeries, HistogramSeries, LineSeries } from 'lightweight-charts';
-import { Box, CircularProgress, Typography, Paper, useTheme } from '@mui/material';
+import { Box, Typography, Paper, useTheme } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import { CandleInterval } from '../types/market.types';
 import { useStockChart } from '../hooks/useStockChart';
 import { useMarketData } from '../hooks/useMarketData';
@@ -127,7 +128,7 @@ export function StockChart({ instrumentId, height = 400 }: StockChartProps) {
         <Box sx={{ width: '100%', height: height, display: 'flex', flexDirection: 'column' }}>
             <ChartControls interval={interval} onIntervalChange={(val) => { setInterval(val); hasFittedRef.current = false; }} />
             <Box sx={{ position: 'relative', flexGrow: 1, minHeight: 0 }}>
-                {isLoading && <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, bgcolor: theme.palette.mode === 'light' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}><CircularProgress /></Box>}
+                {isLoading && <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, bgcolor: theme.palette.mode === 'light' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}><Loader size="medium" /></Box>}
                 <ChartLegend hoverData={hoverData} indicatorSeriesRefs={indicatorSeriesRefs} />
                 <div ref={chartContainerRef} style={{ width: '100%', height: '100%' }} />
             </Box>

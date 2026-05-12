@@ -3,10 +3,10 @@ import {
     Box,
     Typography,
     Container,
-    CircularProgress,
     Alert,
     Fade,
 } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import { TradeDiagnosticsLog } from '../components/TradeDiagnosticsLog';
 import { analyticsService, TradeResult } from '../services/analyticsService';
 
@@ -50,10 +50,7 @@ export const TradeDiagnosticsPage: React.FC = () => {
 
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexGrow: 1 }}>
-                    <CircularProgress size={24} />
-                    <Typography variant="body2" sx={{ ml: 2, color: 'text.secondary' }}>
-                        Analyzing trade history...
-                    </Typography>
+                    <Loader size="medium" message="Analyzing trade history..." />
                 </Box>
             ) : (
                 <Fade in={!loading} timeout={400}>

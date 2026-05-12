@@ -4,9 +4,10 @@ import {
     Typography,
     Button,
     Grid,
-    CircularProgress,
     Alert,
+    Fade,
 } from '@mui/material';
+import { Loader } from '@/shared/components/Loader';
 import {
     Visibility as VisibleIcon,
     VisibilityOff as HiddenIcon,
@@ -51,127 +52,121 @@ export function Dashboard(): JSX.Element {
     const userDisplayName =
         user?.fullName || user?.email?.split('@')[0] || 'Trader';
 
-    if (loading) {
-        return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: '60vh',
-                }}
-            >
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    if (error || !dashboardData) {
-        return (
-            <Box sx={{ py: 3, px: { xs: 1, md: 3 } }}>
-                <Alert severity="error">{error || 'No data available'}</Alert>
-            </Box>
-        );
-    }
-
-    const { performanceOverview, tradingAnalysis, behavioralInsights,
-        marketIntelligence, portfolioDistribution, marketHeatmap } = dashboardData;
-
     return (
         <Box id="dashboard-overview" sx={{ py: 3, px: { xs: 1, md: 3 } }}>
-            {/* Greeter Section */}
-            <Box
-                sx={{
-                    mb: 3,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                }}
-            >
-                <Box>
-                    <Typography
-                        variant="h5"
-                        fontWeight={700}
-                        sx={{ letterSpacing: '-0.01em', mb: 0.5 }}
-                    >
-                        Welcome back, {userDisplayName}! 📈
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary" fontWeight={500}>
-                        The market is calling. Let's analyze your performance.
-                    </Typography>
-                </Box>
-                <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={showBalance ? <HiddenIcon /> : <VisibleIcon />}
-                    onClick={() => setShowBalance(!showBalance)}
+            <Fade in={true} timeout={600}>
+                <Box
                     sx={{
-                        borderRadius: 2,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        mt: 1,
+                        mb: 3,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
                     }}
                 >
-                    {showBalance ? 'Hide Values' : 'Show Values'}
-                </Button>
-            </Box>
+                    <Box>
+                        <Typography
+                            variant="h5"
+                            fontWeight={700}
+                            sx={{ letterSpacing: '-0.01em', mb: 0.5 }}
+                        >
+                            Welcome back, {userDisplayName}! 📈
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" fontWeight={500}>
+                            The market is calling. Let's analyze your performance.
+                        </Typography>
+                    </Box>
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={showBalance ? <HiddenIcon /> : <VisibleIcon />}
+                        onClick={() => setShowBalance(!showBalance)}
+                        sx={{
+                            borderRadius: 2,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            mt: 1,
+                        }}
+                    >
+                        {showBalance ? 'Hide Values' : 'Show Values'}
+                    </Button>
+                </Box>
+            </Fade>
 
-            {/* Performance Overview */}
-            <Grid container spacing={3} sx={{ mb: 6 }}>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        title="Total Equity"
-                        value={`₹${performanceOverview.totalEquity.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                        subtitle="Cash + Holdings"
-                        isPrivate={!showBalance}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        title="Realized P&L"
-                        value={`₹${performanceOverview.realizedPL.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                        isPrivate={!showBalance}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        title="Unrealized P&L"
-                        value={`₹${performanceOverview.unrealizedPL.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                        isPrivate={!showBalance}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        title="Active Positions"
-                        value={portfolioDistribution.activePositions.toString()}
-                        subtitle="Current holdings"
-                        isPrivate={!showBalance}
-                    />
-                </Grid>
-            </Grid>
+            {loading ? (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minHeight: '40vh',
+                    }}
+                >
+                    <Loader size="medium" />
+                </Box>
+            ) : error || !dashboardData ? (
+                <Alert severity="error">{error || 'No data available'}</Alert>
+            ) : (
+                <Fade in={!loading} timeout={400}>
+                    <Box>
+                        {/* Performance Overview */}
+                        <Grid container spacing={3} sx={{ mb: 6 }}>
+                            <Grid item xs={12} sm={6} md={3}>
+                                <StatCard
+                                    title="Total Equity"
+                                    value={`₹${dashboardData.performanceOverview.totalEquity.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    subtitle="Cash + Holdings"
+                                    isPrivate={!showBalance}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={3}>
+                                <StatCard
+                                    title="Realized P&L"
+                                    value={`₹${dashboardData.performanceOverview.realizedPL.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    isPrivate={!showBalance}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={3}>
+                                <StatCard
+                                    title="Unrealized P&L"
+                                    value={`₹${dashboardData.performanceOverview.unrealizedPL.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                                    isPrivate={!showBalance}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={3}>
+                                <StatCard
+                                    title="Active Positions"
+                                    value={dashboardData.portfolioDistribution.activePositions.toString()}
+                                    subtitle="Current holdings"
+                                    isPrivate={!showBalance}
+                                />
+                            </Grid>
+                        </Grid>
 
-            {/* Trading Analysis */}
-            <Box sx={{ mb: 6 }}>
-                <TradingAnalysis analysis={tradingAnalysis} />
-            </Box>
+                        {/* Trading Analysis */}
+                        <Box sx={{ mb: 6 }}>
+                            <TradingAnalysis analysis={dashboardData.tradingAnalysis} />
+                        </Box>
 
-            {/* Behavioral Insights */}
-            <Box sx={{ mb: 6 }}>
-                <BehavioralInsights insights={behavioralInsights} />
-            </Box>
+                        {/* Behavioral Insights */}
+                        <Box sx={{ mb: 6 }}>
+                            <BehavioralInsights insights={dashboardData.behavioralInsights} />
+                        </Box>
 
-            {/* Market Pulse */}
-            <Box sx={{ mb: 6 }}>
-                <MarketPulse
-                    topGainers={marketIntelligence.topGainers}
-                    topLosers={marketIntelligence.topLosers}
-                />
-            </Box>
+                        {/* Market Pulse */}
+                        <Box sx={{ mb: 6 }}>
+                            <MarketPulse
+                                topGainers={dashboardData.marketIntelligence.topGainers}
+                                topLosers={dashboardData.marketIntelligence.topLosers}
+                            />
+                        </Box>
 
-            {/* Market Heatmap */}
-            <Box sx={{ mb: 6 }}>
-                <MarketHeatmap data={marketHeatmap} />
-            </Box>
+                        {/* Market Heatmap */}
+                        <Box sx={{ mb: 6 }}>
+                            <MarketHeatmap data={dashboardData.marketHeatmap} />
+                        </Box>
+                    </Box>
+                </Fade>
+            )}
         </Box>
     );
 }
