@@ -52,6 +52,19 @@ export const useChartIndicators = (
         return IndicatorService.calculateMACD(closePrices, fast, slow, signal);
     }, [closePrices, indicators.macd]);
 
+    // RSI Data
+    const rsiData = useMemo(() => {
+        if (!indicators.rsi.enabled || closePrices.length === 0) return null;
+        const period = indicators.rsi.settings?.period || 14;
+        return IndicatorService.calculateRSI(closePrices, period);
+    }, [closePrices, indicators.rsi]);
+
+    // VWAP Data
+    const vwapData = useMemo(() => {
+        if (!indicators.vwap.enabled || sanitizedCandles.length === 0) return null;
+        return IndicatorService.calculateVWAP(sanitizedCandles);
+    }, [sanitizedCandles, indicators.vwap]);
+
     // SMA Rendering
     useEffect(() => {
         if (!chartRef.current || !smaData) {
@@ -145,5 +158,78 @@ export const useChartIndicators = (
         indicatorSeriesRefs.current['macd-line'] = macdLineSeries;
     }, [macdData, sanitizedCandles, closePrices.length, chartRef, indicatorSeriesRefs, theme]);
 
-    return { indicators, smaData, emaData, bollingerData, macdData };
+    // RSI Rendering
+    useEffect(() => {
+        if (!chartRef.current || !rsiData) {
+            if (indicatorSeriesRefs.current['rsi-line']) {
+                chartRef.current.removeSeries(indicatorSeriesRefs.current['rsi-line']);
+                delete indicatorSeriesRefs.current['rsi-line'];
+            }
+            return;
+        }
+
+        if (indicatorSeriesRefs.current['rsi-line']) {
+            chartRef.current.removeSeries(indicatorSeriesRefs.current['rsi-line']);
+        }
+
+        const offset = closePrices.length - rsiData.length;
+        const series = chartRef.current.addSeries(LineSeries, {
+            color: '#9C27B0',
+            lineWidth: 1.5,
+            title: 'RSI(14)',
+            priceScaleId: 'rsi',
+            priceLineVisible: false
+        });
+
+        const macdEnabled = indicators.macd.enabled;
+        const rsiEnabled = indicators.rsi.enabled;
+        let rsiMargins = { top: 0.8, bottom: 0 };
+        if (macdEnabled && rsiEnabled) {
+            rsiMargins = { top: 0.55, bottom: 0.25 };
+        }
+
+        chartRef.current.priceScale('rsi').applyOptions({
+            scaleMargins: rsiMargins,
+            borderVisible: false
+        });
+
+        series.setData(rsiData.map((value: number, i: number) => ({
+            time: sanitizedCandles[offset + i].time,
+            value
+        })));
+
+        indicatorSeriesRefs.current['rsi-line'] = series;
+    }, [rsiData, sanitizedCandles, closePrices.length, chartRef, indicatorSeriesRefs, indicators.macd.enabled, indicators.rsi.enabled]);
+
+    // VWAP Rendering
+    useEffect(() => {
+        if (!chartRef.current || !vwapData) {
+            if (indicatorSeriesRefs.current['vwap-line']) {
+                chartRef.current.removeSeries(indicatorSeriesRefs.current['vwap-line']);
+                delete indicatorSeriesRefs.current['vwap-line'];
+            }
+            return;
+        }
+
+        if (indicatorSeriesRefs.current['vwap-line']) {
+            chartRef.current.removeSeries(indicatorSeriesRefs.current['vwap-line']);
+        }
+
+        const series = chartRef.current.addSeries(LineSeries, {
+            color: '#FF5722',
+            lineWidth: 1.5,
+            title: 'VWAP',
+            priceLineVisible: false,
+            lastValueVisible: true
+        });
+
+        series.setData(vwapData.map((value: number, i: number) => ({
+            time: sanitizedCandles[i].time,
+            value
+        })));
+
+        indicatorSeriesRefs.current['vwap-line'] = series;
+    }, [vwapData, sanitizedCandles, chartRef, indicatorSeriesRefs]);
+
+    return { indicators, smaData, emaData, bollingerData, macdData, rsiData, vwapData };
 };

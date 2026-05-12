@@ -22,6 +22,16 @@ export const getInstrumentColumns = (prices: any, watchlists: any[], onWatchlist
         )
     },
     {
+        id: 'sector',
+        label: 'Sector',
+        sortable: true,
+        format: (value: string) => (
+            <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                {value}
+            </Typography>
+        )
+    },
+    {
         id: 'ltp',
         label: 'LTP',
         align: 'right' as const,
@@ -31,6 +41,27 @@ export const getInstrumentColumns = (prices: any, watchlists: any[], onWatchlist
                 <TickColoredPrice marketData={prices[row.id]} />
             </Box>
         )
+    },
+    {
+        id: 'change',
+        label: 'Change',
+        align: 'right' as const,
+        sortable: true,
+        format: (_: any, row: Instrument) => {
+            const md = prices[row.id];
+            if (!md) return '--';
+            const isPos = md.change >= 0;
+            return (
+                <Typography
+                    variant="body2"
+                    fontWeight={700}
+                    color={isPos ? 'success.main' : 'error.main'}
+                    sx={{ fontFamily: '"JetBrains Mono", monospace' }}
+                >
+                    {isPos ? '+' : ''}{md.change.toFixed(2)}
+                </Typography>
+            );
+        }
     },
     {
         id: 'changePct',
