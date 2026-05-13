@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { usePortfolioStore } from '../store/portfolioStore';
 import { orderService } from '@/features/trading/services/orderService';
 import { Instrument } from '@/features/instruments/types/instrument.types';
@@ -8,6 +8,10 @@ export const usePositionBanner = (instrument: Instrument, ltp: number) => {
     const position = getPositionByInstrumentId(instrument.id);
     const [isSquaringOff, setIsSquaringOff] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+    useEffect(() => {
+        fetchHoldings();
+    }, [fetchHoldings]);
 
     const unrealizedPL = useMemo(() => {
         if (!position || ltp <= 0) return 0;
