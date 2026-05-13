@@ -10,14 +10,16 @@ import (
 )
 
 type NotificationService struct {
-	repo  *repositories.NotificationRepository
-	wsHub *websocket.Hub
+	repo     *repositories.NotificationRepository
+	wsHub    *websocket.Hub
+	userRepo *repositories.UserRepository
 }
 
-func NewNotificationService(repo *repositories.NotificationRepository, wsHub *websocket.Hub) *NotificationService {
+func NewNotificationService(repo *repositories.NotificationRepository, wsHub *websocket.Hub, userRepo *repositories.UserRepository) *NotificationService {
 	return &NotificationService{
-		repo:  repo,
-		wsHub: wsHub,
+		repo:     repo,
+		wsHub:    wsHub,
+		userRepo: userRepo,
 	}
 }
 
@@ -31,6 +33,45 @@ func (s *NotificationService) SendNotification(
 	data map[string]interface{},
 	actions []models.NotificationAction,
 ) error {
+	// 0. Check User Preferences
+	user, err := s.userRepo.FindByID(userID)
+	if err == nil && user != nil {
+		prefs := user.Preferences.NotificationSettings
+		
+		// If MuteAll is true, don't send anything
+		if prefs.MuteAll {
+			return nil
+		}
+
+		// Check if preferences are uninitialized (all false)
+		// If uninitialized, we default to enabled for backwards compatibility
+		isUninitialized := prefs == models.NotificationSettings{}
+
+		enabled := true
+		if !isUninitialized {
+			switch {
+			case title == "Order Filled":
+				enabled = prefs.OrderFilled
+			case title == "Order Cancelled" || title == "IOC Order Cancelled":
+				enabled = prefs.OrderCancelled
+			case title == "MARGIN CALL: CRITICAL" || title == "Margin Warning":
+				enabled = prefs.MarginCallWarning
+			case title == "Price Alert Triggered":
+				enabled = prefs.PriceAlertTriggered
+			case title == "Ticket Status Updated" || title == "New Support Message":
+				enabled = prefs.SupportTicketUpdated
+			case nType == models.NotificationTypeSystem:
+				enabled = prefs.SystemAnnouncements
+			default:
+				enabled = true // Default to true for other types
+			}
+		}
+
+		if !enabled {
+			return nil // Disabled by user preference
+		}
+	}
+
 	notification := &models.Notification{
 		UserID:  userID,
 		Type:    nType,
@@ -41,7 +82,7 @@ func (s *NotificationService) SendNotification(
 	}
 
 	// 1. Persist to Database
-	err := s.repo.Create(ctx, notification)
+	err = s.repo.Create(ctx, notification)
 	if err != nil {
 		log.Printf("Failed to persist notification for user %s: %v", userID, err)
 		return err

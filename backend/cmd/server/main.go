@@ -96,7 +96,7 @@ func main() {
 	marketService := services.NewMarketService(marketRepo, marketDataRepo, adminConfigRepo)
 	watchlistService := services.NewWatchlistService(watchlistRepo, instrumentRepo)
 	telemetryService := services.NewTelemetryService(telemetryRepo, auditService)
-	userService := services.NewUserService(userRepo, otpService, commProvider)
+	userService := services.NewUserService(userRepo, otpService, commProvider, tradeRepo)
 	analyticsService := services.NewAnalyticsService(tradeResultRepo, activeUnitRepo, candleRepo)
 	portfolioService := services.NewPortfolioService(portfolioRepo, marketService, tradingAccountService, analyticsService)
 	candleService := services.NewCandleService(candleRepo)
@@ -110,7 +110,7 @@ func main() {
 	go wsHub.Run()
 	wsHandler := websocket.NewHandler(wsHub, cfg.JWTSecret)
 
-	notificationService := services.NewNotificationService(notificationRepo, wsHub)
+	notificationService := services.NewNotificationService(notificationRepo, wsHub, userRepo)
 	priceAlertService := services.NewPriceAlertService(priceAlertRepo, notificationService)
 	supportService := services.NewSupportService(supportTicketRepo, userRepo, auditService, notificationService)
 
@@ -170,7 +170,7 @@ func main() {
 	marketController := controllers.NewMarketController(marketService)
 	watchlistController := controllers.NewWatchlistController(watchlistService)
 	telemetryController := controllers.NewTelemetryController(telemetryService)
-	userController := controllers.NewUserController(userService)
+	userController := controllers.NewUserController(userService, tradingAccountService)
 	accountController := controllers.NewAccountController(tradingAccountService)
 	adminController := controllers.NewAdminController(adminService, tradingAccountService)
 	jitController := controllers.NewJITController(jitService)
@@ -299,6 +299,7 @@ func main() {
 	// User Profile routes
 	protected.HandleFunc("/user/profile", userController.GetProfile).Methods("GET", "OPTIONS")
 	protected.HandleFunc("/user/profile", userController.UpdateProfile).Methods("PUT", "OPTIONS")
+	protected.HandleFunc("/user/profile/stats", userController.GetProfileStats).Methods("GET", "OPTIONS")
 	protected.HandleFunc("/user/password", userController.UpdatePassword).Methods("PUT", "OPTIONS")
 	protected.HandleFunc("/user/preferences", userController.UpdatePreferences).Methods("PUT", "OPTIONS")
 	protected.HandleFunc("/user/email/initiate", userController.InitiateEmailUpdate).Methods("POST", "OPTIONS")

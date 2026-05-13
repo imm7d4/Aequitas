@@ -6,10 +6,24 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type NotificationSettings struct {
+	OrderFilled          bool `bson:"order_filled" json:"orderFilled"`
+	OrderRejected        bool `bson:"order_rejected" json:"orderRejected"`
+	OrderCancelled       bool `bson:"order_cancelled" json:"orderCancelled"`
+	MarginCallWarning    bool `bson:"margin_call_warning" json:"marginCallWarning"`
+	AutoLiquidation      bool `bson:"auto_liquidation" json:"autoLiquidation"`
+	FundsDeposited       bool `bson:"funds_deposited" json:"fundsDeposited"`
+	PriceAlertTriggered  bool `bson:"price_alert_triggered" json:"priceAlertTriggered"`
+	SupportTicketUpdated bool `bson:"support_ticket_updated" json:"supportTicketUpdated"`
+	SystemAnnouncements  bool `bson:"system_announcements" json:"systemAnnouncements"`
+	MuteAll              bool `bson:"mute_all" json:"muteAll"`
+}
+
 type UserPreferences struct {
-	Theme                string `bson:"theme" json:"theme"`
-	DefaultPage          string `bson:"default_page" json:"defaultPage"`
-	NotificationsEnabled bool   `bson:"notifications_enabled" json:"notificationsEnabled"`
+	Theme                string               `bson:"theme" json:"theme"`
+	DefaultPage          string               `bson:"default_page" json:"defaultPage"`
+	NotificationsEnabled bool                 `bson:"notifications_enabled" json:"notificationsEnabled"`
+	NotificationSettings NotificationSettings `bson:"notification_settings" json:"notificationSettings"`
 }
 
 type User struct {

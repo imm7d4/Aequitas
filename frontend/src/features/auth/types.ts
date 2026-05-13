@@ -1,7 +1,21 @@
+export interface NotificationSettings {
+    orderFilled: boolean;
+    orderRejected: boolean;
+    orderCancelled: boolean;
+    marginCallWarning: boolean;
+    autoLiquidation: boolean;
+    fundsDeposited: boolean;
+    priceAlertTriggered: boolean;
+    supportTicketUpdated: boolean;
+    systemAnnouncements: boolean;
+    muteAll: boolean;
+}
+
 export interface UserPreferences {
     theme: string;
     defaultPage: string;
     notificationsEnabled: boolean;
+    notificationSettings?: NotificationSettings;
 }
 
 export type AdminRole = 'PLATFORM_ADMIN' | 'RISK_OFFICER' | 'COMPLIANCE_OFFICER' | 'SUPPORT';

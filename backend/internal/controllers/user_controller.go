@@ -11,11 +11,12 @@ import (
 )
 
 type UserController struct {
-	userService *services.UserService
+	userService    *services.UserService
+	accountService *services.TradingAccountService
 }
 
-func NewUserController(userService *services.UserService) *UserController {
-	return &UserController{userService: userService}
+func NewUserController(userService *services.UserService, accountService *services.TradingAccountService) *UserController {
+	return &UserController{userService: userService, accountService: accountService}
 }
 
 type UpdateProfileRequest struct {
@@ -51,6 +52,30 @@ func (c *UserController) GetProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.RespondJSON(w, http.StatusOK, user, "Profile retrieved successfully")
+}
+
+// GetProfileStats handles GET /api/user/profile/stats
+func (c *UserController) GetProfileStats(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	// Fetch realizedPL from account
+	realizedPL := 0.0
+	account, err := c.accountService.GetByUserID(r.Context(), userID)
+	if err == nil && account != nil {
+		realizedPL = account.RealizedPL
+	}
+
+	stats, err := c.userService.GetProfileStats(userID, realizedPL)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, stats, "Profile stats retrieved")
 }
 
 // UpdateProfile handles PUT /api/user/profile

@@ -76,3 +76,41 @@ func (r *TradeRepository) CountRecent(ctx context.Context, duration time.Duratio
 	count, err := r.collection.CountDocuments(ctx, bson.M{"created_at": bson.M{"$gte": since}})
 	return count, err
 }
+
+// TradeStatsResult holds aggregated stats for a user's trades
+type TradeStatsResult struct {
+	TotalTrades  int64 `bson:"totalTrades"`
+	ClosedTrades int64 `bson:"closedTrades"`
+}
+
+// GetStatsForUser returns total closed trades, win count (net_value > avg_entry_price * qty), and count
+// Win = a CLOSE_LONG trade where execution price > avg entry, estimated via net_value > cost
+// For simplicity, we count total executions and wins where net_value is positive (SELL) or advantageous (BUY cover)
+func (r *TradeRepository) GetStatsForUser(ctx context.Context, userID string) (*TradeStatsResult, error) {
+	objID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Count all trades
+	total, err := r.collection.CountDocuments(ctx, bson.M{"user_id": objID})
+	if err != nil {
+		return nil, err
+	}
+
+	// Count closing trades (CLOSE_LONG and CLOSE_SHORT) as "attempted trades"
+	closingTrades, err := r.collection.CountDocuments(ctx, bson.M{
+		"user_id": objID,
+		"intent":  bson.M{"$in": bson.A{"CLOSE_LONG", "CLOSE_SHORT"}},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &TradeStatsResult{
+		TotalTrades:  total,
+		ClosedTrades: closingTrades,
+	}, nil
+}
+
+

@@ -8,47 +8,59 @@ import {
     RadioGroup,
     FormControlLabel,
     Radio,
-    Switch,
     Button,
     Stack,
-    Divider,
     Alert,
     Select,
     MenuItem,
+    Snackbar,
 } from '@mui/material';
 import {
     Palette as PaletteIcon,
     OpenInNew as OpenInNewIcon,
-    Notifications as NotificationsIcon,
 } from '@mui/icons-material';
 import { profileService } from '../services/profileService';
-import type { User, UserPreferences as UserPrefsType } from '@/features/auth/types';
+import type { User, UserPreferences as UserPrefsType, NotificationSettings } from '@/features/auth/types';
+import { NotificationPreferencesPanel } from './NotificationPreferencesPanel';
 
 interface UserPreferencesProps {
     user: User;
     onUpdate: (updatedUser: User) => void;
 }
 
+const defaultNotificationSettings: NotificationSettings = {
+    orderFilled: true,
+    orderRejected: true,
+    orderCancelled: true,
+    marginCallWarning: true,
+    autoLiquidation: true,
+    fundsDeposited: true,
+    priceAlertTriggered: true,
+    supportTicketUpdated: true,
+    systemAnnouncements: true,
+    muteAll: false,
+};
+
 export const UserPreferences: React.FC<UserPreferencesProps> = ({ user, onUpdate }) => {
-    const [preferences, setPreferences] = useState<UserPrefsType>(
-        user.preferences || {
-            theme: 'dark',
-            defaultPage: '/dashboard',
-            notificationsEnabled: true,
-        }
-    );
+    const [preferences, setPreferences] = useState<UserPrefsType>({
+        ...user.preferences,
+        notificationSettings: user.preferences?.notificationSettings || defaultNotificationSettings
+    });
     const [isLoading, setIsLoading] = useState(false);
-    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [snackbar, setSnackbar] = useState<{ open: boolean, message: string, severity: 'success' | 'error' }>({
+        open: false,
+        message: '',
+        severity: 'success'
+    });
 
     const handleSave = async () => {
         setIsLoading(true);
-        setMessage(null);
         try {
             const updatedUser = await profileService.updatePreferences(preferences);
             onUpdate(updatedUser);
-            setMessage({ type: 'success', text: 'Preferences updated successfully' });
+            setSnackbar({ open: true, message: 'Preferences updated successfully', severity: 'success' });
         } catch (err: any) {
-            setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to update preferences' });
+            setSnackbar({ open: true, message: err.response?.data?.message || 'Failed to update preferences', severity: 'error' });
         } finally {
             setIsLoading(false);
         }
@@ -56,12 +68,6 @@ export const UserPreferences: React.FC<UserPreferencesProps> = ({ user, onUpdate
 
     return (
         <Stack spacing={4}>
-            {message && (
-                <Alert severity={message.type} sx={{ borderRadius: 1.5 }}>
-                    {message.text}
-                </Alert>
-            )}
-
             <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                     <PaletteIcon color="primary" />
@@ -109,29 +115,10 @@ export const UserPreferences: React.FC<UserPreferencesProps> = ({ user, onUpdate
                 </FormControl>
             </Paper>
 
-            <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                    <NotificationsIcon color="primary" />
-                    <Typography variant="h6" fontWeight={600}>
-                        Alerts & Notifications
-                    </Typography>
-                </Box>
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box>
-                        <Typography variant="body1" fontWeight={500}>
-                            System Notifications
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Receive updates about trades, alerts and system status.
-                        </Typography>
-                    </Box>
-                    <Switch
-                        checked={preferences.notificationsEnabled}
-                        onChange={(e) => setPreferences({ ...preferences, notificationsEnabled: e.target.checked })}
-                    />
-                </Box>
-            </Paper>
+            <NotificationPreferencesPanel
+                settings={preferences.notificationSettings || defaultNotificationSettings}
+                onChange={(newSettings) => setPreferences({ ...preferences, notificationSettings: newSettings })}
+            />
 
             <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
                 <Button
@@ -143,6 +130,22 @@ export const UserPreferences: React.FC<UserPreferencesProps> = ({ user, onUpdate
                     {isLoading ? 'Saving...' : 'Save Preferences'}
                 </Button>
             </Box>
+
+            <Snackbar 
+                open={snackbar.open} 
+                autoHideDuration={3000} 
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert 
+                    onClose={() => setSnackbar({ ...snackbar, open: false })} 
+                    severity={snackbar.severity} 
+                    variant="filled"
+                    sx={{ width: '100%', borderRadius: 1.5 }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Stack>
     );
 };
