@@ -39,6 +39,7 @@ type PricingService struct {
 	priceHistory      map[string][]float64
 	ema               map[string]float64
 	alertChan         chan alertRequest
+	lastResetDate     string // Format: "2006-01-02"
 }
 
 func NewPricingService(
@@ -171,9 +172,54 @@ func (s *PricingService) Stop() {
 	close(s.stopChan)
 }
 
+func (s *PricingService) triggerDailyReset(ctx context.Context) {
+	instruments, err := s.instrumentRepo.FindAll(map[string]interface{}{"status": "ACTIVE"})
+	if err != nil {
+		log.Printf("Daily reset error: failed to fetch instruments: %v", err)
+		return
+	}
+
+	for _, inst := range instruments {
+		data, err := s.marketDataRepo.FindByInstrumentID(ctx, inst.ID.Hex())
+		if err != nil {
+			log.Printf("Daily reset error: failed to fetch market data for %s: %v", inst.Symbol, err)
+			continue
+		}
+
+		if data != nil {
+			// Update PrevClose to LastPrice
+			data.PrevClose = data.LastPrice
+			// Reset Open, High, Low to current price
+			data.Open = data.LastPrice
+			data.High = data.LastPrice
+			data.Low = data.LastPrice
+			data.Volume = 0
+			data.Change = 0
+			data.ChangePct = 0
+
+			if err := s.marketDataRepo.Upsert(ctx, data); err != nil {
+				log.Printf("Daily reset error: failed to update %s: %v", inst.Symbol, err)
+			}
+		}
+	}
+	log.Println("Daily reset complete. PrevClose updated for all active instruments.")
+}
+
 func (s *PricingService) simulatePrices() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+
+	now := time.Now()
+	today := now.Format("2006-01-02")
+
+	// Check if it's 3:30 PM (15:30) or later and we haven't reset today
+	if now.Hour() > 15 || (now.Hour() == 15 && now.Minute() >= 30) {
+		if s.lastResetDate != today {
+			log.Println("MARKET CLOSE: Triggering daily reset at 3:30 PM")
+			s.triggerDailyReset(ctx)
+			s.lastResetDate = today
+		}
+	}
 
 	instruments, err := s.instrumentRepo.FindAll(map[string]interface{}{"status": "ACTIVE"})
 	if err != nil {

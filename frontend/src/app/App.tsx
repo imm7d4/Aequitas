@@ -20,7 +20,7 @@ function App(): JSX.Element {
         <Providers>
             <BrowserRouter>
                 <AppRoutes />
-                {isAuthenticated && user?.role === 'TRADER' && (
+                {isAuthenticated && (
                     <>
                         <WatchlistSelectionDialog />
                         <OnboardingTour />

@@ -189,12 +189,17 @@ func (s *AnalyticsService) applyExcursionLogic(res *models.TradeResult, minPrice
 
 func formatDuration(d time.Duration) string {
 	d = d.Round(time.Second)
+	days := d / (24 * time.Hour)
+	d -= days * 24 * time.Hour
 	h := d / time.Hour
 	d -= h * time.Hour
 	m := d / time.Minute
 	d -= m * time.Minute
 	s := d / time.Second
 
+	if days > 0 {
+		return fmt.Sprintf("%dd %dh %dm %ds", days, h, m, s)
+	}
 	if h > 0 {
 		return fmt.Sprintf("%dh %dm %ds", h, m, s)
 	}

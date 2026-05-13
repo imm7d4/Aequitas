@@ -100,14 +100,41 @@ export function InstrumentDetail() {
 
     const handleWatchlistToggle = async () => {
         if (!instrument) return;
-        if (watchlists.length !== 1) { openSelectionDialog(instrument); return; }
-        if (!activeWatchlistId) { openSelectionDialog(instrument); return; }
-        try {
-            const activeWatchlist = watchlists.find(w => w.id === activeWatchlistId);
-            const inActiveWatchlist = activeWatchlist?.instrumentIds.includes(instrument.id) || false;
-            if (inActiveWatchlist) await removeInstrumentFromWatchlist(activeWatchlistId, instrument.id);
-            else await addInstrumentToWatchlist(activeWatchlistId, instrument.id);
-        } catch (err) { }
+        
+        // If there are multiple watchlists or none, open the selection dialog
+        if (watchlists.length > 1 || watchlists.length === 0) {
+            openSelectionDialog(instrument);
+            return;
+        }
+        
+        // If there is exactly 1 watchlist, toggle it directly
+        if (activeWatchlistId) {
+            try {
+                const activeWatchlist = watchlists.find(w => w.id === activeWatchlistId);
+                const inActiveWatchlist = activeWatchlist?.instrumentIds.includes(instrument.id) || false;
+                
+                if (inActiveWatchlist) {
+                    await removeInstrumentFromWatchlist(activeWatchlistId, instrument.id);
+                } else {
+                    await addInstrumentToWatchlist(activeWatchlistId, instrument.id);
+                }
+            } catch (err) {
+                console.error('Failed to toggle watchlist:', err);
+            }
+        } else if (watchlists.length === 1) {
+            // Fallback if activeWatchlistId is not set but there is 1 watchlist
+            try {
+                const singleWatchlist = watchlists[0];
+                const inWatchlist = singleWatchlist.instrumentIds.includes(instrument.id);
+                if (inWatchlist) {
+                    await removeInstrumentFromWatchlist(singleWatchlist.id, instrument.id);
+                } else {
+                    await addInstrumentToWatchlist(singleWatchlist.id, instrument.id);
+                }
+            } catch (err) {
+                console.error('Failed to toggle watchlist:', err);
+            }
+        }
     };
 
     if (isLoading) return <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}><Box sx={{ height: 64, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }} /></Box>;

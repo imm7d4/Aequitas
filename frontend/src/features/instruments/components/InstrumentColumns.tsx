@@ -22,16 +22,6 @@ export const getInstrumentColumns = (prices: any, watchlists: any[], onWatchlist
         )
     },
     {
-        id: 'sector',
-        label: 'Sector',
-        sortable: true,
-        format: (value: string) => (
-            <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                {value}
-            </Typography>
-        )
-    },
-    {
         id: 'ltp',
         label: 'LTP',
         align: 'right' as const,
@@ -90,6 +80,16 @@ export const getInstrumentColumns = (prices: any, watchlists: any[], onWatchlist
         id: 'exchange',
         label: 'Exch',
         format: (value: string) => <Chip label={value} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.65rem', borderRadius: '4px' }} />
+    },
+    {
+        id: 'sector',
+        label: 'Sector',
+        sortable: true,
+        format: (value: string) => (
+            <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                {value}
+            </Typography>
+        )
     },
     {
         id: 'watchlist',
