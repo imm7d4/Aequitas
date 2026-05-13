@@ -1,16 +1,18 @@
 import { ThemeProvider, createTheme, CssBaseline, PaletteMode } from '@mui/material';
-import { ReactNode, createContext, useContext, useMemo, useState } from 'react';
+import { ReactNode, createContext, useContext, useMemo, useState, useEffect } from 'react';
 
 // Theme persistence key
 const THEME_STORAGE_KEY = 'aequitas-theme-mode';
 
 interface ColorModeContextType {
     toggleColorMode: () => void;
+    setColorMode: (mode: PaletteMode | 'system') => void;
     mode: PaletteMode;
 }
 
 export const ColorModeContext = createContext<ColorModeContextType>({
     toggleColorMode: () => {},
+    setColorMode: () => {},
     mode: 'light',
 });
 
@@ -165,8 +167,23 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps): JSX.Element {
     const [mode, setMode] = useState<PaletteMode>(() => {
         const savedMode = localStorage.getItem(THEME_STORAGE_KEY);
-        return (savedMode as PaletteMode) || 'light';
+        if (savedMode === 'system' || !savedMode) {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        return savedMode as PaletteMode;
     });
+
+    useEffect(() => {
+        const savedMode = localStorage.getItem(THEME_STORAGE_KEY);
+        if (savedMode !== 'system') return;
+
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleChange = (e: MediaQueryListEvent) => {
+            setMode(e.matches ? 'dark' : 'light');
+        };
+        mediaQuery.addEventListener('change', handleChange);
+        return () => mediaQuery.removeEventListener('change', handleChange);
+    }, []);
 
     const colorMode = useMemo(
         () => ({
@@ -176,6 +193,15 @@ export function Providers({ children }: ProvidersProps): JSX.Element {
                     localStorage.setItem(THEME_STORAGE_KEY, newMode);
                     return newMode;
                 });
+            },
+            setColorMode: (newMode: PaletteMode | 'system') => {
+                if (newMode === 'system') {
+                    const systemMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                    setMode(systemMode);
+                } else {
+                    setMode(newMode);
+                }
+                localStorage.setItem(THEME_STORAGE_KEY, newMode);
             },
             mode,
         }),

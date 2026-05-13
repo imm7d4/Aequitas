@@ -1,6 +1,6 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth, useAuthStore } from '../hooks/useAuth';
 import { healthService } from '@/services/healthService';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import styles from '../styles/Auth.module.css';
@@ -31,7 +31,9 @@ export function LoginForm(): JSX.Element {
 
         try {
             await login(email, password);
-            navigate('/dashboard');
+            const user = useAuthStore.getState().user;
+            const defaultPage = user?.preferences?.defaultPage || '/dashboard';
+            navigate(defaultPage);
         } catch (err) {
             // Error handled by store
         }

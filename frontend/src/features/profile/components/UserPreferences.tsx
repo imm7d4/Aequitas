@@ -22,6 +22,7 @@ import {
 import { profileService } from '../services/profileService';
 import type { User, UserPreferences as UserPrefsType, NotificationSettings } from '@/features/auth/types';
 import { NotificationPreferencesPanel } from './NotificationPreferencesPanel';
+import { useColorMode } from '@/app/providers';
 
 interface UserPreferencesProps {
     user: User;
@@ -46,6 +47,7 @@ export const UserPreferences: React.FC<UserPreferencesProps> = ({ user, onUpdate
         ...user.preferences,
         notificationSettings: user.preferences?.notificationSettings || defaultNotificationSettings
     });
+    const { setColorMode } = useColorMode();
     const [isLoading, setIsLoading] = useState(false);
     const [snackbar, setSnackbar] = useState<{ open: boolean, message: string, severity: 'success' | 'error' }>({
         open: false,
@@ -58,6 +60,7 @@ export const UserPreferences: React.FC<UserPreferencesProps> = ({ user, onUpdate
         try {
             const updatedUser = await profileService.updatePreferences(preferences);
             onUpdate(updatedUser);
+            setColorMode(preferences.theme as any); // Apply theme immediately
             setSnackbar({ open: true, message: 'Preferences updated successfully', severity: 'success' });
         } catch (err: any) {
             setSnackbar({ open: true, message: err.response?.data?.message || 'Failed to update preferences', severity: 'error' });
@@ -68,51 +71,42 @@ export const UserPreferences: React.FC<UserPreferencesProps> = ({ user, onUpdate
 
     return (
         <Stack spacing={4}>
-            <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                    <PaletteIcon color="primary" />
-                    <Typography variant="h6" fontWeight={600}>
-                        Appearance
-                    </Typography>
+            <Paper elevation={0} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'flex-start' }}>
+                    {/* Theme Section */}
+                    <FormControl component="fieldset">
+                        <FormLabel component="legend" sx={{ mb: 0.5, fontSize: '0.85rem', fontWeight: 600 }}>Theme</FormLabel>
+                        <RadioGroup
+                            row
+                            value={preferences.theme}
+                            onChange={(e) => setPreferences({ ...preferences, theme: e.target.value })}
+                        >
+                            <FormControlLabel value="light" control={<Radio size="small" />} label={<Typography variant="body2">Light</Typography>} />
+                            <FormControlLabel value="dark" control={<Radio size="small" />} label={<Typography variant="body2">Dark</Typography>} />
+                            <FormControlLabel value="system" control={<Radio size="small" />} label={<Typography variant="body2">System</Typography>} />
+                        </RadioGroup>
+                    </FormControl>
+
+                    {/* Navigation Section */}
+                    <FormControl sx={{ minWidth: 200 }}>
+                        <FormLabel sx={{ mb: 0.5, fontSize: '0.85rem', fontWeight: 600 }}>Default Landing Page</FormLabel>
+                        <Select
+                            size="small"
+                            value={preferences.defaultPage}
+                            onChange={(e) => setPreferences({ ...preferences, defaultPage: e.target.value })}
+                            sx={{ maxWidth: 200 }}
+                        >
+                            <MenuItem value="/dashboard">Dashboard</MenuItem>
+                            <MenuItem value="/portfolio">Portfolio</MenuItem>
+                            <MenuItem value="/orders">Orders</MenuItem>
+                            <MenuItem value="/instruments">Instruments</MenuItem>
+                            <MenuItem value="/diagnostics">Trade Diagnostics</MenuItem>
+                        </Select>
+                        <Typography variant="caption" sx={{ mt: 0.5, color: 'text.secondary', fontSize: '0.75rem' }}>
+                            Loads automatically after login.
+                        </Typography>
+                    </FormControl>
                 </Box>
-
-                <FormControl component="fieldset">
-                    <FormLabel component="legend" sx={{ mb: 1 }}>Current Theme</FormLabel>
-                    <RadioGroup
-                        row
-                        value={preferences.theme}
-                        onChange={(e) => setPreferences({ ...preferences, theme: e.target.value })}
-                    >
-                        <FormControlLabel value="light" control={<Radio />} label="Light" />
-                        <FormControlLabel value="dark" control={<Radio />} label="Dark" />
-                        <FormControlLabel value="system" control={<Radio />} label="System" />
-                    </RadioGroup>
-                </FormControl>
-            </Paper>
-
-            <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                    <OpenInNewIcon color="primary" />
-                    <Typography variant="h6" fontWeight={600}>
-                        Navigation
-                    </Typography>
-                </Box>
-
-                <FormControl fullWidth>
-                    <FormLabel sx={{ mb: 1 }}>Default Starting Page</FormLabel>
-                    <Select
-                        value={preferences.defaultPage}
-                        onChange={(e) => setPreferences({ ...preferences, defaultPage: e.target.value })}
-                        sx={{ maxWidth: 300 }}
-                    >
-                        <MenuItem value="/dashboard">Dashboard</MenuItem>
-                        <MenuItem value="/markets">Market Pulse</MenuItem>
-                        <MenuItem value="/portfolio">My Portfolio</MenuItem>
-                    </Select>
-                    <Typography variant="caption" sx={{ mt: 1, color: 'text.secondary' }}>
-                        This page will load automatically after successful login.
-                    </Typography>
-                </FormControl>
             </Paper>
 
             <NotificationPreferencesPanel
